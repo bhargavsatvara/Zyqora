@@ -14,7 +14,6 @@ import {
   FiSearch,
   FiShoppingCart,
   FiHeart,
-  FiDollarSign,
   FiUser,
   FiHelpCircle,
   FiSettings,

@@ -88,7 +88,11 @@ export default function Index() {
             <h5 className="mb-4 text-3xl font-semibold leading-normal">
               Shop The Collections
             </h5>
+
+            <p className="max-w-xl mx-auto text-slate-500 text-xl">
+
             <p className="max-w-xl mx-auto text-slate-400">
+
               Shop the latest products from the most popular collections
             </p>
           </div>
@@ -119,6 +123,7 @@ export default function Index() {
             <h5 className="mb-4 text-3xl font-semibold leading-normal">
               New Arrival Products
             </h5>
+            <p className="max-w-xl mx-auto text-slate-500 text-xl">
             <p className="max-w-xl mx-auto text-slate-400">
               Shop the latest products from the most popular collections
             </p>
@@ -284,7 +289,11 @@ export default function Index() {
               <h5 className="mb-4 text-3xl font-semibold leading-normal">
                 Popular Items
               </h5>
+
+              <p className="max-w-xl text-slate-500 text-xl">
+
               <p className="max-w-xl text-slate-400">
+
                 Popular items this week
               </p>
             </div>
