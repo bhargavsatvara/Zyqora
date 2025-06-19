@@ -306,7 +306,7 @@ export const footerServices = [
     },
     {
         icon:'mdi mdi-cash-multiple',
-        name:'Money-back quarantee'
+        name:'Money-back Guarantee'
     },
     {
         icon:'mdi mdi-shield-check',

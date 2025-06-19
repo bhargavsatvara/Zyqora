@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 
+
 import logoDark from "../assets/images/logo.png";
 import logoWhite from "../assets/images/Zyqora-light.png";
 import logoLight from "../assets/images/Zyqora-light.png";
@@ -10,21 +11,44 @@ import product3 from "../assets/images/shop/apple-smart-watch.jpg";
 import client from "../assets/images/client/16.jpg";
 import ctaImg from "../assets/images/cta.png";
 
+import logoDark from '../assets/images/logo.png';
+import logoWhite from '../assets/images/Zyqora-light.png';
+import logoLight from '../assets/images/Zyqora-light.png';
+import product1 from '../assets/images/shop/trendy-shirt.jpg';
+import product2 from '../assets/images/shop/luxurious-bag2.jpg';
+import product3 from '../assets/images/shop/apple-smart-watch.jpg';
+import client from '../assets/images/client/16.jpg';
+import ctaImg from '../assets/images/cta.png';
+
+
 import {
   FiSearch,
   FiShoppingCart,
   FiHeart,
+
+
+  FiDollarSign,
+
   FiUser,
   FiHelpCircle,
   FiSettings,
   FiLogOut,
+
 } from "../assets/icons/vander";
+
+} from '../assets/icons/vander';
+
 
 export default function Navbar({ navClass, navlight }) {
   let [scrolling, setScrolling] = useState(false);
   let [isToggle, setToggle] = useState(false);
+
   let [manu, setManu] = useState("");
   let [subManu, setSubManu] = useState("");
+
+  let [manu, setManu] = useState('');
+  let [subManu, setSubManu] = useState('');
+
   let [isOpen, setIsOpen] = useState(false);
   let [cartManu, setCartManu] = useState(false);
   let [userManu, setUserManu] = useState(false);
@@ -57,10 +81,17 @@ export default function Navbar({ navClass, navlight }) {
       }
     };
 
+
     window.addEventListener("scroll", handleScroll);
     window.addEventListener("click", handleOutsideClick);
     window.addEventListener("click", cartOutsideClick);
     window.addEventListener("click", userOutsideClick);
+
+    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('click', handleOutsideClick);
+    window.addEventListener('click', cartOutsideClick);
+    window.addEventListener('click', userOutsideClick);
+
 
     let current = window.location.pathname;
     setManu(current);
@@ -80,11 +111,16 @@ export default function Navbar({ navClass, navlight }) {
   };
 
   return (
+
     <nav id="topnav" className={`${navClass} ${scrolling ? "nav-sticky" : ""}`}>
+
+    <nav id="topnav" className={`${navClass} ${scrolling ? 'nav-sticky' : ''}`}>
+
       <div className="container relative">
         {navlight === true ? (
           <Link className="logo" to="/">
             <span className="inline-block dark:hidden">
+
               <img
                 src={logoDark}
                 className="h-[22px] l-dark"
@@ -101,10 +137,17 @@ export default function Navbar({ navClass, navlight }) {
               className="h-[22px] hidden dark:inline-block"
               alt="Zyqora Logo Light"
             />
+
+              <img src={logoDark} className="l-dark" alt="" />
+              <img src={logoLight} className="l-light" alt="" />
+            </span>
+            <img src={logoLight} className="hidden dark:inline-block" alt="" />
+
           </Link>
         ) : (
           <Link className="logo" to="/">
             <div>
+
               <img
                 src={logoDark}
                 className="h-[22px] inline-block dark:hidden"
@@ -115,6 +158,10 @@ export default function Navbar({ navClass, navlight }) {
                 className="h-[22px] hidden dark:inline-block"
                 alt="Zyqora Logo Light"
               />
+
+              <img src={logoDark} className="h-[22px] inline-block dark:hidden" alt="" />
+              <img src={logoWhite} className="h-[22px] hidden dark:inline-block" alt="" />
+
             </div>
           </Link>
         )}
@@ -122,8 +169,14 @@ export default function Navbar({ navClass, navlight }) {
         <div className="menu-extras">
           <div className="menu-item">
             <Link
+
               className={`navbar-toggle ${isToggle ? "open" : ""}`}
               onClick={toggleMenu}
+
+              className={`navbar-toggle ${isToggle ? 'open' : ''}`}
+              id="isToggle"
+              onClick={() => toggleMenu()}
+
             >
               <div className="lines">
                 <span></span>
@@ -135,13 +188,21 @@ export default function Navbar({ navClass, navlight }) {
         </div>
 
         <ul className="buy-button list-none mb-0">
+
           {/* Search */}
           <li className="dropdown inline-block relative pe-1" ref={dropdownRef}>
             <button
+
+          {/* ←–– Search icon ––→ */}
+          <li className="dropdown inline-block relative pe-1" ref={dropdownRef}>
+            <button
+              data-dropdown-toggle="dropdown"
+
               className="dropdown-toggle align-middle inline-flex search-dropdown"
               type="button"
               onClick={() => setIsOpen(!isOpen)}
             >
+
               <FiSearch className="size-5"></FiSearch>
             </button>
             {isOpen && (
@@ -151,12 +212,35 @@ export default function Navbar({ navClass, navlight }) {
                   <input
                     type="text"
                     className="h-9 px-3 pe-10 w-full border-0 focus:ring-0 outline-none bg-white dark:bg-slate-900"
+
+              {navlight === true ? (
+                <>
+                  <FiSearch className="size-5 dark-icon" />
+                  <FiSearch className="size-5 white-icon text-white" />
+                </>
+              ) : (
+                <FiSearch className="size-5" />
+              )}
+            </button>
+            {isOpen && (
+              <div
+                className={`dropdown-menu absolute overflow-hidden end-0 m-0 mt-5 z-10 md:w-52 w-48 rounded-md bg-white dark:bg-slate-900 shadow dark:shadow-gray-800`}
+              >
+                <div className="relative">
+                  <FiSearch className="absolute size-4 top-[9px] end-3 text-slate-900 dark:text-white" />
+                  <input
+                    type="text"
+                    className="h-9 px-3 pe-10 w-full border-0 focus:ring-0 outline-none bg-white dark:bg-slate-900"
+                    name="s"
+                    id="searchItem"
+
                     placeholder="Search..."
                   />
                 </div>
               </div>
             )}
           </li>
+
 
           {/* Cart */}
           <li className="dropdown inline-block relative ps-0.5" ref={cartRef}>
@@ -175,6 +259,23 @@ export default function Navbar({ navClass, navlight }) {
                       to="#"
                       className="flex items-center justify-between py-1.5 px-4"
                     >
+
+          {/* ←–– Cart icon (UPDATED >>> darker orange: #E65500) ––→ */}
+          <li className="dropdown inline-block relative ps-0.5" ref={cartRef}>
+            <button
+              data-dropdown-toggle="dropdown"
+              className="dropdown-toggle size-9 inline-flex items-center justify-center tracking-wide align-middle duration-500 text-base text-center rounded-full bg-[#E65500] border border-[#E65500] text-white"
+              type="button"
+              onClick={() => setCartManu(!cartManu)}
+            >
+              <FiShoppingCart className="h-4 w-4" />
+            </button>
+            {cartManu && (
+              <div className="dropdown-menu absolute end-0 m-0 mt-4 z-10 w-64 rounded-md bg-white dark:bg-slate-900 shadow dark:shadow-gray-800">
+                <ul className="py-3 text-start" aria-labelledby="dropdownDefault">
+                  <li className="ms-0">
+                    <Link to="#" className="flex items-center justify-between py-1.5 px-4">
+
                       <span className="flex items-center">
                         <img
                           src={product1}
@@ -182,6 +283,7 @@ export default function Navbar({ navClass, navlight }) {
                           alt=""
                         />
                         <span className="ms-3">
+
                           <span className="block font-semibold">
                             T-shirt (M)
                           </span>
@@ -190,15 +292,26 @@ export default function Navbar({ navClass, navlight }) {
                           </span>
                         </span>
                       </span>
+
+                          <span className="block font-semibold">T-shirt (M)</span>
+                          <span className="block text-sm text-slate-400">$320 X 2</span>
+                        </span>
+                      </span>
+
+
                       <span className="font-semibold">$640</span>
                     </Link>
                   </li>
 
                   <li className="ms-0">
+
                     <Link
                       to="#"
                       className="flex items-center justify-between py-1.5 px-4"
                     >
+
+                    <Link to="#" className="flex items-center justify-between py-1.5 px-4">
+
                       <span className="flex items-center">
                         <img
                           src={product2}
@@ -207,20 +320,31 @@ export default function Navbar({ navClass, navlight }) {
                         />
                         <span className="ms-3">
                           <span className="block font-semibold">Bag</span>
+
                           <span className="block text-sm text-slate-400">
                             $50 X 5
                           </span>
                         </span>
                       </span>
+
+                          <span className="block text-sm text-slate-400">$50 X 5</span>
+                        </span>
+                      </span>
+
+
                       <span className="font-semibold">$250</span>
                     </Link>
                   </li>
 
                   <li className="ms-0">
+
                     <Link
                       to="#"
                       className="flex items-center justify-between py-1.5 px-4"
                     >
+
+                    <Link to="#" className="flex items-center justify-between py-1.5 px-4">
+
                       <span className="flex items-center">
                         <img
                           src={product3}
@@ -228,6 +352,7 @@ export default function Navbar({ navClass, navlight }) {
                           alt=""
                         />
                         <span className="ms-3">
+
                           <span className="block font-semibold">
                             Watch (Men)
                           </span>
@@ -236,6 +361,13 @@ export default function Navbar({ navClass, navlight }) {
                           </span>
                         </span>
                       </span>
+
+                          <span className="block font-semibold">Watch (Men)</span>
+                          <span className="block text-sm text-slate-400">$800 X 1</span>
+                        </span>
+                      </span>
+
+
                       <span className="font-semibold">$800</span>
                     </Link>
                   </li>
@@ -251,13 +383,21 @@ export default function Navbar({ navClass, navlight }) {
                     <span className="text-center block">
                       <Link
                         to="#"
+
                         className="py-[5px] px-4 inline-block font-semibold tracking-wide align-middle duration-500 text-sm text-center rounded-md bg-orange-500 border border-orange-500 text-white me-1"
+
+                        className="py-[5px] px-4 inline-block font-semibold tracking-wide align-middle duration-500 text-sm text-center rounded-md bg-[#E65500] border border-[#E65500] text-white me-1"
+
                       >
                         View Cart
                       </Link>
                       <Link
                         to="#"
+
                         className="py-[5px] px-4 inline-block font-semibold tracking-wide align-middle duration-500 text-sm text-center rounded-md bg-orange-500 border border-orange-500 text-white"
+
+                        className="py-[5px] px-4 inline-block font-semibold tracking-wide align-middle duration-500 text-sm text-center rounded-md bg-[#E65500] border border-[#E65500] text-white"
+
                       >
                         Checkout
                       </Link>
@@ -268,6 +408,7 @@ export default function Navbar({ navClass, navlight }) {
               </div>
             )}
           </li>
+
 
           {/* Wishlist */}
           <li className="inline-block ps-0.5">
@@ -282,17 +423,38 @@ export default function Navbar({ navClass, navlight }) {
           {/* User Dropdown */}
           <li className="dropdown inline-block relative ps-0.5" ref={userRef}>
             <button
+
+          {/* ←–– Heart icon (UPDATED >>> darker orange: #E65500) ––→ */}
+          <li className="inline-block ps-0.5">
+            <Link
+              to="#"
+              className="size-9 inline-flex items-center justify-center tracking-wide align-middle duration-500 text-base text-center rounded-full bg-[#E65500] text-white"
+            >
+              <FiHeart data-feather="heart" className="h-4 w-4" />
+            </Link>
+          </li>
+
+          {/* ←–– User avatar & dropdown ––→ */}
+          <li className="dropdown inline-block relative ps-0.5" ref={userRef}>
+            <button
+              data-dropdown-toggle="dropdown"
+
               className="dropdown-toggle items-center"
               type="button"
               onClick={() => setUserManu(!userManu)}
             >
+
               <span className="size-9 inline-flex items-center justify-center tracking-wide align-middle duration-500 text-base text-center rounded-full border border-orange-500 bg-orange-500 text-white">
+
+              <span className="size-9 inline-flex items-center justify-center tracking-wide align-middle duration-500 text-base text-center rounded-full border border-[#E65500] bg-[#E65500] text-white">
+
                 <img src={client} className="rounded-full" alt="" />
               </span>
             </button>
             {userManu && (
               <div className="dropdown-menu absolute end-0 m-0 mt-4 z-10 w-48 rounded-md overflow-hidden bg-white dark:bg-slate-900 shadow dark:shadow-gray-700">
                 <ul className="py-2 text-start">
+
                   <li className="px-4 py-2 text-slate-400">
                     <p className="text-slate-400 pt-2 px-4">Welcome Guest!</p>
                   </li>
@@ -325,6 +487,48 @@ export default function Navbar({ navClass, navlight }) {
                     <button className="flex items-center font-medium w-full py-2 px-4 hover:text-orange-500">
                       <FiLogOut className="h-4 w-4 me-2" /> Logout
                     </button>
+
+                  <li className="ms-0">
+                    <p className="text-slate-400 pt-2 px-4">Welcome Guest!</p>
+                  </li>
+
+                  <li className="ms-0">
+                    <Link
+                      to="#"
+                      className="flex items-center font-medium py-2 px-4 dark:text-white/70 hover:text-[#E65500] dark:hover:text-white"
+                    >
+                      <FiUser className="h-4 w-4 me-2" />
+                      Account
+                    </Link>
+                  </li>
+                  <li className="ms-0">
+                    <Link
+                      to="#"
+                      className="flex items-center font-medium py-2 px-4 dark:text-white/70 hover:text-[#E65500] dark:hover:text-white"
+                    >
+                      <FiHelpCircle className="h-4 w-4 me-2" />
+                      Helpcenter
+                    </Link>
+                  </li>
+                  <li className="ms-0">
+                    <Link
+                      to="#"
+                      className="flex items-center font-medium py-2 px-4 dark:text-white/70 hover:text-[#E65500] dark:hover:text-white"
+                    >
+                      <FiSettings className="h-4 w-4 me-2" />
+                      Settings
+                    </Link>
+                  </li>
+                  <li className="border-t border-gray-100 dark:border-gray-800 my-2"></li>
+                  <li className="ms-0">
+                    <Link
+                      to="/login"
+                      className="flex items-center font-medium py-2 px-4 dark:text-white/70 hover:text-[#E65500] dark:hover:text-white"
+                    >
+                      <FiLogOut className="h-4 w-4 me-2" />
+                      Logout
+                    </Link>
+
                   </li>
                 </ul>
               </div>
@@ -334,6 +538,7 @@ export default function Navbar({ navClass, navlight }) {
 
         <div
           id="navigation"
+
           style={{ display: isToggle === true ? "block" : "none" }}
         >
           <ul
@@ -344,12 +549,24 @@ export default function Navbar({ navClass, navlight }) {
             <li
               className={`has-submenu parent-parent-menu-item ${
                 ["/product-item"].includes(manu) ? "active" : ""
+
+          style={{ display: isToggle === true ? 'block' : 'none' }}
+        >
+          <ul className={`navigation-menu ${navlight === true ? 'nav-light' : ''}`}>
+            <li
+              className={`has-submenu parent-parent-menu-item ${
+                ['/product-item'].includes(manu) ? 'active' : ''
+
               }`}
             >
               <Link
                 to="#"
                 onClick={() =>
+
                   setSubManu(setManu === "/product-item" ? "" : "/product-item")
+
+                  setSubManu(setManu === '/product-item' ? '' : '/product-item')
+
                 }
               >
                 Products
@@ -358,7 +575,11 @@ export default function Navbar({ navClass, navlight }) {
 
               <ul
                 className={`submenu megamenu ${
+
                   ["/product-item"].includes(subManu) ? "open" : ""
+
+                  ['/product-item'].includes(subManu) ? 'open' : ''
+
                 }`}
               >
                 <li className="ms-0">
@@ -568,7 +789,11 @@ export default function Navbar({ navClass, navlight }) {
 
                     <li className="text-center">
                       <Link
+
                         to="/shop-grid-left-sidebar"
+
+                        to="#!"
+
                         className="py-2 px-5 inline-block font-medium tracking-wide align-middle duration-500 text-base text-center bg-[#E65500]/10 text-[#E65500] rounded-md me-2 mt-2"
                       >
                         <i className="mdi mdi-cart-outline"></i> Shop Now
@@ -578,6 +803,7 @@ export default function Navbar({ navClass, navlight }) {
                 </li>
               </ul>
             </li>
+
 
             <li
               className={`has-submenu parent-parent-menu-item ${
@@ -914,6 +1140,21 @@ export default function Navbar({ navClass, navlight }) {
 
             <li className={`${manu === "/contact" ? "active" : ""}`}>
               <Link to="/contact" className="sub-menu-item">
+
+            <li className={`${manu === '/sale' ? 'active' : ''}`}>
+              <Link to="#" className="sub-menu-item">
+                Sale
+              </Link>
+            </li>
+            <li className={`${manu === '/about-us' ? 'active' : ''}`}>
+              <Link to="#" className="sub-menu-item">
+                About Us
+              </Link>
+            </li>
+
+            <li className={`${manu === '/contact' ? 'active' : ''}`}>
+              <Link to="#" className="sub-menu-item">
+
                 Contact Us
               </Link>
             </li>
