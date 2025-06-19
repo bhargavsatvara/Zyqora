@@ -28,13 +28,13 @@ export default function Signup() {
                     <Link to="/">
                       <img
                         src={logoDark}
-                        className="mx-auto block dark:hidden"
-                        alt=""
+                        className="mx-auto block dark:hidden h-12 w-auto"
+                        alt="Zyqora Logo Dark"
                       />
                       <img
                         src={logoLight}
-                        className="mx-auto hidden dark:block"
-                        alt=""
+                        className="mx-auto hidden dark:block h-12 w-auto"
+                        alt="Zyqora Logo Light"
                       />
                     </Link>
                   </div>
@@ -82,7 +82,7 @@ export default function Signup() {
                           className="font-semibold"
                           htmlFor="LoginPassword"
                         >
-                        Confirm  Password:
+                          Confirm Password:
                         </label>
                         <input
                           id="LoginPassword"

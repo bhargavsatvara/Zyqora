@@ -29,13 +29,13 @@ export default function ForgotPassword() {
                     <Link to="/">
                       <img
                         src={logoDark}
-                        className="mx-auto block dark:hidden"
-                        alt=""
+                        className="mx-auto block dark:hidden h-12 w-auto"
+                        alt="Zyqora Logo Dark"
                       />
                       <img
                         src={logoLight}
-                        className="mx-auto hidden dark:block"
-                        alt=""
+                        className="mx-auto hidden dark:block h-12 w-auto"
+                        alt="Zyqora Logo Light"
                       />
                     </Link>
                   </div>
@@ -67,7 +67,7 @@ export default function ForgotPassword() {
 
                       <div className="text-center">
                         <span className="text-slate-400 me-2">
-                          Remember your password ?{" "}
+                          Remember your password?{' '}
                         </span>
                         <Link
                           to="/login"
@@ -81,8 +81,8 @@ export default function ForgotPassword() {
 
                   <div className="text-center">
                     <p className="mb-0 text-slate-400">
-                      © {new Date().getFullYear()} Zyqora. Design & Develop with{" "}
-                      <i className="mdi mdi-heart text-red-600"></i> by{" "}
+                      © {new Date().getFullYear()} Zyqora. Design & Develop with{' '}
+                      <i className="mdi mdi-heart text-red-600"></i> by{' '}
                       <Link
                         to="https://zyqora.in/"
                         target="_blank"
