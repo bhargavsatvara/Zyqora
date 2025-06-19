@@ -155,7 +155,7 @@ export default function Signup() {
               </span>{" "}
               by{" "}
               <Link
-                to="https://zyqora.in/"
+                to="#"
                 target="_blank"
                 className="text-gray-400 hover:underline"
               >

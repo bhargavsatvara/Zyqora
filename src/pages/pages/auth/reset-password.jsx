@@ -3,12 +3,12 @@ import { Link } from "react-router-dom";
 
 import logoDark from "../../../assets/images/logo.png";
 import logoLight from "../../../assets/images/Zyqora-light.png";
-import forgotImg from "../../../assets/images/forgot-password.jpg";
+import resetImg from "../../../assets/images/forgot-password.jpg";
 
 import BackToHome from "../../../components/back-to-home";
 import Switcher from "../../../components/switcher";
 
-export default function ForgotPassword() {
+export default function ResetPassword() {
   return (
     <section className="relative h-screen flex items-center justify-center bg-orange-50 dark:bg-orange-50/20 overflow-hidden">
       {/* Decorative background circles */}
@@ -20,8 +20,8 @@ export default function ForgotPassword() {
           {/* Left image */}
           <div className="hidden md:block md:w-1/2">
             <img
-              src={forgotImg}
-              alt="Forgot Password"
+              src={resetImg}
+              alt="Reset Password"
               className="w-full h-full object-cover"
             />
           </div>
@@ -43,40 +43,57 @@ export default function ForgotPassword() {
               </Link>
             </div>
 
-            <form className="space-y-6">
-              <p className="text-gray-600 dark:text-gray-400">
-                Please enter your email address. You will receive a link to
-                create a new password via email.
+            <form className="space-y-4">
+              <h2 className="text-xl font-semibold text-gray-700 text-center">
+                Reset Your Password
+              </h2>
+              <p className="text-gray-600 text-center">
+                Enter a new password for your account.
               </p>
 
-              {/* Email */}
+              {/* New Password */}
               <div>
                 <label
-                  htmlFor="forgotEmail"
+                  htmlFor="newPassword"
                   className="block font-semibold text-gray-700"
                 >
-                  Email Address
+                  New Password
                 </label>
                 <input
-                  id="forgotEmail"
-                  type="email"
+                  id="newPassword"
+                  type="password"
                   className="mt-1 w-full px-3 py-2 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-orange-300 bg-transparent dark:bg-slate-900 dark:text-slate-200"
                 />
               </div>
 
-              {/* Send button */}
+              {/* Confirm Password */}
+              <div>
+                <label
+                  htmlFor="confirmPassword"
+                  className="block font-semibold text-gray-700"
+                >
+                  Confirm Password
+                </label>
+                <input
+                  id="confirmPassword"
+                  type="password"
+                  className="mt-1 w-full px-3 py-2 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-orange-300 bg-transparent dark:bg-slate-900 dark:text-slate-200"
+                />
+              </div>
+
+              {/* Reset button */}
               <div>
                 <button
                   type="button"
                   className="w-full py-2 bg-orange-500 text-white font-medium rounded hover:bg-orange-600 transition"
                 >
-                  Send Reset Link
+                  Reset Password
                 </button>
               </div>
 
               {/* Back to login */}
               <p className="text-center text-gray-500 text-sm">
-                Remember your password?{" "}
+                Remembered your password?{" "}
                 <Link
                   to="/login"
                   className="font-semibold text-gray-900 dark:text-white hover:underline"
