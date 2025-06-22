@@ -347,7 +347,7 @@ export default function Navbar({ navClass, navlight }) {
               }`}
             >
               <Link
-                to="#"
+                to="/shop-grid-left-sidebar"
                 onClick={() =>
                   setSubManu(setManu === "/product-item" ? "" : "/product-item")
                 }
