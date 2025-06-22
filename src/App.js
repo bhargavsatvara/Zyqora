@@ -23,6 +23,8 @@ import Error from "./pages/pages/special/error";
 import Terms from "./pages/pages/utility/terms";
 import Privacy from "./pages/pages/utility/privacy";
 import AboutUS from './pages/pages/aboutus';
+import Contact from './pages/contact';
+
 
 function App() {
   return (
@@ -57,6 +59,8 @@ function App() {
       <Route path="/terms" element={<Terms />}></Route>
       <Route path="/privacy" element={<Privacy />}></Route>
       <Route path="/aboutus" element={<AboutUS/>}></Route>
+      <Route path="/contact" element={<Contact/>}></Route>
+
 
     </Routes>
   );
