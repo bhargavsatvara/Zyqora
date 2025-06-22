@@ -17,6 +17,9 @@ import Helpcenter from "./pages/pages/helpcenter/helpcenter";
 import HelpcenterGuides from "./pages/pages/helpcenter/helpcenter-guides";
 import HelpcenterSupport from "./pages/pages/helpcenter/helpcenter-support";
 import HelpcenterFaqs from "./pages/pages/helpcenter/helpcenter-faqs";
+import Comingsoon from "./pages/pages/special/comingsoon";
+import Maintenance from "./pages/pages/special/maintenance";
+import Error from "./pages/pages/special/error";
 
 function App() {
   return (
@@ -45,6 +48,9 @@ function App() {
       <Route path="/helpcenter-guides" element={<HelpcenterGuides />}></Route>
       <Route path="/helpcenter-support" element={<HelpcenterSupport />}></Route>
       <Route path="/helpcenter-faqs" element={<HelpcenterFaqs />}></Route>
+      <Route path="/comingsoon" element={<Comingsoon />}></Route>
+      <Route path="/maintenance" element={<Maintenance />}></Route>
+      <Route path="/error" element={<Error />}></Route>
     </Routes>
   );
 }
