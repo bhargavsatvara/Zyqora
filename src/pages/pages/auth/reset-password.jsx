@@ -3,11 +3,12 @@ import { Link } from "react-router-dom";
 
 import logoDark from "../../../assets/images/logo.png";
 import logoLight from "../../../assets/images/Zyqora-light.png";
-import loginImg from "../../../assets/images/login.jpg";
+import resetImg from "../../../assets/images/forgot-password.jpg";
 
 import BackToHome from "../../../components/back-to-home";
+import Switcher from "../../../components/switcher";
 
-export default function Login() {
+export default function ResetPassword() {
   return (
     <section className="relative h-screen flex items-center justify-center bg-orange-50 dark:bg-orange-50/20 overflow-hidden">
       {/* Decorative background circles */}
@@ -19,8 +20,8 @@ export default function Login() {
           {/* Left image */}
           <div className="hidden md:block md:w-1/2">
             <img
-              src={loginImg}
-              alt="Sign in"
+              src={resetImg}
+              alt="Reset Password"
               className="w-full h-full object-cover"
             />
           </div>
@@ -43,77 +44,61 @@ export default function Login() {
             </div>
 
             <form className="space-y-4">
-              {/* Email field */}
-              <div>
-                <label
-                  htmlFor="loginEmail"
-                  className="block font-semibold text-gray-700"
-                >
-                  Email Address
-                </label>
-                <input
-                  id="loginEmail"
-                  name="email"
-                  type="email"
-                  className="mt-1 w-full px-3 py-2 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-orange-300"
-                />
-              </div>
+              <h2 className="text-xl font-semibold text-gray-700 text-center">
+                Reset Your Password
+              </h2>
+              <p className="text-gray-600 text-center">
+                Enter a new password for your account.
+              </p>
 
-              {/* Password field */}
+              {/* New Password */}
               <div>
                 <label
-                  htmlFor="loginPassword"
+                  htmlFor="newPassword"
                   className="block font-semibold text-gray-700"
                 >
-                  Password
+                  New Password
                 </label>
                 <input
-                  id="loginPassword"
-                  name="password"
+                  id="newPassword"
                   type="password"
-                  className="mt-1 w-full px-3 py-2 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-orange-300"
+                  className="mt-1 w-full px-3 py-2 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-orange-300 bg-transparent dark:bg-slate-900 dark:text-slate-200"
                 />
               </div>
 
-              {/* Remember me & forgot password */}
-              <div className="flex justify-between items-center">
-                <div className="flex items-center">
-                  <input
-                    id="rememberMe"
-                    name="rememberMe"
-                    type="checkbox"
-                    className="h-4 w-4 text-orange-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="rememberMe" className="ml-2 text-gray-600">
-                    Remember me
-                  </label>
-                </div>
-                <Link
-                  to="/forgot-password"
-                  className="text-sm text-gray-600 hover:underline"
+              {/* Confirm Password */}
+              <div>
+                <label
+                  htmlFor="confirmPassword"
+                  className="block font-semibold text-gray-700"
                 >
-                  Forgot password?
-                </Link>
+                  Confirm Password
+                </label>
+                <input
+                  id="confirmPassword"
+                  type="password"
+                  className="mt-1 w-full px-3 py-2 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-orange-300 bg-transparent dark:bg-slate-900 dark:text-slate-200"
+                />
               </div>
 
-              {/* Submit button */}
+              {/* Reset button */}
               <div>
                 <button
-                  type="submit"
+                  type="button"
                   className="w-full py-2 bg-orange-500 text-white font-medium rounded hover:bg-orange-600 transition"
                 >
-                  Login / Sign in
+                  Reset Password
                 </button>
               </div>
 
-              {/* Signup link */}
+              {/* Back to login */}
               <p className="text-center text-gray-500 text-sm">
-                Don’t have an account?{" "}
+                Remembered your password?{" "}
                 <Link
-                  to="/signup"
-                  className="font-semibold text-gray-900 hover:underline"
+                  to="/login"
+                  className="font-semibold text-gray-900 dark:text-white hover:underline"
                 >
-                  Sign Up
+                  Sign in
                 </Link>
               </p>
             </form>
@@ -130,7 +115,7 @@ export default function Login() {
                 target="_blank"
                 className="text-gray-400 hover:underline"
               >
-                Group 7
+                Zyqora
               </Link>
               .
             </p>
@@ -139,6 +124,7 @@ export default function Login() {
       </div>
 
       <BackToHome />
+      <Switcher />
     </section>
   );
 }
