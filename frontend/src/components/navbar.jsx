@@ -72,8 +72,8 @@ export default function Navbar({ navClass, navlight }) {
 
   // Check authentication on mount
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const user = localStorage.getItem("user");
+    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+    const user = localStorage.getItem("user") || sessionStorage.getItem("user");
     if (token && user) {
       setIsAuthenticated(true);
       try {
@@ -91,6 +91,8 @@ export default function Navbar({ navClass, navlight }) {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
     setIsAuthenticated(false);
     setUserName("");
     navigate("/login");
