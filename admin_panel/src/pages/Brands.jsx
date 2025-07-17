@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Award, Eye, Package, Search } from 'lucide-react';
 import { brandsAPI } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 
 export default function Brands() {
   const [brands, setBrands] = useState([]);
@@ -12,6 +13,8 @@ export default function Brands() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalBrands, setTotalBrands] = useState(0);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchBrands();
@@ -77,7 +80,7 @@ export default function Brands() {
           <p className="text-slate-600 mt-2">Manage product brands and manufacturers</p>
         </div>
         <button 
-          onClick={() => setShowModal(true)}
+          onClick={() => navigate('/brands/add')}
           className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl hover:from-blue-600 hover:to-blue-700 flex items-center gap-2 shadow-lg transition-all"
         >
           <Plus className="h-4 w-4" />
@@ -270,15 +273,15 @@ export default function Brands() {
         </div>
       )}
 
-      {/* Add/Edit Brand Modal would go here */}
-      {showModal && (
+      {/* Remove Add/Edit Brand Modal for Add Brand (keep for edit only) */}
+      {showModal && editingBrand && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-6 w-full max-w-md">
             <h2 className="text-xl font-bold text-slate-900 mb-4">
-              {editingBrand ? 'Edit Brand' : 'Add Brand'}
+              Edit Brand
             </h2>
             <p className="text-slate-600 mb-4">
-              {editingBrand ? 'Update brand information' : 'Create a new brand'}
+              Update brand information
             </p>
             <div className="flex gap-3">
               <button
@@ -288,7 +291,7 @@ export default function Brands() {
                 Cancel
               </button>
               <button className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                {editingBrand ? 'Update' : 'Create'}
+                Update
               </button>
             </div>
           </div>

@@ -21,6 +21,7 @@ import Settings from './pages/Settings';
 import Profile from './pages/Profile';
 import Notifications from './pages/Notifications';
 import Login from './pages/Login';
+import AddBrand from './pages/AddBrand';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 function AppContent() {
@@ -62,6 +63,7 @@ function AppContent() {
             <Route path="/categories/add" element={<AddCategory />} />
             <Route path="/categories/edit/:id" element={<EditCategory />} />
             <Route path="/brands" element={<Brands />} />
+            <Route path="/brands/add" element={<AddBrand />} />
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/coupons" element={<Coupons />} />
             <Route path="/reviews" element={<Reviews />} />
