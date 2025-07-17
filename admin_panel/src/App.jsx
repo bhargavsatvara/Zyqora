@@ -36,6 +36,9 @@ import AddState from './pages/AddState.jsx';
 import EditState from './pages/EditState.jsx';
 import AddCity from './pages/AddCity.jsx';
 import EditCity from './pages/EditCity.jsx';
+import Colors from './pages/Colors.jsx';
+import AddColor from './pages/AddColor.jsx';
+import EditColor from './pages/EditColor.jsx';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 function AppContent() {
@@ -100,6 +103,9 @@ function AppContent() {
             <Route path="/cities" element={<Cities />} />
             <Route path="/cities/add" element={<AddCity />} />
             <Route path="/cities/edit/:id" element={<EditCity />} />
+            <Route path="/colors" element={<Colors />} />
+            <Route path="/colors/add" element={<AddColor />} />
+            <Route path="/colors/edit/:id" element={<EditColor />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

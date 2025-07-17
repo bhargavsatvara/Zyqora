@@ -20,7 +20,8 @@ import {
   Globe,
   MapPin,
   Building2,
-  FolderOpen
+  FolderOpen,
+  Palette
 } from 'lucide-react';
 
 const navigation = [
@@ -35,6 +36,7 @@ const navigation = [
       { name: 'Countries', href: '/countries', icon: Globe },
       { name: 'States', href: '/states', icon: MapPin },
       { name: 'Cities', href: '/cities', icon: Building2 },
+      { name: 'Colors', href: '/colors', icon: Palette },
       { name: 'Inventory', href: '/inventory', icon: Warehouse },
     ]
   },
