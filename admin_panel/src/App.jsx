@@ -30,6 +30,12 @@ import AddUser from './pages/AddUser.jsx';
 import Countries from './pages/Countries.jsx';
 import AddCountry from './pages/AddCountry.jsx';
 import EditCountry from './pages/EditCountry.jsx';
+import States from './pages/States.jsx';
+import Cities from './pages/Cities.jsx';
+import AddState from './pages/AddState.jsx';
+import EditState from './pages/EditState.jsx';
+import AddCity from './pages/AddCity.jsx';
+import EditCity from './pages/EditCity.jsx';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 function AppContent() {
@@ -88,6 +94,12 @@ function AppContent() {
             <Route path="/countries" element={<Countries />} />
             <Route path="/countries/add" element={<AddCountry />} />
             <Route path="/countries/edit/:id" element={<EditCountry />} />
+            <Route path="/states" element={<States />} />
+            <Route path="/states/add" element={<AddState />} />
+            <Route path="/states/edit/:id" element={<EditState />} />
+            <Route path="/cities" element={<Cities />} />
+            <Route path="/cities/add" element={<AddCity />} />
+            <Route path="/cities/edit/:id" element={<EditCity />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
