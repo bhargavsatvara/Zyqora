@@ -1,21 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Plus, Edit, Trash2, Ban, CheckCircle, Mail, Phone, Calendar, Shield, Users as UsersIcon, UserPlus } from 'lucide-react';
+import { Search, Filter, Plus, Edit, Trash2, Ban, CheckCircle, Mail, Phone, Calendar, Shield, Users as UsersIcon, UserPlus, X } from 'lucide-react';
 import { usersAPI } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 
 export default function Users() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUsers, setSelectedUsers] = useState([]);
-  const [statusFilter, setStatusFilter] = useState('all');
   const [roleFilter, setRoleFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalUsers, setTotalUsers] = useState(0);
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     fetchUsers();
-  }, [currentPage, searchTerm, statusFilter, roleFilter]);
+  }, [currentPage, searchTerm, roleFilter]);
 
   const fetchUsers = async () => {
     try {
@@ -24,7 +26,6 @@ export default function Users() {
         page: currentPage,
         limit: 10,
         search: searchTerm || undefined,
-        status: statusFilter !== 'all' ? statusFilter : undefined,
         role: roleFilter !== 'all' ? roleFilter : undefined,
       };
 
@@ -44,10 +45,9 @@ export default function Users() {
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
     
-    return matchesSearch && matchesStatus && matchesRole;
+    return matchesSearch && matchesRole;
   });
 
   const toggleUserSelection = (userId) => {
@@ -139,7 +139,7 @@ export default function Users() {
           <h1 className="text-3xl font-bold text-slate-900">Users</h1>
           <p className="text-slate-600 mt-2">Manage user accounts and permissions</p>
         </div>
-        <button className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl hover:from-blue-600 hover:to-blue-700 flex items-center gap-2 shadow-lg transition-all">
+        <button onClick={() => navigate('/users/add')} className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl hover:from-blue-600 hover:to-blue-700 flex items-center gap-2 shadow-lg transition-all">
           <UserPlus className="h-4 w-4" />
           Add User
         </button>
@@ -158,21 +158,6 @@ export default function Users() {
             </div>
           </div>
         </div>
-
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-600">Active Users</p>
-              <p className="text-3xl font-bold text-slate-900 mt-2">
-                {users.filter(u => u.status === 'active').length}
-              </p>
-            </div>
-            <div className="p-3 rounded-2xl bg-emerald-100">
-              <CheckCircle className="h-6 w-6 text-emerald-600" />
-            </div>
-          </div>
-        </div>
-
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -183,24 +168,6 @@ export default function Users() {
             </div>
             <div className="p-3 rounded-2xl bg-purple-100">
               <Shield className="h-6 w-6 text-purple-600" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-600">New This Month</p>
-              <p className="text-3xl font-bold text-slate-900 mt-2">
-                {users.filter(u => {
-                  const userDate = new Date(u.createdAt);
-                  const now = new Date();
-                  return userDate.getMonth() === now.getMonth() && userDate.getFullYear() === now.getFullYear();
-                }).length}
-              </p>
-            </div>
-            <div className="p-3 rounded-2xl bg-amber-100">
-              <UserPlus className="h-6 w-6 text-amber-600" />
             </div>
           </div>
         </div>
@@ -222,16 +189,6 @@ export default function Users() {
             </div>
           </div>
           <div className="flex gap-3">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="suspended">Suspended</option>
-            </select>
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
@@ -259,9 +216,11 @@ export default function Users() {
                     className="h-4 w-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
                   />
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">User</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Name</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Email</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Phone</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Role</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Status</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Notifications</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Joined</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-slate-900">Actions</th>
               </tr>
@@ -286,9 +245,14 @@ export default function Users() {
                       </div>
                       <div>
                         <p className="font-semibold text-slate-900">{user.name}</p>
-                        <p className="text-sm text-slate-600">{user.email}</p>
                       </div>
                     </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="text-slate-600">{user.email}</span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="text-slate-600">{user.phone || '—'}</span>
                   </td>
                   <td className="px-6 py-4">
                     <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.role)}`}>
@@ -296,8 +260,9 @@ export default function Users() {
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(user.status)}`}>
-                      {user.status}
+                    <span className="inline-flex items-center gap-2 text-xs">
+                      <Mail className={`h-4 w-4 ${user.settings?.emailNotifications ? 'text-emerald-500' : 'text-slate-400'}`} title="Email Notifications" />
+                      <Phone className={`h-4 w-4 ${user.settings?.smsNotifications ? 'text-emerald-500' : 'text-slate-400'}`} title="SMS Notifications" />
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-600">

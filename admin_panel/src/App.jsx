@@ -26,6 +26,7 @@ import Departments from './pages/Departments';
 import AddDepartment from './pages/AddDepartment';
 import EditDepartment from './pages/EditDepartment';
 import EditBrand from './pages/EditBrand.jsx';
+import AddUser from './pages/AddUser.jsx';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 function AppContent() {
@@ -60,6 +61,7 @@ function AppContent() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/users" element={<Users />} />
+            <Route path="/users/add" element={<AddUser />} />
             <Route path="/products" element={<Products />} />
             <Route path="/products/add" element={<AddProduct />} />
             <Route path="/orders" element={<Orders />} />

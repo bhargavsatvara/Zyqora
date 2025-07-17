@@ -59,7 +59,8 @@ export const usersAPI = {
     api.get('/admin/users', { params }),
   updateUserRole: (userId, role) =>
     api.put(`/admin/users/${userId}/role`, { role }),
-  deleteUser: (userId) => api.delete(`/user/${userId}`),
+  deleteUser: (userId) => api.delete(`/admin/users/${userId}`),
+  addUser: (data) => api.post('/auth/signup', data),
 };
 
 // Products API
