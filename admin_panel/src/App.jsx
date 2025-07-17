@@ -27,6 +27,9 @@ import AddDepartment from './pages/AddDepartment';
 import EditDepartment from './pages/EditDepartment';
 import EditBrand from './pages/EditBrand.jsx';
 import AddUser from './pages/AddUser.jsx';
+import Countries from './pages/Countries.jsx';
+import AddCountry from './pages/AddCountry.jsx';
+import EditCountry from './pages/EditCountry.jsx';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 function AppContent() {
@@ -82,6 +85,9 @@ function AppContent() {
             <Route path="/departments" element={<Departments />} />
             <Route path="/departments/add" element={<AddDepartment />} />
             <Route path="/departments/edit/:id" element={<EditDepartment />} />
+            <Route path="/countries" element={<Countries />} />
+            <Route path="/countries/add" element={<AddCountry />} />
+            <Route path="/countries/edit/:id" element={<EditCountry />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

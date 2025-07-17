@@ -127,6 +127,15 @@ export const departmentsAPI = {
   deleteDepartment: (id) => api.delete(`/departments/${id}`),
 };
 
+// Countries API
+export const countriesAPI = {
+  getCountries: (params) => api.get('/countries', { params }),
+  getCountry: (id) => api.get(`/countries/${id}`),
+  createCountry: (data) => api.post('/countries', data),
+  updateCountry: (id, data) => api.put(`/countries/${id}`, data),
+  deleteCountry: (id) => api.delete(`/countries/${id}`),
+};
+
 // Settings API
 export const settingsAPI = {
   getSystemStats: () => api.get('/admin/settings'),

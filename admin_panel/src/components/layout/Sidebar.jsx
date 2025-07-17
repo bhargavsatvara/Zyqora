@@ -28,6 +28,7 @@ const navigation = [
       { name: 'Categories', href: '/categories', icon: Tags },
       { name: 'Brands', href: '/brands', icon: Award },
       { name: 'Departments', href: '/departments', icon: Warehouse },
+      { name: 'Countries', href: '/countries', icon: Warehouse },
       { name: 'Inventory', href: '/inventory', icon: Warehouse },
     ]
   },
