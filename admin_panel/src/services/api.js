@@ -117,6 +117,15 @@ export const reviewsAPI = {
   deleteReview: (id) => api.delete(`/admin/reviews/${id}`),
 };
 
+// Departments API
+export const departmentsAPI = {
+  getDepartments: (params) => api.get('/departments', { params }),
+  getDepartment: (id) => api.get(`/departments/${id}`),
+  createDepartment: (data) => api.post('/departments', data),
+  updateDepartment: (id, data) => api.put(`/departments/${id}`, data),
+  deleteDepartment: (id) => api.delete(`/departments/${id}`),
+};
+
 // Settings API
 export const settingsAPI = {
   getSystemStats: () => api.get('/admin/settings'),

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Folder, Eye, Tag, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { categoriesAPI } from '../services/api';
+import { departmentsAPI } from '../services/api';
 
 export default function Categories() {
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -14,6 +16,7 @@ export default function Categories() {
 
   useEffect(() => {
     fetchCategories();
+    fetchDepartments();
   }, [currentPage, searchTerm]);
 
   const fetchCategories = async () => {
@@ -24,21 +27,43 @@ export default function Categories() {
         limit: 10,
         search: searchTerm || undefined,
       };
-
       const response = await categoriesAPI.getCategories(params);
-      console.log("response -----------",response);
-      
-      const { categories: categoriesData, pagination } = response.data.data;
-      
+      console.log('Categories API response:', response);
+      // Try to handle different possible response structures
+      let categoriesData = [];
+      let pagination = { total: 1, totalRecords: 0 };
+      if (response.data && response.data.data) {
+        categoriesData = response.data.data.categories || [];
+        pagination = response.data.data.pagination || pagination;
+      } else if (response.data && response.data.categories) {
+        categoriesData = response.data.categories;
+        pagination = response.data.pagination || pagination;
+      } else if (response.data) {
+        categoriesData = response.data;
+      }
       setCategories(categoriesData);
-      console.log("categoriesData ---------",categoriesData);
-      
-      setTotalPages(pagination.totalPages);
+      setTotalPages(pagination.total);
       setTotalCategories(pagination.totalRecords);
     } catch (error) {
       console.error('Error fetching categories:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchDepartments = async () => {
+    try {
+      const response = await departmentsAPI.getDepartments({ limit: 100 });
+      console.log('Departments API response:', response);
+      if (response.data && response.data.departments) {
+        setDepartments(response.data.departments);
+      } else if (response.data) {
+        setDepartments(response.data);
+      } else {
+        setDepartments([]);
+      }
+    } catch (error) {
+      console.error('Error fetching departments:', error);
     }
   };
 
@@ -54,10 +79,10 @@ export default function Categories() {
     }
   };
 
-  const getParentName = (parentId) => {
-    if (!parentId) return 'Root';
-    const parent = categories.find(cat => cat._id === parentId);
-    return parent ? parent.name : 'Unknown';
+  const getDepartmentName = (departmentId) => {
+    if (!departmentId) return 'None';
+    const dept = departments.find(d => d._id === departmentId);
+    return dept ? dept.name : 'Unknown';
   };
 
   const formatDate = (dateString) => {
@@ -66,16 +91,6 @@ export default function Categories() {
       month: 'short',
       day: 'numeric'
     });
-  };
-
-  const getStatusBadge = (status) => {
-    return (
-      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-        status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
-      }`}>
-        {status}
-      </span>
-    );
   };
 
   if (loading) {
@@ -92,7 +107,7 @@ export default function Categories() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Categories</h1>
-          <p className="text-slate-600 mt-2">Organize your products into categories and subcategories</p>
+          <p className="text-slate-600 mt-2">Organize your products into categories</p>
         </div>
         <button 
           onClick={() => navigate('/categories/add')}
@@ -103,59 +118,15 @@ export default function Categories() {
         </button>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-600">Total Categories</p>
-              <p className="text-3xl font-bold text-slate-900 mt-2">{totalCategories}</p>
-            </div>
-            <div className="p-3 rounded-2xl bg-blue-100">
-              <Folder className="h-6 w-6 text-blue-600" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-600">Active Categories</p>
-              <p className="text-3xl font-bold text-slate-900 mt-2">
-                {categories.filter(c => c.status === 'active').length}
-              </p>
-            </div>
-            <div className="p-3 rounded-2xl bg-emerald-100">
-              <Tag className="h-6 w-6 text-emerald-600" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-600">Total Products</p>
-              <p className="text-3xl font-bold text-slate-900 mt-2">
-                {categories.reduce((sum, c) => sum + (c.productCount || 0), 0)}
-              </p>
-            </div>
-            <div className="p-3 rounded-2xl bg-amber-100">
-              <Tag className="h-6 w-6 text-amber-600" />
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Search */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input
             type="text"
             placeholder="Search categories..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 pr-4 py-3 w-full border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            className="pl-4 pr-4 py-3 w-full border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           />
         </div>
       </div>
@@ -167,19 +138,13 @@ export default function Categories() {
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
                 <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  Category
+                  Name
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  Slug
+                  Description
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  Parent
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  Products
+                  Department
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                   Created
@@ -193,38 +158,13 @@ export default function Categories() {
               {categories.map((category) => (
                 <tr key={category._id} className="hover:bg-slate-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10">
-                        <img
-                          className="h-10 w-10 rounded-lg object-cover"
-                          src={category.image || 'https://via.placeholder.com/40x40?text=No+Image'}
-                          alt={category.name}
-                        />
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-slate-900">{category.name}</div>
-                        <div className="text-sm text-slate-500 truncate max-w-xs">
-                          {category.description || 'No description'}
-                        </div>
-                      </div>
-                    </div>
+                    <div className="text-sm font-medium text-slate-900">{category.name}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-slate-900 font-mono">{category.slug}</div>
+                    <div className="text-sm text-slate-500">{category.description}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-slate-900">
-                      {category.parentId ? getParentName(category.parentId) : 'Root'}
-                    </div>
-                    {category.parentId && (
-                      <div className="text-xs text-slate-500">Subcategory</div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {getStatusBadge(category.status)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-slate-900">{category.productCount || 0}</div>
+                    <div className="text-sm text-slate-900">{getDepartmentName(category.department_id)}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-slate-900">{formatDate(category.createdAt)}</div>
@@ -262,7 +202,6 @@ export default function Categories() {
         {/* Empty State */}
         {categories.length === 0 && !loading && (
           <div className="text-center py-12">
-            <Folder className="mx-auto h-12 w-12 text-slate-400" />
             <h3 className="mt-2 text-sm font-medium text-slate-900">No categories found</h3>
             <p className="mt-1 text-sm text-slate-500">
               {searchTerm ? 'Try adjusting your search terms.' : 'Get started by creating a new category.'}
@@ -295,34 +234,14 @@ export default function Categories() {
                 disabled={currentPage === 1}
                 className="p-2 text-slate-400 hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg hover:bg-slate-100 transition-colors"
               >
-                <ChevronLeft className="h-4 w-4" />
+                {'<'}
               </button>
-              
-              <div className="flex items-center gap-1">
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  const pageNum = i + 1;
-                  return (
-                    <button
-                      key={pageNum}
-                      onClick={() => setCurrentPage(pageNum)}
-                      className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                        currentPage === pageNum
-                          ? 'bg-blue-600 text-white'
-                          : 'text-slate-700 hover:bg-slate-100'
-                      }`}
-                    >
-                      {pageNum}
-                    </button>
-                  );
-                })}
-              </div>
-              
               <button
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
                 className="p-2 text-slate-400 hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg hover:bg-slate-100 transition-colors"
               >
-                <ChevronRight className="h-4 w-4" />
+                {'>'}
               </button>
             </div>
           </div>

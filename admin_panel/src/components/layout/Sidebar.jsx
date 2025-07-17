@@ -27,6 +27,7 @@ const navigation = [
       { name: 'Products', href: '/products', icon: Package },
       { name: 'Categories', href: '/categories', icon: Tags },
       { name: 'Brands', href: '/brands', icon: Award },
+      { name: 'Departments', href: '/departments', icon: Warehouse },
       { name: 'Inventory', href: '/inventory', icon: Warehouse },
     ]
   },

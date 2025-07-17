@@ -22,6 +22,9 @@ import Profile from './pages/Profile';
 import Notifications from './pages/Notifications';
 import Login from './pages/Login';
 import AddBrand from './pages/AddBrand';
+import Departments from './pages/Departments';
+import AddDepartment from './pages/AddDepartment';
+import EditDepartment from './pages/EditDepartment';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 function AppContent() {
@@ -72,6 +75,9 @@ function AppContent() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/notifications" element={<Notifications />} />
+            <Route path="/departments" element={<Departments />} />
+            <Route path="/departments/add" element={<AddDepartment />} />
+            <Route path="/departments/edit/:id" element={<EditDepartment />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
