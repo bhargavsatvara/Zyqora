@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Folder, Eye, Tag, Search } from 'lucide-react';
+import { Plus, Edit, Trash2, Folder, Eye, Tag, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { categoriesAPI } from '../services/api';
 
@@ -30,10 +30,10 @@ export default function Categories() {
       
       const { categories: categoriesData, pagination } = response.data.data;
       
-      setCategories(response.data.data);
+      setCategories(categoriesData);
       console.log("categoriesData ---------",categoriesData);
       
-      setTotalPages(pagination.total);
+      setTotalPages(pagination.totalPages);
       setTotalCategories(pagination.totalRecords);
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -60,16 +60,22 @@ export default function Categories() {
     return parent ? parent.name : 'Unknown';
   };
 
-  const getCategoryLevel = (category) => {
-    return category.parentId ? 1 : 0;
-  };
-
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
     });
+  };
+
+  const getStatusBadge = (status) => {
+    return (
+      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+        status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
+      }`}>
+        {status}
+      </span>
+    );
   };
 
   if (loading) {
@@ -154,101 +160,174 @@ export default function Categories() {
         </div>
       </div>
 
-      {/* Categories Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {categories.map((category) => (
-          <div key={category._id} className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow">
-            <div className="relative">
-              <img
-                src={category.image || 'https://via.placeholder.com/300x200?text=No+Image'}
-                alt={category.name}
-                className="w-full h-48 object-cover"
-              />
-              <div className="absolute top-4 left-4">
-                <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
-                  category.status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
-                }`}>
-                  {category.status}
-                </span>
-              </div>
-              {category.parentId && (
-                <div className="absolute top-4 right-4">
-                  <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                    Subcategory
-                  </span>
-                </div>
-              )}
-            </div>
-            
-            <div className="p-6">
-              <div className="mb-4">
-                <h3 className="font-bold text-slate-900 text-lg mb-2">{category.name}</h3>
-                <p className="text-sm text-slate-600 mb-3">{category.description || 'No description'}</p>
-                <div className="flex items-center justify-between text-sm text-slate-500">
-                  <span>Slug: {category.slug}</span>
-                  <span>{category.productCount || 0} products</span>
-                </div>
-                {category.parentId && (
-                  <p className="text-xs text-slate-500 mt-1">
-                    Parent: {getParentName(category.parentId)}
-                  </p>
-                )}
-                <p className="text-xs text-slate-500 mt-1">
-                  Created: {formatDate(category.createdAt)}
-                </p>
-              </div>
+      {/* Categories Table */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-slate-50 border-b border-slate-200">
+              <tr>
+                <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Category
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Slug
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Parent
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Products
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Created
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-slate-200">
+              {categories.map((category) => (
+                <tr key={category._id} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 h-10 w-10">
+                        <img
+                          className="h-10 w-10 rounded-lg object-cover"
+                          src={category.image || 'https://via.placeholder.com/40x40?text=No+Image'}
+                          alt={category.name}
+                        />
+                      </div>
+                      <div className="ml-4">
+                        <div className="text-sm font-medium text-slate-900">{category.name}</div>
+                        <div className="text-sm text-slate-500 truncate max-w-xs">
+                          {category.description || 'No description'}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-slate-900 font-mono">{category.slug}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-slate-900">
+                      {category.parentId ? getParentName(category.parentId) : 'Root'}
+                    </div>
+                    {category.parentId && (
+                      <div className="text-xs text-slate-500">Subcategory</div>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {getStatusBadge(category.status)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-slate-900">{category.productCount || 0}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-slate-900">{formatDate(category.createdAt)}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex items-center gap-2">
+                      <button 
+                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 p-2 rounded-lg transition-colors"
+                        title="View Category"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </button>
+                      <button 
+                        onClick={() => navigate(`/categories/edit/${category._id}`)}
+                        className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 p-2 rounded-lg transition-colors"
+                        title="Edit Category"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </button>
+                      <button 
+                        onClick={() => deleteCategory(category._id)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors"
+                        title="Delete Category"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-              <div className="flex items-center gap-2">
-                <button className="flex-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 p-2 rounded-lg transition-colors">
-                  <Eye className="h-4 w-4 mx-auto" />
-                </button>
-                <button 
-                  onClick={() => navigate(`/categories/edit/${category._id}`)}
-                  className="flex-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 p-2 rounded-lg transition-colors"
+        {/* Empty State */}
+        {categories.length === 0 && !loading && (
+          <div className="text-center py-12">
+            <Folder className="mx-auto h-12 w-12 text-slate-400" />
+            <h3 className="mt-2 text-sm font-medium text-slate-900">No categories found</h3>
+            <p className="mt-1 text-sm text-slate-500">
+              {searchTerm ? 'Try adjusting your search terms.' : 'Get started by creating a new category.'}
+            </p>
+            {!searchTerm && (
+              <div className="mt-6">
+                <button
+                  onClick={() => navigate('/categories/add')}
+                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
-                  <Edit className="h-4 w-4 mx-auto" />
-                </button>
-                <button 
-                  onClick={() => deleteCategory(category._id)}
-                  className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors"
-                >
-                  <Trash2 className="h-4 w-4 mx-auto" />
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Category
                 </button>
               </div>
-            </div>
+            )}
           </div>
-        ))}
+        )}
       </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-          <div className="text-sm text-slate-600">
-            Showing {((currentPage - 1) * 10) + 1} to {Math.min(currentPage * 10, totalCategories)} of {totalCategories} categories
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Previous
-            </button>
-            <span className="px-3 py-2 text-sm text-slate-600">
-              Page {currentPage} of {totalPages}
-            </span>
-            <button
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className="px-3 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Next
-            </button>
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-slate-700">
+              Showing page {currentPage} of {totalPages} ({totalCategories} total categories)
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="p-2 text-slate-400 hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg hover:bg-slate-100 transition-colors"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const pageNum = i + 1;
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                        currentPage === pageNum
+                          ? 'bg-blue-600 text-white'
+                          : 'text-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+              
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="p-2 text-slate-400 hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg hover:bg-slate-100 transition-colors"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
       )}
-
-
     </div>
   );
 } 
