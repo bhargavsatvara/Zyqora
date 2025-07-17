@@ -136,6 +136,24 @@ export const countriesAPI = {
   deleteCountry: (id) => api.delete(`/countries/${id}`),
 };
 
+// States API
+export const statesAPI = {
+  getStates: (params) => api.get('/states', { params }),
+  getState: (id) => api.get(`/states/${id}`),
+  createState: (data) => api.post('/states', data),
+  updateState: (id, data) => api.put(`/states/${id}`, data),
+  deleteState: (id) => api.delete(`/states/${id}`),
+};
+
+// Cities API
+export const citiesAPI = {
+  getCities: (params) => api.get('/cities', { params }),
+  getCity: (id) => api.get(`/cities/${id}`),
+  createCity: (data) => api.post('/cities', data),
+  updateCity: (id, data) => api.put(`/cities/${id}`, data),
+  deleteCity: (id) => api.delete(`/cities/${id}`),
+};
+
 // Settings API
 export const settingsAPI = {
   getSystemStats: () => api.get('/admin/settings'),
