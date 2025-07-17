@@ -16,7 +16,11 @@ import {
   X,
   Store,
   User,
-  Bell
+  Bell,
+  Globe,
+  MapPin,
+  Building2,
+  FolderOpen
 } from 'lucide-react';
 
 const navigation = [
@@ -27,10 +31,10 @@ const navigation = [
       { name: 'Products', href: '/products', icon: Package },
       { name: 'Categories', href: '/categories', icon: Tags },
       { name: 'Brands', href: '/brands', icon: Award },
-      { name: 'Departments', href: '/departments', icon: Warehouse },
-      { name: 'Countries', href: '/countries', icon: Warehouse },
-      { name: 'States', href: '/states', icon: Warehouse },
-      { name: 'Cities', href: '/cities', icon: Warehouse },
+      { name: 'Departments', href: '/departments', icon: FolderOpen },
+      { name: 'Countries', href: '/countries', icon: Globe },
+      { name: 'States', href: '/states', icon: MapPin },
+      { name: 'Cities', href: '/cities', icon: Building2 },
       { name: 'Inventory', href: '/inventory', icon: Warehouse },
     ]
   },
@@ -78,11 +82,11 @@ export default function Sidebar({ isOpen, onClose }) {
 
       {/* Sidebar */}
       <div className={`
-        fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200 transition-transform duration-300 ease-in-out lg:translate-x-0
+        fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200 transition-transform duration-300 ease-in-out lg:translate-x-0 flex flex-col
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         {/* Header */}
-        <div className="flex items-center justify-between h-16 px-6 border-b border-slate-200">
+        <div className="flex items-center justify-between h-16 px-6 border-b border-slate-200 flex-shrink-0">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl">
               <Store className="h-6 w-6 text-white" />
@@ -101,7 +105,7 @@ export default function Sidebar({ isOpen, onClose }) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100">
           {navigation.map((item, index) => (
             <div key={index}>
               {item.href ? (
@@ -152,7 +156,7 @@ export default function Sidebar({ isOpen, onClose }) {
         </nav>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-200">
+        <div className="p-4 border-t border-slate-200 flex-shrink-0">
           <div className="flex items-center space-x-3 p-3 bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl">
             <div className="h-8 w-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
               <span className="text-xs font-bold text-white">A</span>
