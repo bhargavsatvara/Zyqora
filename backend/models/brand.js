@@ -8,4 +8,4 @@ const BrandSchema = new Schema({
   created_at: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model('Brand', BrandSchema); 
+module.exports = mongoose.model('Brand', BrandSchema);

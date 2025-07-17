@@ -88,161 +88,96 @@ export default function Brands() {
         </button>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-600">Total Brands</p>
-              <p className="text-3xl font-bold text-slate-900 mt-2">{totalBrands}</p>
-            </div>
-            <div className="p-3 rounded-2xl bg-blue-100">
-              <Award className="h-6 w-6 text-blue-600" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-600">Active Brands</p>
-              <p className="text-3xl font-bold text-slate-900 mt-2">
-                {brands.filter(b => b.status === 'active').length}
-              </p>
-            </div>
-            <div className="p-3 rounded-2xl bg-emerald-100">
-              <Package className="h-6 w-6 text-emerald-600" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-600">Total Products</p>
-              <p className="text-3xl font-bold text-slate-900 mt-2">
-                {brands.reduce((sum, b) => sum + (b.productCount || 0), 0)}
-              </p>
-            </div>
-            <div className="p-3 rounded-2xl bg-amber-100">
-              <Package className="h-6 w-6 text-amber-600" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-600">New This Month</p>
-              <p className="text-3xl font-bold text-slate-900 mt-2">
-                {brands.filter(b => {
-                  const brandDate = new Date(b.createdAt);
-                  const now = new Date();
-                  return brandDate.getMonth() === now.getMonth() && brandDate.getFullYear() === now.getFullYear();
-                }).length}
-              </p>
-            </div>
-            <div className="p-3 rounded-2xl bg-purple-100">
-              <Plus className="h-6 w-6 text-purple-600" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Filters */}
+      {/* Search */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-        <div className="flex flex-col lg:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search brands by name or description..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-3 w-full border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              />
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-          </div>
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search brands by name or description..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-4 pr-4 py-3 w-full border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+          />
         </div>
       </div>
 
-      {/* Brands Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {brands.map((brand) => (
-          <div key={brand._id} className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow">
-            <div className="relative">
-              <img
-                src={brand.logo || 'https://via.placeholder.com/300x200?text=No+Logo'}
-                alt={brand.name}
-                className="w-full h-48 object-cover"
-              />
-              <div className="absolute top-4 left-4">
-                <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
-                  brand.status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
-                }`}>
-                  {brand.status}
-                </span>
-              </div>
-            </div>
-            
-            <div className="p-6">
-              <div className="mb-4">
-                <h3 className="font-bold text-slate-900 text-lg mb-2">{brand.name}</h3>
-                <p className="text-sm text-slate-600 mb-3">{brand.description || 'No description'}</p>
-                <div className="space-y-1 text-sm text-slate-500">
-                  <p>Founded: {brand.founded || 'Unknown'}</p>
-                  <p>Country: {brand.country || 'Unknown'}</p>
-                  <p>Website: {brand.website ? (
-                    <a href={brand.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                      {brand.website}
-                    </a>
-                  ) : 'Not available'}</p>
-                  <p>Created: {formatDate(brand.createdAt)}</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 mb-4 p-3 bg-slate-50 rounded-xl">
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-slate-900">{brand.productCount || 0}</p>
-                  <p className="text-xs text-slate-600">Products</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button className="flex-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 p-2 rounded-lg transition-colors">
-                  <Eye className="h-4 w-4 mx-auto" />
-                </button>
-                <button 
-                  onClick={() => {
-                    setEditingBrand(brand);
-                    setShowModal(true);
-                  }}
-                  className="flex-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 p-2 rounded-lg transition-colors"
+      {/* Brands Table */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-slate-50 border-b border-slate-200">
+              <tr>
+                <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Name</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Description</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Website</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Created</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-slate-200">
+              {brands.map((brand) => (
+                <tr key={brand._id} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-slate-900">{brand.name}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-slate-500">{brand.description || '—'}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {brand.website ? (
+                      <a href={brand.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm">
+                        {brand.website}
+                      </a>
+                    ) : (
+                      <span className="text-slate-400 text-sm">—</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-slate-900">{brand.created_at ? new Date(brand.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => navigate(`/brands/edit/${brand._id}`)}
+                        className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 p-2 rounded-lg transition-colors"
+                        title="Edit Brand"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </button>
+                      <button 
+                        onClick={() => deleteBrand(brand._id)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors"
+                        title="Delete Brand"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {/* Empty State */}
+        {brands.length === 0 && !loading && (
+          <div className="text-center py-12">
+            <h3 className="mt-2 text-sm font-medium text-slate-900">No brands found</h3>
+            <p className="mt-1 text-sm text-slate-500">
+              {searchTerm ? 'Try adjusting your search terms.' : 'Get started by creating a new brand.'}
+            </p>
+            {!searchTerm && (
+              <div className="mt-6">
+                <button
+                  onClick={() => navigate('/brands/add')}
+                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
-                  <Edit className="h-4 w-4 mx-auto" />
-                </button>
-                <button 
-                  onClick={() => deleteBrand(brand._id)}
-                  className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors"
-                >
-                  <Trash2 className="h-4 w-4 mx-auto" />
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Brand
                 </button>
               </div>
-            </div>
+            )}
           </div>
-        ))}
+        )}
       </div>
 
       {/* Pagination */}
@@ -269,31 +204,6 @@ export default function Brands() {
             >
               Next
             </button>
-          </div>
-        </div>
-      )}
-
-      {/* Remove Add/Edit Brand Modal for Add Brand (keep for edit only) */}
-      {showModal && editingBrand && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold text-slate-900 mb-4">
-              Edit Brand
-            </h2>
-            <p className="text-slate-600 mb-4">
-              Update brand information
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowModal(false)}
-                className="flex-1 px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50"
-              >
-                Cancel
-              </button>
-              <button className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                Update
-              </button>
-            </div>
           </div>
         </div>
       )}

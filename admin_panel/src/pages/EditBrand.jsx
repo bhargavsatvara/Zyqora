@@ -1,18 +1,43 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { brandsAPI } from '../services/api';
 import { Plus, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
 
-export default function AddBrand() {
+export default function EditBrand() {
+  const { id } = useParams();
   const [form, setForm] = useState({
     name: '',
     description: '',
     website: '',
   });
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchBrand();
+    // eslint-disable-next-line
+  }, [id]);
+
+  const fetchBrand = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await brandsAPI.getBrand(id);
+      const brand = response.data.data || response.data;
+      setForm({
+        name: brand.name || '',
+        description: brand.description || '',
+        website: brand.website || '',
+      });
+    } catch (err) {
+      setError('Failed to fetch brand.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -34,17 +59,25 @@ export default function AddBrand() {
       setError(validationError);
       return;
     }
-    setLoading(true);
+    setSaving(true);
     try {
-      await brandsAPI.createBrand(form);
-      setSuccess('Brand added successfully!');
+      await brandsAPI.updateBrand(id, form);
+      setSuccess('Brand updated successfully!');
       setTimeout(() => navigate('/brands'), 1200);
     } catch (err) {
       setError(err.response?.data?.message || err.message);
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100 py-8 px-2">
@@ -56,8 +89,8 @@ export default function AddBrand() {
           </button>
           <Plus className="h-7 w-7 text-white" />
           <div>
-            <h1 className="text-2xl font-bold text-white">Add Brand</h1>
-            <p className="text-blue-100">Fill in the details to create a new brand.</p>
+            <h1 className="text-2xl font-bold text-white">Edit Brand</h1>
+            <p className="text-blue-100">Update the details of this brand.</p>
           </div>
         </div>
         {/* Form */}
@@ -92,8 +125,8 @@ export default function AddBrand() {
             <button type="button" onClick={() => navigate('/brands')} className="flex-1 px-4 py-2 border border-slate-200 rounded-lg bg-slate-50 hover:bg-slate-100 font-medium text-slate-700 flex items-center justify-center gap-2">
               <ArrowLeft className="h-4 w-4" /> Cancel
             </button>
-            <button type="submit" disabled={loading} className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium flex items-center justify-center gap-2">
-              <Plus className="h-4 w-4" /> {loading ? 'Adding...' : 'Add Brand'}
+            <button type="submit" disabled={saving} className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium flex items-center justify-center gap-2">
+              <Plus className="h-4 w-4" /> {saving ? 'Saving...' : 'Update Brand'}
             </button>
           </div>
         </form>

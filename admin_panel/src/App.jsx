@@ -25,6 +25,7 @@ import AddBrand from './pages/AddBrand';
 import Departments from './pages/Departments';
 import AddDepartment from './pages/AddDepartment';
 import EditDepartment from './pages/EditDepartment';
+import EditBrand from './pages/EditBrand.jsx';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 function AppContent() {
@@ -67,6 +68,7 @@ function AppContent() {
             <Route path="/categories/edit/:id" element={<EditCategory />} />
             <Route path="/brands" element={<Brands />} />
             <Route path="/brands/add" element={<AddBrand />} />
+            <Route path="/brands/edit/:id" element={<EditBrand />} />
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/coupons" element={<Coupons />} />
             <Route path="/reviews" element={<Reviews />} />
