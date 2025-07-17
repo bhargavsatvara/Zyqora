@@ -20,6 +20,7 @@ const colorRoutes = require('./colors');
 const sizeRoutes = require('./sizes');
 const materialRoutes = require('./materials');
 const couponRoutes = require('./coupons');
+const adminRoutes = require('./admin');
 
 // Mount routes
 router.use('/auth', authRoutes);
@@ -42,5 +43,6 @@ router.use('/colors', colorRoutes);
 router.use('/sizes', sizeRoutes);
 router.use('/materials', materialRoutes);
 router.use('/coupons', couponRoutes);
+router.use('/admin', adminRoutes);
 
 module.exports = router; 
