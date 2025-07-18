@@ -6,4 +6,4 @@ const ProductSizeSchema = new Schema({
   size_id: { type: Schema.Types.ObjectId, ref: 'Size' }
 });
 
-module.exports = mongoose.model('ProductSize', ProductSizeSchema); 
+module.exports = mongoose.model('ProductSize', ProductSizeSchema);

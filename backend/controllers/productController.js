@@ -1,51 +1,76 @@
-const { Product } = require('../models');
+const { Product, Category, Brand } = require('../models');
+const path = require('path');
+
+// All product endpoints now support the 'image' field (string URL)
 
 exports.getAllProducts = async (req, res) => {
   try {
-    console.log("getAllProducts api called");
-    const {
-      category_id,
-      brand_id,
-      min_price,
-      max_price,
-      color_id,
-      size_id,
-      material_id,
-      search
-    } = req.query;
-    let filter = {};
-    if (category_id) filter.category_id = category_id;
-    if (brand_id) filter.brand_id = brand_id;
-    if (min_price || max_price) filter.price = {};
-    if (min_price) filter.price.$gte = Number(min_price);
-    if (max_price) filter.price.$lte = Number(max_price);
-    // For color, size, material, use related collections (product_colors, product_sizes, product_materials)
-    // This is a simple version, for advanced filtering use aggregation
-    if (search) {
-      filter.$or = [
+    const { search, page = 1, limit = 10, category_id, brand_id, min_price, max_price } = req.query;
+    console.log('getAllProducts called with query:', req.query);
+    
+    // Build query
+    let query = {};
+    
+    // Add search functionality
+    if (search && search.trim()) {
+      query.$or = [
         { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
+        { description: { $regex: search, $options: 'i' } },
+        { sku: { $regex: search, $options: 'i' } }
       ];
+      console.log('Search query:', query);
     }
-    let products = await Product.find(filter).populate('category_id brand_id');
-    // Filter by color, size, material if provided
-    if (color_id || size_id || material_id) {
-      const ids = products.map(p => p._id.toString());
-      // For demo, just return all products (implement aggregation for real use)
-      // You can join with product_colors, product_sizes, product_materials for advanced filtering
-      // ...
+    
+    // Add filters
+    if (category_id) query.category_id = category_id;
+    if (brand_id) query.brand_id = brand_id;
+    if (min_price || max_price) {
+      query.price = {};
+      if (min_price) query.price.$gte = Number(min_price);
+      if (max_price) query.price.$lte = Number(max_price);
     }
-    res.json(products);
+    
+    // Calculate pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    // Execute query with pagination and populate
+    const products = await Product.find(query)
+      .populate('category_id', 'name')
+      .populate('brand_id', 'name')
+      .skip(skip)
+      .limit(parseInt(limit))
+      .sort({ created_at: -1 });
+    
+    // Get total count for pagination
+    const totalProducts = await Product.countDocuments(query);
+    const totalPages = Math.ceil(totalProducts / parseInt(limit));
+    
+    console.log('Found products:', products.length, 'Total:', totalProducts);
+    
+    res.json({
+      data: {
+        products, // Each product includes the 'image' field if set
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages,
+          totalRecords: totalProducts,
+          limit: parseInt(limit)
+        }
+      }
+    });
   } catch (err) {
+    console.error('Error in getAllProducts:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };
 
 exports.getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id).populate('category_id brand_id');
+    const product = await Product.findById(req.params.id)
+      .populate('category_id', 'name')
+      .populate('brand_id', 'name');
     if (!product) return res.status(404).json({ message: 'Product not found' });
-    res.json(product);
+    res.json(product); // Includes 'image' field
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
@@ -53,19 +78,46 @@ exports.getProductById = async (req, res) => {
 
 exports.createProduct = async (req, res) => {
   try {
-    const product = new Product(req.body);
+    console.log('REQ FILE:', req.file);
+    console.log('REQ BODY:', req.body);
+    // Accept 'image' field in req.body or file upload
+    let imageUrl = req.body.image;
+    if (req.file) {
+      // Serve from /uploads/products/...
+      imageUrl = `/uploads/products/${req.file.filename}`;
+    }
+    const product = new Product({
+      ...req.body,
+      image: imageUrl
+    });
     await product.save();
-    res.status(201).json(product);
+    // Populate the saved product
+    const populatedProduct = await Product.findById(product._id)
+      .populate('category_id', 'name')
+      .populate('brand_id', 'name');
+    res.status(201).json(populatedProduct); // Includes 'image' field
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error creating product:', err);
+    res.status(500).json({ message: 'Server error', error: err.message, stack: err.stack });
   }
 };
 
 exports.updateProduct = async (req, res) => {
   try {
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    // Accept 'image' field in req.body or file upload
+    let imageUrl = req.body.image;
+    if (req.file) {
+      imageUrl = `/uploads/products/${req.file.filename}`;
+    }
+    const updateData = { ...req.body };
+    if (imageUrl) updateData.image = imageUrl;
+    const product = await Product.findByIdAndUpdate(
+      req.params.id, 
+      updateData, 
+      { new: true }
+    ).populate('category_id', 'name').populate('brand_id', 'name');
     if (!product) return res.status(404).json({ message: 'Product not found' });
-    res.json(product);
+    res.json(product); // Includes 'image' field
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
@@ -75,16 +127,24 @@ exports.deleteProduct = async (req, res) => {
   try {
     const product = await Product.findByIdAndDelete(req.params.id);
     if (!product) return res.status(404).json({ message: 'Product not found' });
-    res.json({ message: 'Product deleted' });
+    res.json({ message: 'Product deleted successfully' });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
 };
 
-exports.getCategories = async (req, res) => {
+exports.bulkDeleteProducts = async (req, res) => {
   try {
-    const categories = await Product.distinct('category_id');
-    res.json(categories);
+    const { productIds } = req.body;
+    if (!productIds || !Array.isArray(productIds)) {
+      return res.status(400).json({ message: 'Product IDs array is required' });
+    }
+    
+    const result = await Product.deleteMany({ _id: { $in: productIds } });
+    res.json({ 
+      message: `${result.deletedCount} products deleted successfully`,
+      deletedCount: result.deletedCount
+    });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
@@ -96,30 +156,11 @@ exports.searchProducts = async (req, res) => {
     const products = await Product.find({
       $or: [
         { name: { $regex: query, $options: 'i' } },
-        { description: { $regex: query, $options: 'i' } }
+        { description: { $regex: query, $options: 'i' } },
+        { sku: { $regex: query, $options: 'i' } }
       ]
-    }).populate('category_id brand_id');
-    res.json(products);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-exports.filterProducts = async (req, res) => {
-  try {
-    const { category, brand, minPrice, maxPrice } = req.query;
-    let filter = {};
-    
-    if (category) filter.category_id = category;
-    if (brand) filter.brand_id = brand;
-    if (minPrice || maxPrice) {
-      filter.price = {};
-      if (minPrice) filter.price.$gte = Number(minPrice);
-      if (maxPrice) filter.price.$lte = Number(maxPrice);
-    }
-    
-    const products = await Product.find(filter).populate('category_id brand_id');
-    res.json(products);
+    }).populate('category_id', 'name').populate('brand_id', 'name');
+    res.json(products); // Each product includes 'image' field
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
@@ -127,33 +168,12 @@ exports.filterProducts = async (req, res) => {
 
 exports.getFeaturedProducts = async (req, res) => {
   try {
-    const products = await Product.find({ is_featured: true })
-      .populate('category_id brand_id')
-      .limit(10);
-    res.json(products);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-exports.getNewProducts = async (req, res) => {
-  try {
     const products = await Product.find()
+      .populate('category_id', 'name')
+      .populate('brand_id', 'name')
       .sort({ created_at: -1 })
-      .populate('category_id brand_id')
       .limit(10);
-    res.json(products);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-exports.getSaleProducts = async (req, res) => {
-  try {
-    const products = await Product.find({ discount_price: { $exists: true, $ne: null } })
-      .populate('category_id brand_id')
-      .limit(10);
-    res.json(products);
+    res.json(products); // Each product includes 'image' field
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }

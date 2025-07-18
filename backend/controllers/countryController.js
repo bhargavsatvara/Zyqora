@@ -2,9 +2,42 @@ const { Country } = require('../models');
 
 exports.getAllCountries = async (req, res) => {
   try {
-    const countries = await Country.find();
-    res.json(countries);
+    const { search, page = 1, limit = 10 } = req.query;
+    
+    // Build query
+    let query = {};
+    
+    // Add search functionality
+    if (search && search.trim()) {
+      query.name = { $regex: search, $options: 'i' };
+    }
+    
+    // Calculate pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    // Execute query with pagination
+    const countries = await Country.find(query)
+      .skip(skip)
+      .limit(parseInt(limit))
+      .sort({ createdAt: -1 });
+    
+    // Get total count for pagination
+    const totalCountries = await Country.countDocuments(query);
+    const totalPages = Math.ceil(totalCountries / parseInt(limit));
+    
+    res.json({
+      data: {
+        countries,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages,
+          totalRecords: totalCountries,
+          limit: parseInt(limit)
+        }
+      }
+    });
   } catch (err) {
+    console.error('Error in getAllCountries:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };

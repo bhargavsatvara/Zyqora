@@ -1,9 +1,9 @@
-const User  = require('../models/user');
+const User = require('../models/user');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const nodemailer  = require('nodemailer');
-const transporter   = require('../utils/mailer');
+const nodemailer = require('nodemailer');
+const transporter = require('../utils/mailer');
 const { successEmail, resetPasswordEmail } = require('../utils/emailTemplates');
 
 exports.register = async (req, res) => {
@@ -32,9 +32,9 @@ exports.register = async (req, res) => {
     }
 
     // 3) Hash + save user
-    const salt   = await bcrypt.genSalt(10);
+    const salt = await bcrypt.genSalt(10);
     const hashed = await bcrypt.hash(password, salt);
-    const user   = await new User({ name, email, password: hashed }).save();
+    const user = await new User({ name, email, password: hashed }).save();
 
     // 4) Send welcome email
     try {
@@ -49,7 +49,7 @@ exports.register = async (req, res) => {
             __dirname,
             '..',      // backend/controllers → backend
             '..',      // backend → project root
-            'frontend','src','assets','images','logo.png'
+            'frontend', 'src', 'assets', 'images', 'logo.png'
           ),
           cid: 'zyqoraLogo'
         }]
@@ -76,6 +76,7 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
   try {
+    console.log("req.body", req.body);
     const { email, password, rememberMe } = req.body;
 
     if (!email || !password)
@@ -86,6 +87,8 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: "Please enter a valid email address" });
 
     const user = await User.findOne({ email });
+    console.log("user", user);
+
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -112,7 +115,7 @@ exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
     const user = await User.findOne({ email });
-    if (!user) 
+    if (!user)
       return res.status(404).json({ message: 'No account found with that email.' });
 
     // 1) Create transporter
@@ -147,7 +150,7 @@ exports.forgotPassword = async (req, res) => {
     });
 
     console.log('📧 Message sent:', info.messageId);
-    console.log('Preview URL:', nodemailer.getTestMessageUrl(info));  
+    console.log('Preview URL:', nodemailer.getTestMessageUrl(info));
     // (only prints a URL when using an Ethereal or similar test account)
 
     return res.json({ message: 'If that email is in our system, you’ll receive a reset link shortly.' });
@@ -185,7 +188,7 @@ exports.resetPassword = async (req, res) => {
 };
 
 exports.verifyEmail = async (req, res) => {
-  const {token} = req.body;
+  const { token } = req.body;
   if (!token) {
     return res.status(400).json({ message: 'Verification token is required' });
   }
@@ -203,4 +206,69 @@ exports.verifyEmail = async (req, res) => {
     return res.status(400).json({ message: msg });
   }
 
-}; 
+};
+
+exports.getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json({ success: true, data: user });
+  } catch (error) {
+    console.error('Get profile error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.updateProfile = async (req, res) => {
+  try {
+    const { name, phone, currentPassword, newPassword, settings } = req.body;
+    const user = await User.findById(req.user);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Update basic info
+    if (name) user.name = name;
+    if (phone) user.phone = phone;
+    if (settings) user.settings = { ...user.settings, ...settings };
+
+    // Handle password change
+    if (currentPassword && newPassword) {
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ message: 'Current password is incorrect' });
+      }
+
+      // Validate new password strength
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()+={}[\]|\\:;"'<>,./~-]).{8,}$/;
+      if (!passwordRegex.test(newPassword)) {
+        return res.status(400).json({
+          message: 'Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character'
+        });
+      }
+
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(newPassword, salt);
+    }
+
+    await user.save();
+    res.json({ success: true, data: user, message: 'Profile updated successfully' });
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.logout = async (req, res) => {
+  try {
+    // In a real application, you might want to blacklist the token
+    // For now, we'll just return a success response
+    res.json({ success: true, message: 'Logged out successfully' });
+  } catch (error) {
+    console.error('Logout error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

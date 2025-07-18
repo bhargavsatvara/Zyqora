@@ -9,7 +9,8 @@ const ProductSchema = new Schema({
   price: Number,
   description: String,
   stock_qty: Number,
+  image: String, // URL to the product image
   created_at: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model('Product', ProductSchema); 
+module.exports = mongoose.model('Product', ProductSchema);  

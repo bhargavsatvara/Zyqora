@@ -100,6 +100,60 @@ router.post('/reset-password/:token', authController.resetPassword);
 
 /**
  * @swagger
+ * /auth/profile:
+ *   get:
+ *     summary: Get user profile
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: Profile retrieved successfully }
+ *       401: { description: Unauthorized }
+ */
+router.get('/profile', authenticate, authController.getProfile);
+
+/**
+ * @swagger
+ * /auth/profile:
+ *   put:
+ *     summary: Update user profile
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name: { type: string }
+ *               phone: { type: string }
+ *               currentPassword: { type: string }
+ *               newPassword: { type: string }
+ *               settings: { type: object }
+ *     responses:
+ *       200: { description: Profile updated successfully }
+ *       400: { description: Invalid data }
+ *       401: { description: Unauthorized }
+ */
+router.put('/profile', authenticate, authController.updateProfile);
+
+/**
+ * @swagger
+ * /auth/logout:
+ *   post:
+ *     summary: Logout user
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: Logout successful }
+ */
+router.post('/logout', authenticate, authController.logout);
+
+/**
+ * @swagger
  * /auth/verify-email:
  *   post:
  *     summary: Verify email address
@@ -117,7 +171,5 @@ router.post('/reset-password/:token', authController.resetPassword);
  *       200: { description: Email verified successfully }
  *       400: { description: Invalid or expired token }
  */
-
-
 
 module.exports = router; 
