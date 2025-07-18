@@ -32,6 +32,7 @@ router.use('/wishlist', wishlistRoutes);
 router.use('/reviews', reviewRoutes);
 router.use('/product-materials', require('./product_materials'));
 router.use('/product-sizes', require('./product_sizes'));
+router.use('/product-colors', require('./product_colors'));
 
 
 router.use('/categories', categoryRoutes);
