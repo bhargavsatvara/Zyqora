@@ -52,11 +52,23 @@ export default function ProductSizes() {
     try {
       await productSizesAPI.deleteProductSize(deleteId);
       setDeleteId(null);
-      showSuccess('Association deleted successfully!');
+      showSuccess('Product sizes association deleted successfully!');
       fetchProductSizes();
     } catch (err) {
       setDeleteError(err.response?.data?.message || err.message);
     }
+  };
+
+  const getSizeNames = (sizes) => {
+    if (!sizes || !Array.isArray(sizes)) return '—';
+    if (sizes.length === 0) return 'None';
+    
+    return sizes.map(size => {
+      if (typeof size === 'object' && size.name) {
+        return size.name;
+      }
+      return 'Unknown';
+    }).join(', ');
   };
 
   if (loading) {
@@ -76,7 +88,7 @@ export default function ProductSizes() {
         </div>
         <button onClick={() => navigate('/product-sizes/add')} className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl hover:from-blue-600 hover:to-blue-700 flex items-center gap-2 shadow-lg transition-all">
           <Plus className="h-4 w-4" />
-          Add Association
+          Add Sizes
         </button>
       </div>
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
@@ -130,7 +142,7 @@ export default function ProductSizes() {
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
                 <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Product</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Size</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Sizes</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
@@ -140,15 +152,17 @@ export default function ProductSizes() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-slate-900">{ps.product_id?.name || '—'}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-slate-600">{ps.size_id?.name || '—'}</div>
+                  <td className="px-6 py-4">
+                    <div className="text-sm text-slate-600 max-w-xs">
+                      {getSizeNames(ps.size_ids)}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center gap-2">
                       <button 
                         onClick={() => navigate(`/product-sizes/edit/${ps._id}`)}
                         className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 p-2 rounded-lg transition-colors"
-                        title="Edit Association"
+                        title="Edit Sizes"
                       >
                         <Edit className="h-4 w-4" />
                       </button>
@@ -179,7 +193,7 @@ export default function ProductSizes() {
                   className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Association
+                  Add Sizes
                 </button>
               </div>
             )}
@@ -220,7 +234,7 @@ export default function ProductSizes() {
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md p-8 relative">
             <h2 className="text-xl font-bold text-slate-900 mb-2">Delete Association</h2>
-            <p className="mb-4 text-slate-700">Are you sure you want to delete this association? This action cannot be undone.</p>
+            <p className="mb-4 text-slate-700">Are you sure you want to delete this product sizes association? This action cannot be undone.</p>
             <div className="flex gap-3 mt-4">
               <button type="button" onClick={() => setDeleteId(null)} className="flex-1 px-4 py-2 border border-slate-200 rounded-lg bg-slate-50 hover:bg-slate-100 font-medium text-slate-700">Cancel</button>
               <button type="button" onClick={handleDelete} className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 font-medium flex items-center justify-center gap-2">Delete</button>

@@ -9,7 +9,7 @@ export default function EditProductSize() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { showSuccess, showError } = useToast();
-  const [form, setForm] = useState({ product_id: '', size_id: '' });
+  const [form, setForm] = useState({ product_id: '', size_ids: [] });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
@@ -29,7 +29,9 @@ export default function EditProductSize() {
       const response = await productSizesAPI.getProductSize(id);
       setForm({
         product_id: response.data.product_id?._id || response.data.product_id || '',
-        size_id: response.data.size_id?._id || response.data.size_id || ''
+        size_ids: response.data.size_ids ? response.data.size_ids.map(size => 
+          typeof size === 'object' ? size._id : size
+        ) : []
       });
     } catch (err) {
       showError('Error fetching association: ' + (err.response?.data?.message || err.message));
@@ -47,6 +49,7 @@ export default function EditProductSize() {
       setProducts([]);
     }
   };
+  
   const fetchSizes = async () => {
     try {
       const res = await sizesAPI.getSizes({ limit: 100 });
@@ -61,16 +64,26 @@ export default function EditProductSize() {
     setError('');
   };
 
+  const handleSizeChange = (e) => {
+    const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+    setForm(prev => ({ ...prev, size_ids: selectedOptions }));
+    setError('');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.product_id || !form.size_id) {
-      setError('Both product and size are required');
+    if (!form.product_id) {
+      setError('Product is required');
+      return;
+    }
+    if (!form.size_ids.length) {
+      setError('At least one size is required');
       return;
     }
     setLoading(true);
     try {
       await productSizesAPI.updateProductSize(id, form);
-      showSuccess('Association updated successfully!');
+      showSuccess('Product sizes association updated successfully!');
       navigate('/product-sizes');
     } catch (err) {
       setError(err.response?.data?.message || err.message);
@@ -96,7 +109,7 @@ export default function EditProductSize() {
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <h1 className="text-3xl font-bold text-slate-900">Edit Product Size Association</h1>
+        <h1 className="text-3xl font-bold text-slate-900">Edit Product Sizes</h1>
       </div>
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 space-y-6">
         <div>
@@ -115,19 +128,20 @@ export default function EditProductSize() {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Size *</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Sizes * (Hold Ctrl/Cmd to select multiple)</label>
           <select
-            name="size_id"
-            value={form.size_id}
-            onChange={handleInputChange}
-            className="w-full px-4 py-3 border rounded-xl border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            name="size_ids"
+            multiple
+            value={form.size_ids}
+            onChange={handleSizeChange}
+            className="w-full px-4 py-3 border rounded-xl border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[120px]"
             required
           >
-            <option value="">Select size</option>
             {sizes.map((s) => (
               <option key={s._id} value={s._id}>{s.name}</option>
             ))}
           </select>
+          <p className="text-xs text-slate-500 mt-1">Selected: {form.size_ids.length} size(s)</p>
         </div>
         {error && <div className="text-red-600 text-sm font-medium mt-2">{error}</div>}
         <div className="flex gap-3 mt-4">
@@ -143,7 +157,7 @@ export default function EditProductSize() {
             disabled={loading}
             className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-medium flex items-center justify-center gap-2 disabled:opacity-50"
           >
-            <Save className="h-4 w-4" /> Update Association
+            <Save className="h-4 w-4" /> Update Sizes
           </button>
         </div>
       </form>

@@ -9,7 +9,7 @@ export default function EditProductMaterial() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { showSuccess, showError } = useToast();
-  const [form, setForm] = useState({ product_id: '', material_id: '' });
+  const [form, setForm] = useState({ product_id: '', material_ids: [] });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
@@ -29,7 +29,9 @@ export default function EditProductMaterial() {
       const response = await productMaterialsAPI.getProductMaterial(id);
       setForm({
         product_id: response.data.product_id?._id || response.data.product_id || '',
-        material_id: response.data.material_id?._id || response.data.material_id || ''
+        material_ids: response.data.material_ids ? response.data.material_ids.map(material => 
+          typeof material === 'object' ? material._id : material
+        ) : []
       });
     } catch (err) {
       showError('Error fetching association: ' + (err.response?.data?.message || err.message));
@@ -47,6 +49,7 @@ export default function EditProductMaterial() {
       setProducts([]);
     }
   };
+  
   const fetchMaterials = async () => {
     try {
       const res = await materialsAPI.getMaterials({ limit: 100 });
@@ -61,16 +64,26 @@ export default function EditProductMaterial() {
     setError('');
   };
 
+  const handleMaterialChange = (e) => {
+    const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+    setForm(prev => ({ ...prev, material_ids: selectedOptions }));
+    setError('');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.product_id || !form.material_id) {
-      setError('Both product and material are required');
+    if (!form.product_id) {
+      setError('Product is required');
+      return;
+    }
+    if (!form.material_ids.length) {
+      setError('At least one material is required');
       return;
     }
     setLoading(true);
     try {
       await productMaterialsAPI.updateProductMaterial(id, form);
-      showSuccess('Association updated successfully!');
+      showSuccess('Product materials association updated successfully!');
       navigate('/product-materials');
     } catch (err) {
       setError(err.response?.data?.message || err.message);
@@ -96,7 +109,7 @@ export default function EditProductMaterial() {
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <h1 className="text-3xl font-bold text-slate-900">Edit Product Material Association</h1>
+        <h1 className="text-3xl font-bold text-slate-900">Edit Product Materials</h1>
       </div>
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 space-y-6">
         <div>
@@ -115,19 +128,20 @@ export default function EditProductMaterial() {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Material *</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Materials * (Hold Ctrl/Cmd to select multiple)</label>
           <select
-            name="material_id"
-            value={form.material_id}
-            onChange={handleInputChange}
-            className="w-full px-4 py-3 border rounded-xl border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            name="material_ids"
+            multiple
+            value={form.material_ids}
+            onChange={handleMaterialChange}
+            className="w-full px-4 py-3 border rounded-xl border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[120px]"
             required
           >
-            <option value="">Select material</option>
             {materials.map((m) => (
               <option key={m._id} value={m._id}>{m.name}</option>
             ))}
           </select>
+          <p className="text-xs text-slate-500 mt-1">Selected: {form.material_ids.length} material(s)</p>
         </div>
         {error && <div className="text-red-600 text-sm font-medium mt-2">{error}</div>}
         <div className="flex gap-3 mt-4">
@@ -143,7 +157,7 @@ export default function EditProductMaterial() {
             disabled={loading}
             className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-medium flex items-center justify-center gap-2 disabled:opacity-50"
           >
-            <Save className="h-4 w-4" /> Update Association
+            <Save className="h-4 w-4" /> Update Materials
           </button>
         </div>
       </form>

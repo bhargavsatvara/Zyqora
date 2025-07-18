@@ -9,7 +9,7 @@ export default function EditProductColor() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { showSuccess, showError } = useToast();
-  const [form, setForm] = useState({ product_id: '', color_id: '' });
+  const [form, setForm] = useState({ product_id: '', color_ids: [] });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
@@ -29,7 +29,9 @@ export default function EditProductColor() {
       const response = await productColorsAPI.getProductColor(id);
       setForm({
         product_id: response.data.product_id?._id || response.data.product_id || '',
-        color_id: response.data.color_id?._id || response.data.color_id || ''
+        color_ids: response.data.color_ids ? response.data.color_ids.map(color => 
+          typeof color === 'object' ? color._id : color
+        ) : []
       });
     } catch (err) {
       showError('Error fetching association: ' + (err.response?.data?.message || err.message));
@@ -47,6 +49,7 @@ export default function EditProductColor() {
       setProducts([]);
     }
   };
+  
   const fetchColors = async () => {
     try {
       const res = await colorsAPI.getColors({ limit: 100 });
@@ -61,16 +64,26 @@ export default function EditProductColor() {
     setError('');
   };
 
+  const handleColorChange = (e) => {
+    const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+    setForm(prev => ({ ...prev, color_ids: selectedOptions }));
+    setError('');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.product_id || !form.color_id) {
-      setError('Both product and color are required');
+    if (!form.product_id) {
+      setError('Product is required');
+      return;
+    }
+    if (!form.color_ids.length) {
+      setError('At least one color is required');
       return;
     }
     setLoading(true);
     try {
       await productColorsAPI.updateProductColor(id, form);
-      showSuccess('Association updated successfully!');
+      showSuccess('Product colors association updated successfully!');
       navigate('/product-colors');
     } catch (err) {
       setError(err.response?.data?.message || err.message);
@@ -96,7 +109,7 @@ export default function EditProductColor() {
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <h1 className="text-3xl font-bold text-slate-900">Edit Product Color Association</h1>
+        <h1 className="text-3xl font-bold text-slate-900">Edit Product Colors</h1>
       </div>
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 space-y-6">
         <div>
@@ -115,19 +128,20 @@ export default function EditProductColor() {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Color *</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Colors * (Hold Ctrl/Cmd to select multiple)</label>
           <select
-            name="color_id"
-            value={form.color_id}
-            onChange={handleInputChange}
-            className="w-full px-4 py-3 border rounded-xl border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            name="color_ids"
+            multiple
+            value={form.color_ids}
+            onChange={handleColorChange}
+            className="w-full px-4 py-3 border rounded-xl border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[120px]"
             required
           >
-            <option value="">Select color</option>
             {colors.map((c) => (
               <option key={c._id} value={c._id}>{c.name}</option>
             ))}
           </select>
+          <p className="text-xs text-slate-500 mt-1">Selected: {form.color_ids.length} color(s)</p>
         </div>
         {error && <div className="text-red-600 text-sm font-medium mt-2">{error}</div>}
         <div className="flex gap-3 mt-4">
@@ -143,7 +157,7 @@ export default function EditProductColor() {
             disabled={loading}
             className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-medium flex items-center justify-center gap-2 disabled:opacity-50"
           >
-            <Save className="h-4 w-4" /> Update Association
+            <Save className="h-4 w-4" /> Update Colors
           </button>
         </div>
       </form>
