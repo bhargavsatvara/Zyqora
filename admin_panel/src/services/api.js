@@ -162,10 +162,6 @@ export const citiesAPI = {
 // Colors API
 export const colorsAPI = {
   getColors: (params) => api.get('/colors', { params }),
-  getColor: (id) => api.get(`/colors/${id}`),
-  createColor: (data) => api.post('/colors', data),
-  updateColor: (id, data) => api.put(`/colors/${id}`, data),
-  deleteColor: (id) => api.delete(`/colors/${id}`),
 };
 
 // Sizes API
@@ -201,6 +197,14 @@ export const productSizesAPI = {
   createProductSize: (data) => api.post('/product-sizes', data),
   updateProductSize: (id, data) => api.put(`/product-sizes/${id}`, data),
   deleteProductSize: (id) => api.delete(`/product-sizes/${id}`),
+};
+
+export const productColorsAPI = {
+  getProductColors: (params) => api.get('/product-colors', { params }),
+  getProductColor: (id) => api.get(`/product-colors/${id}`),
+  createProductColor: (data) => api.post('/product-colors', data),
+  updateProductColor: (id, data) => api.put(`/product-colors/${id}`, data),
+  deleteProductColor: (id) => api.delete(`/product-colors/${id}`),
 };
 
 export default api; 

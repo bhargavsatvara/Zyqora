@@ -44,6 +44,7 @@ const navigation = [
           { name: 'Inventory', href: '/inventory', icon: Warehouse },
           { name: 'Product Materials', href: '/product-materials', icon: FlaskConical },
           { name: 'Product Sizes', href: '/product-sizes', icon: Ruler },
+          { name: 'Product Colors', href: '/product-colors', icon: Palette },
         ]
       },
   { 
