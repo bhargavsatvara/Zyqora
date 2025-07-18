@@ -2,9 +2,45 @@ const { Color } = require('../models');
 
 exports.getAllColors = async (req, res) => {
   try {
-    const colors = await Color.find();
-    res.json(colors);
+    const { search, page = 1, limit = 10 } = req.query;
+    
+    // Build query
+    let query = {};
+    
+    // Add search functionality
+    if (search && search.trim()) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { hex_code: { $regex: search, $options: 'i' } }
+      ];
+    }
+    
+    // Calculate pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    // Execute query with pagination
+    const colors = await Color.find(query)
+      .skip(skip)
+      .limit(parseInt(limit))
+      .sort({ createdAt: -1 });
+    
+    // Get total count for pagination
+    const totalColors = await Color.countDocuments(query);
+    const totalPages = Math.ceil(totalColors / parseInt(limit));
+    
+    res.json({
+      data: {
+        colors,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages,
+          totalRecords: totalColors,
+          limit: parseInt(limit)
+        }
+      }
+    });
   } catch (err) {
+    console.error('Error in getAllColors:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };

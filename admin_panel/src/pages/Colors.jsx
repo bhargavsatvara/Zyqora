@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Edit, Trash2, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
 import { colorsAPI } from '../services/api';
 import { useNavigate } from 'react-router-dom';
@@ -7,6 +7,7 @@ export default function Colors() {
   const [colors, setColors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeSearchTerm, setActiveSearchTerm] = useState('');
   const [showAdd, setShowAdd] = useState(false);
   const [showEdit, setShowEdit] = useState(null); // color object or null
   const [form, setForm] = useState({ name: '', hex_code: '' });
@@ -22,13 +23,15 @@ export default function Colors() {
   useEffect(() => {
     fetchColors();
     // eslint-disable-next-line
-  }, [currentPage, searchTerm]);
+  }, [currentPage, activeSearchTerm]);
 
   const fetchColors = async () => {
     setLoading(true);
     try {
-      const params = { page: currentPage, limit: 10, search: searchTerm || undefined };
+      const params = { page: currentPage, limit: 10, search: activeSearchTerm || undefined };
+      console.log('Fetching colors with params:', params);
       const response = await colorsAPI.getColors(params);
+      console.log('API response:', response);
       let data = response.data;
       if (Array.isArray(data)) {
         setColors(data);
@@ -44,6 +47,7 @@ export default function Colors() {
         setTotalColors(0);
       }
     } catch (err) {
+      console.error('Error fetching colors:', err);
       setColors([]);
       setTotalPages(1);
       setTotalColors(0);
@@ -136,15 +140,49 @@ export default function Colors() {
 
       {/* Search */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search colors..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-4 pr-4 py-3 w-full border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-          />
+        <div className="flex gap-3">
+          <div className="flex-1 relative">
+            <input
+              type="text"
+              placeholder="Search colors... (Press Enter to search)"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  setActiveSearchTerm(searchTerm);
+                  setCurrentPage(1); // Reset to first page when searching
+                }
+              }}
+              className="pl-4 pr-4 py-3 w-full border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            />
+          </div>
+          <button
+            onClick={() => {
+              setActiveSearchTerm(searchTerm);
+              setCurrentPage(1); // Reset to first page when searching
+            }}
+            className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
+          >
+            Search
+          </button>
+          {activeSearchTerm && (
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setActiveSearchTerm('');
+                setCurrentPage(1);
+              }}
+              className="px-6 py-3 bg-slate-200 text-slate-700 rounded-xl hover:bg-slate-300 transition-colors font-medium"
+            >
+              Clear
+            </button>
+          )}
         </div>
+        {activeSearchTerm && (
+          <div className="mt-3 text-sm text-slate-600">
+            Searching for: <span className="font-medium">"{activeSearchTerm}"</span>
+          </div>
+        )}
       </div>
 
       {/* Colors Table */}
