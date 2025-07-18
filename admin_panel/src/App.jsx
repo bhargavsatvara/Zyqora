@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
 import Products from './pages/Products';
 import AddProduct from './pages/AddProduct';
+import EditProduct from './pages/EditProduct';
 import Orders from './pages/Orders';
 import Categories from './pages/Categories';
 import AddCategory from './pages/AddCategory';
@@ -43,6 +44,7 @@ import Sizes from './pages/Sizes.jsx';
 import AddSize from './pages/AddSize.jsx';
 import EditSize from './pages/EditSize.jsx';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ToastProvider } from './contexts/ToastContext';
 
 function AppContent() {
   const { isAuthenticated, loading } = useAuth();
@@ -79,6 +81,7 @@ function AppContent() {
             <Route path="/users/add" element={<AddUser />} />
             <Route path="/products" element={<Products />} />
             <Route path="/products/add" element={<AddProduct />} />
+            <Route path="/products/edit/:id" element={<EditProduct />} />
             <Route path="/orders" element={<Orders />} />
             <Route path="/categories" element={<Categories />} />
             <Route path="/categories/add" element={<AddCategory />} />
@@ -123,9 +126,11 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <AppContent />
-      </Router>
+      <ToastProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </ToastProvider>
     </AuthProvider>
   );
 }

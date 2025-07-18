@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Save, Upload, X, Plus, Trash2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { productsAPI, categoriesAPI, brandsAPI } from '../services/api';
 import { useToast } from '../contexts/ToastContext';
 
-export default function AddProduct() {
+export default function EditProduct() {
   const navigate = useNavigate();
+  const { id } = useParams();
   const { showSuccess, showError } = useToast();
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
   const [formData, setFormData] = useState({
@@ -21,26 +23,42 @@ export default function AddProduct() {
     images: []
   });
   const [errors, setErrors] = useState({});
-  const [newTag, setNewTag] = useState('');
 
   useEffect(() => {
+    fetchProduct();
     fetchCategories();
     fetchBrands();
-  }, []);
+  }, [id]);
 
-  useEffect(() => {
-    console.log('Categories state:', categories);
-    console.log('Brands state:', brands);
-  }, [categories, brands]);
+  const fetchProduct = async () => {
+    try {
+      setFetching(true);
+      const response = await productsAPI.getProduct(id);
+      const product = response.data;
+      
+      setFormData({
+        name: product.name || '',
+        sku: product.sku || '',
+        category_id: product.category_id?._id || '',
+        brand_id: product.brand_id?._id || '',
+        price: product.price || '',
+        description: product.description || '',
+        stock_qty: product.stock_qty || '',
+        images: product.images ? product.images.map(img => ({ preview: img })) : []
+      });
+    } catch (error) {
+      console.error('Error fetching product:', error);
+      showError('Error fetching product: ' + (error.response?.data?.message || error.message));
+      navigate('/products');
+    } finally {
+      setFetching(false);
+    }
+  };
 
   const fetchCategories = async () => {
     try {
-      console.log('Fetching categories...');
       const response = await categoriesAPI.getCategories();
-      console.log('Categories response:', response);
-      console.log('Categories data:', response.data);
       const categoriesData = response.data.data?.categories || response.data.data || response.data || [];
-      console.log('Categories to set:', categoriesData);
       setCategories(categoriesData);
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -49,12 +67,8 @@ export default function AddProduct() {
 
   const fetchBrands = async () => {
     try {
-      console.log('Fetching brands...');
       const response = await brandsAPI.getBrands();
-      console.log('Brands response:', response);
-      console.log('Brands data:', response.data);
       const brandsData = response.data.data?.brands || response.data.data || response.data || [];
-      console.log('Brands to set:', brandsData);
       setBrands(brandsData);
     } catch (error) {
       console.error('Error fetching brands:', error);
@@ -144,16 +158,24 @@ export default function AddProduct() {
       const imageUrls = formData.images.map(img => img.preview); // For demo, using preview URLs
       productData.images = imageUrls;
 
-      await productsAPI.createProduct(productData);
-      showSuccess('Product created successfully!');
+      await productsAPI.updateProduct(id, productData);
+      showSuccess('Product updated successfully!');
       navigate('/products');
     } catch (error) {
-      console.error('Error creating product:', error);
-      showError('Error creating product: ' + (error.response?.data?.message || error.message));
+      console.error('Error updating product:', error);
+      showError('Error updating product: ' + (error.response?.data?.message || error.message));
     } finally {
       setLoading(false);
     }
   };
+
+  if (fetching) {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -167,8 +189,8 @@ export default function AddProduct() {
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">Add New Product</h1>
-            <p className="text-slate-600 mt-2">Create a new product for your catalog</p>
+            <h1 className="text-3xl font-bold text-slate-900">Edit Product</h1>
+            <p className="text-slate-600 mt-2">Update product information</p>
           </div>
         </div>
       </div>
@@ -421,12 +443,12 @@ export default function AddProduct() {
             {loading ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                Creating...
+                Updating...
               </>
             ) : (
               <>
                 <Save className="h-4 w-4" />
-                Create Product
+                Update Product
               </>
             )}
           </button>

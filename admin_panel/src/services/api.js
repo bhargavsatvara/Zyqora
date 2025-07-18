@@ -70,8 +70,7 @@ export const productsAPI = {
   createProduct: (data) => api.post('/products', data),
   updateProduct: (id, data) => api.put(`/products/${id}`, data),
   deleteProduct: (id) => api.delete(`/products/${id}`),
-  bulkAction: (action, productIds) =>
-    api.post('/admin/products/bulk-action', { action, productIds }),
+  bulkDelete: (productIds) => api.post('/products/bulk-delete', { productIds }),
 };
 
 // Orders API

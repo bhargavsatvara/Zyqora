@@ -14,33 +14,43 @@ const { authenticate } = require('../middleware/auth');
  * @swagger
  * /products:
  *   get:
- *     summary: Get all products
+ *     summary: Get all products with pagination and search
  *     tags: [Products]
  *     parameters:
  *       - in: query
+ *         name: search
+ *         schema: { type: string }
+ *         description: Search term for product name, description, or SKU
+ *       - in: query
  *         name: page
- *         schema: { type: integer }
+ *         schema: { type: integer, default: 1 }
+ *         description: Page number
  *       - in: query
  *         name: limit
- *         schema: { type: integer }
+ *         schema: { type: integer, default: 10 }
+ *         description: Number of items per page
  *       - in: query
- *         name: sort
+ *         name: category_id
  *         schema: { type: string }
+ *         description: Filter by category ID
+ *       - in: query
+ *         name: brand_id
+ *         schema: { type: string }
+ *         description: Filter by brand ID
+ *       - in: query
+ *         name: min_price
+ *         schema: { type: number }
+ *         description: Minimum price filter
+ *       - in: query
+ *         name: max_price
+ *         schema: { type: number }
+ *         description: Maximum price filter
  *     responses:
- *       200: { description: List of products }
+ *       200: { description: List of products with pagination }
  */
 router.get('/', productController.getAllProducts);
 
-/**
- * @swagger
- * /products/categories:
- *   get:
- *     summary: Get product categories
- *     tags: [Products]
- *     responses:
- *       200: { description: List of categories }
- */
-router.get('/categories', productController.getCategories);
+
 
 /**
  * @swagger
@@ -60,30 +70,6 @@ router.get('/search', productController.searchProducts);
 
 /**
  * @swagger
- * /products/filter:
- *   get:
- *     summary: Filter products
- *     tags: [Products]
- *     parameters:
- *       - in: query
- *         name: category
- *         schema: { type: string }
- *       - in: query
- *         name: brand
- *         schema: { type: string }
- *       - in: query
- *         name: minPrice
- *         schema: { type: number }
- *       - in: query
- *         name: maxPrice
- *         schema: { type: number }
- *     responses:
- *       200: { description: Filtered products }
- */
-router.get('/filter', productController.filterProducts);
-
-/**
- * @swagger
  * /products/featured:
  *   get:
  *     summary: Get featured products
@@ -92,28 +78,6 @@ router.get('/filter', productController.filterProducts);
  *       200: { description: Featured products }
  */
 router.get('/featured', productController.getFeaturedProducts);
-
-/**
- * @swagger
- * /products/new:
- *   get:
- *     summary: Get new products
- *     tags: [Products]
- *     responses:
- *       200: { description: New products }
- */
-router.get('/new', productController.getNewProducts);
-
-/**
- * @swagger
- * /products/sale:
- *   get:
- *     summary: Get products on sale
- *     tags: [Products]
- *     responses:
- *       200: { description: Products on sale }
- */
-router.get('/sale', productController.getSaleProducts);
 
 /**
  * @swagger
@@ -131,5 +95,113 @@ router.get('/sale', productController.getSaleProducts);
  *       404: { description: Product not found }
  */
 router.get('/:id', productController.getProductById);
+
+/**
+ * @swagger
+ * /products:
+ *   post:
+ *     summary: Create new product
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [name]
+ *             properties:
+ *               name: { type: string }
+ *               sku: { type: string }
+ *               category_id: { type: string }
+ *               brand_id: { type: string }
+ *               price: { type: number }
+ *               description: { type: string }
+ *               stock_qty: { type: number }
+ *     responses:
+ *       201: { description: Product created successfully }
+ *       401: { description: Unauthorized }
+ */
+router.post('/', authenticate, productController.createProduct);
+
+/**
+ * @swagger
+ * /products/{id}:
+ *   put:
+ *     summary: Update product
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name: { type: string }
+ *               sku: { type: string }
+ *               category_id: { type: string }
+ *               brand_id: { type: string }
+ *               price: { type: number }
+ *               description: { type: string }
+ *               stock_qty: { type: number }
+ *     responses:
+ *       200: { description: Product updated successfully }
+ *       401: { description: Unauthorized }
+ *       404: { description: Product not found }
+ */
+router.put('/:id', authenticate, productController.updateProduct);
+
+/**
+ * @swagger
+ * /products/{id}:
+ *   delete:
+ *     summary: Delete product
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200: { description: Product deleted successfully }
+ *       401: { description: Unauthorized }
+ *       404: { description: Product not found }
+ */
+router.delete('/:id', authenticate, productController.deleteProduct);
+
+/**
+ * @swagger
+ * /products/bulk-delete:
+ *   post:
+ *     summary: Bulk delete products
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [productIds]
+ *             properties:
+ *               productIds: 
+ *                 type: array
+ *                 items: { type: string }
+ *     responses:
+ *       200: { description: Products deleted successfully }
+ *       401: { description: Unauthorized }
+ */
+router.post('/bulk-delete', authenticate, productController.bulkDeleteProducts);
 
 module.exports = router; 
