@@ -8,6 +8,7 @@ import {
   Tags, 
   Award,
   Warehouse,
+  FlaskConical,
   Ticket, 
   Star,
   BarChart3, 
@@ -39,6 +40,7 @@ const navigation = [
           { name: 'Cities', href: '/cities', icon: Building2 },
           { name: 'Colors', href: '/colors', icon: Palette },
           { name: 'Sizes', href: '/sizes', icon: Ruler },
+          { name: 'Materials', href: '/materials', icon: FlaskConical },
           { name: 'Inventory', href: '/inventory', icon: Warehouse },
         ]
       },

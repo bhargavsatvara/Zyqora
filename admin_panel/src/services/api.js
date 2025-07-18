@@ -177,6 +177,15 @@ export const sizesAPI = {
   deleteSize: (id) => api.delete(`/sizes/${id}`),
 };
 
+// Materials API
+export const materialsAPI = {
+  getMaterials: (params) => api.get('/materials', { params }),
+  getMaterial: (id) => api.get(`/materials/${id}`),
+  createMaterial: (data) => api.post('/materials', data),
+  updateMaterial: (id, data) => api.put(`/materials/${id}`, data),
+  deleteMaterial: (id) => api.delete(`/materials/${id}`),
+};
+
 // Settings API
 export const settingsAPI = {
   getSystemStats: () => api.get('/admin/settings'),

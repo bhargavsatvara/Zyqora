@@ -44,6 +44,9 @@ import EditColor from './pages/EditColor.jsx';
 import Sizes from './pages/Sizes.jsx';
 import AddSize from './pages/AddSize.jsx';
 import EditSize from './pages/EditSize.jsx';
+import Materials from './pages/Materials';
+import AddMaterial from './pages/AddMaterial';
+import EditMaterial from './pages/EditMaterial';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 
@@ -117,6 +120,9 @@ function AppContent() {
             <Route path="/sizes" element={<Sizes />} />
             <Route path="/sizes/add" element={<AddSize />} />
             <Route path="/sizes/edit/:id" element={<EditSize />} />
+            <Route path="/materials" element={<Materials />} />
+            <Route path="/materials/add" element={<AddMaterial />} />
+            <Route path="/materials/edit/:id" element={<EditMaterial />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
