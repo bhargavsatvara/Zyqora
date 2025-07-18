@@ -42,6 +42,7 @@ const navigation = [
           { name: 'Sizes', href: '/sizes', icon: Ruler },
           { name: 'Materials', href: '/materials', icon: FlaskConical },
           { name: 'Inventory', href: '/inventory', icon: Warehouse },
+          { name: 'Product Materials', href: '/product-materials', icon: FlaskConical },
         ]
       },
   { 

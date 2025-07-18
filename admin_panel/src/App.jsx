@@ -47,6 +47,9 @@ import EditSize from './pages/EditSize.jsx';
 import Materials from './pages/Materials';
 import AddMaterial from './pages/AddMaterial';
 import EditMaterial from './pages/EditMaterial';
+import ProductMaterials from './pages/ProductMaterials';
+import AddProductMaterial from './pages/AddProductMaterial';
+import EditProductMaterial from './pages/EditProductMaterial';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 
@@ -123,6 +126,9 @@ function AppContent() {
             <Route path="/materials" element={<Materials />} />
             <Route path="/materials/add" element={<AddMaterial />} />
             <Route path="/materials/edit/:id" element={<EditMaterial />} />
+            <Route path="/product-materials" element={<ProductMaterials />} />
+            <Route path="/product-materials/add" element={<AddProductMaterial />} />
+            <Route path="/product-materials/edit/:id" element={<EditProductMaterial />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

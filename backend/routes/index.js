@@ -30,6 +30,7 @@ router.use('/orders', orderRoutes);
 router.use('/cart', cartRoutes);
 router.use('/wishlist', wishlistRoutes);
 router.use('/reviews', reviewRoutes);
+router.use('/product-materials', require('./product_materials'));
 
 
 router.use('/categories', categoryRoutes);

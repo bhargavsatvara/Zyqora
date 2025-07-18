@@ -191,4 +191,12 @@ export const settingsAPI = {
   getSystemStats: () => api.get('/admin/settings'),
 };
 
+export const productMaterialsAPI = {
+  getProductMaterials: (params) => api.get('/product-materials', { params }),
+  getProductMaterial: (id) => api.get(`/product-materials/${id}`),
+  createProductMaterial: (data) => api.post('/product-materials', data),
+  updateProductMaterial: (id, data) => api.put(`/product-materials/${id}`, data),
+  deleteProductMaterial: (id) => api.delete(`/product-materials/${id}`),
+};
+
 export default api; 
