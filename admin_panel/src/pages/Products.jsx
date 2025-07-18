@@ -372,7 +372,10 @@ export default function Products() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <button className="flex-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 p-2 rounded-lg transition-colors">
+                  <button 
+                    onClick={() => navigate(`/products/view/${product._id}`)}
+                    className="flex-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 p-2 rounded-lg transition-colors"
+                  >
                     <Eye className="h-4 w-4 mx-auto" />
                   </button>
                   <button 
