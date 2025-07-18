@@ -167,6 +167,10 @@ export const colorsAPI = {
 // Sizes API
 export const sizesAPI = {
   getSizes: (params) => api.get('/sizes', { params }),
+  getSize: (id) => api.get(`/sizes/${id}`),
+  createSize: (data) => api.post('/sizes', data),
+  updateSize: (id, data) => api.put(`/sizes/${id}`, data),
+  deleteSize: (id) => api.delete(`/sizes/${id}`),
 };
 
 // Materials API
