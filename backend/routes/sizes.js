@@ -1,8 +1,3 @@
-const express = require('express');
-const router = express.Router();
-const sizeController = require('../controllers/sizeController');
-const { authenticate } = require('../middleware/auth');
-
 /**
  * @swagger
  * tags:
@@ -16,9 +11,28 @@ const { authenticate } = require('../middleware/auth');
  *   get:
  *     summary: Get all sizes
  *     tags: [Sizes]
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema: { type: string }
+ *         description: Search term for size name or description
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, default: 1 }
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, default: 10 }
+ *         description: Number of items per page
  *     responses:
- *       200: { description: List of sizes }
+ *       200: { description: List of sizes with pagination }
  */
+
+const express = require('express');
+const router = express.Router();
+const sizeController = require('../controllers/sizeController');
+const { authenticate } = require('../middleware/auth');
+
 router.get('/', sizeController.getAllSizes);
 
 /**
@@ -52,16 +66,15 @@ router.get('/:id', sizeController.getSizeById);
  *         application/json:
  *           schema:
  *             type: object
- *             required: [name, category]
+ *             required: [name]
  *             properties:
  *               name: { type: string }
- *               category: { type: string }
  *               description: { type: string }
  *     responses:
  *       201: { description: Size created successfully }
  *       401: { description: Unauthorized }
  */
-router.post('/', authenticate, sizeController.createSize);
+router.post('/', sizeController.createSize);
 
 /**
  * @swagger
@@ -84,14 +97,13 @@ router.post('/', authenticate, sizeController.createSize);
  *             type: object
  *             properties:
  *               name: { type: string }
- *               category: { type: string }
  *               description: { type: string }
  *     responses:
  *       200: { description: Size updated successfully }
  *       401: { description: Unauthorized }
  *       404: { description: Size not found }
  */
-router.put('/:id', authenticate, sizeController.updateSize);
+router.put('/:id', sizeController.updateSize);
 
 /**
  * @swagger
@@ -111,6 +123,6 @@ router.put('/:id', authenticate, sizeController.updateSize);
  *       401: { description: Unauthorized }
  *       404: { description: Size not found }
  */
-router.delete('/:id', authenticate, sizeController.deleteSize);
+router.delete('/:id', sizeController.deleteSize);
 
 module.exports = router; 

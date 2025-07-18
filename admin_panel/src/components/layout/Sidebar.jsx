@@ -21,25 +21,27 @@ import {
   MapPin,
   Building2,
   FolderOpen,
-  Palette
+  Palette,
+  Ruler
 } from 'lucide-react';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { 
-    name: 'Catalog', 
-    items: [
-      { name: 'Products', href: '/products', icon: Package },
-      { name: 'Categories', href: '/categories', icon: Tags },
-      { name: 'Brands', href: '/brands', icon: Award },
-      { name: 'Departments', href: '/departments', icon: FolderOpen },
-      { name: 'Countries', href: '/countries', icon: Globe },
-      { name: 'States', href: '/states', icon: MapPin },
-      { name: 'Cities', href: '/cities', icon: Building2 },
-      { name: 'Colors', href: '/colors', icon: Palette },
-      { name: 'Inventory', href: '/inventory', icon: Warehouse },
-    ]
-  },
+        { 
+        name: 'Catalog', 
+        items: [
+          { name: 'Products', href: '/products', icon: Package },
+          { name: 'Categories', href: '/categories', icon: Tags },
+          { name: 'Brands', href: '/brands', icon: Award },
+          { name: 'Departments', href: '/departments', icon: FolderOpen },
+          { name: 'Countries', href: '/countries', icon: Globe },
+          { name: 'States', href: '/states', icon: MapPin },
+          { name: 'Cities', href: '/cities', icon: Building2 },
+          { name: 'Colors', href: '/colors', icon: Palette },
+          { name: 'Sizes', href: '/sizes', icon: Ruler },
+          { name: 'Inventory', href: '/inventory', icon: Warehouse },
+        ]
+      },
   { 
     name: 'Sales', 
     items: [
