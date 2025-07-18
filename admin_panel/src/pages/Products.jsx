@@ -5,6 +5,9 @@ import { productsAPI, categoriesAPI, brandsAPI } from '../services/api';
 import { useToast } from '../contexts/ToastContext';
 import ConfirmModal from '../components/ConfirmModal';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+const FILE_BASE_URL = API_BASE_URL.replace(/\/api$/, '');
+
 export default function Products() {
   const navigate = useNavigate();
   const { showSuccess, showError, showWarning } = useToast();
@@ -317,11 +320,16 @@ export default function Products() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {products.map((product) => {
           const stockStatus = getStockStatus(product.stock_qty);
+          let imageUrl = product.image
+            ? product.image.startsWith('/uploads/')
+              ? FILE_BASE_URL + product.image
+              : product.image
+            : 'https://via.placeholder.com/300x200?text=No+Image';
           return (
             <div key={product._id} className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow">
               <div className="relative">
                 <img
-                  src={product.images?.[0] || 'https://via.placeholder.com/300x200?text=No+Image'}
+                  src={imageUrl}
                   alt={product.name}
                   className="w-full h-48 object-cover"
                 />

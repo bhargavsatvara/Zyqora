@@ -4,6 +4,7 @@ const dotenv = require("dotenv");
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpecs = require('./swagger');
 const cors = require('cors');
+const path = require('path');
 
 // Load environment variables
 dotenv.config();
@@ -18,6 +19,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Swagger documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
+
+// Serve uploads directory statically
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Import routes after models are defined
 const router = require("./routes");

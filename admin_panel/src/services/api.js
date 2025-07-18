@@ -67,8 +67,14 @@ export const usersAPI = {
 export const productsAPI = {
   getProducts: (params) => api.get('/products', { params }),
   getProduct: (id) => api.get(`/products/${id}`),
-  createProduct: (data) => api.post('/products', data),
-  updateProduct: (id, data) => api.put(`/products/${id}`, data),
+  createProduct: (data, isMultipart) =>
+    isMultipart
+      ? api.post('/products', data, { headers: { 'Content-Type': 'multipart/form-data' } })
+      : api.post('/products', data),
+  updateProduct: (id, data, isMultipart) =>
+    isMultipart
+      ? api.put(`/products/${id}`, data, { headers: { 'Content-Type': 'multipart/form-data' } })
+      : api.put(`/products/${id}`, data),
   deleteProduct: (id) => api.delete(`/products/${id}`),
   bulkDelete: (productIds) => api.post('/products/bulk-delete', { productIds }),
 };

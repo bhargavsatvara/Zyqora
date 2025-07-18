@@ -1,4 +1,7 @@
 const { Product, Category, Brand } = require('../models');
+const path = require('path');
+
+// All product endpoints now support the 'image' field (string URL)
 
 exports.getAllProducts = async (req, res) => {
   try {
@@ -46,7 +49,7 @@ exports.getAllProducts = async (req, res) => {
     
     res.json({
       data: {
-        products,
+        products, // Each product includes the 'image' field if set
         pagination: {
           currentPage: parseInt(page),
           totalPages,
@@ -67,7 +70,7 @@ exports.getProductById = async (req, res) => {
       .populate('category_id', 'name')
       .populate('brand_id', 'name');
     if (!product) return res.status(404).json({ message: 'Product not found' });
-    res.json(product);
+    res.json(product); // Includes 'image' field
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
@@ -75,31 +78,46 @@ exports.getProductById = async (req, res) => {
 
 exports.createProduct = async (req, res) => {
   try {
-    const product = new Product(req.body);
+    console.log('REQ FILE:', req.file);
+    console.log('REQ BODY:', req.body);
+    // Accept 'image' field in req.body or file upload
+    let imageUrl = req.body.image;
+    if (req.file) {
+      // Serve from /uploads/products/...
+      imageUrl = `/uploads/products/${req.file.filename}`;
+    }
+    const product = new Product({
+      ...req.body,
+      image: imageUrl
+    });
     await product.save();
-    
     // Populate the saved product
     const populatedProduct = await Product.findById(product._id)
       .populate('category_id', 'name')
       .populate('brand_id', 'name');
-    
-    res.status(201).json(populatedProduct);
+    res.status(201).json(populatedProduct); // Includes 'image' field
   } catch (err) {
     console.error('Error creating product:', err);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: err.message, stack: err.stack });
   }
 };
 
 exports.updateProduct = async (req, res) => {
   try {
+    // Accept 'image' field in req.body or file upload
+    let imageUrl = req.body.image;
+    if (req.file) {
+      imageUrl = `/uploads/products/${req.file.filename}`;
+    }
+    const updateData = { ...req.body };
+    if (imageUrl) updateData.image = imageUrl;
     const product = await Product.findByIdAndUpdate(
       req.params.id, 
-      req.body, 
+      updateData, 
       { new: true }
     ).populate('category_id', 'name').populate('brand_id', 'name');
-    
     if (!product) return res.status(404).json({ message: 'Product not found' });
-    res.json(product);
+    res.json(product); // Includes 'image' field
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
@@ -132,8 +150,6 @@ exports.bulkDeleteProducts = async (req, res) => {
   }
 };
 
-
-
 exports.searchProducts = async (req, res) => {
   try {
     const { query } = req.query;
@@ -144,7 +160,7 @@ exports.searchProducts = async (req, res) => {
         { sku: { $regex: query, $options: 'i' } }
       ]
     }).populate('category_id', 'name').populate('brand_id', 'name');
-    res.json(products);
+    res.json(products); // Each product includes 'image' field
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
@@ -157,7 +173,7 @@ exports.getFeaturedProducts = async (req, res) => {
       .populate('brand_id', 'name')
       .sort({ created_at: -1 })
       .limit(10);
-    res.json(products);
+    res.json(products); // Each product includes 'image' field
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }

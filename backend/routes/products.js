@@ -2,6 +2,21 @@ const express = require('express');
 const router = express.Router();
 const productController = require('../controllers/productController');
 const { authenticate } = require('../middleware/auth');
+const multer = require('multer');
+const path = require('path');
+
+// Multer setup for product images
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, '../uploads/products'));
+  },
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname);
+    const basename = path.basename(file.originalname, ext);
+    cb(null, basename + '-' + Date.now() + ext);
+  }
+});
+const upload = multer({ storage });
 
 /**
  * @swagger
@@ -123,7 +138,7 @@ router.get('/:id', productController.getProductById);
  *       201: { description: Product created successfully }
  *       401: { description: Unauthorized }
  */
-router.post('/', authenticate, productController.createProduct);
+router.post('/', authenticate, upload.single('image'), productController.createProduct);
 
 /**
  * @swagger
@@ -157,7 +172,7 @@ router.post('/', authenticate, productController.createProduct);
  *       401: { description: Unauthorized }
  *       404: { description: Product not found }
  */
-router.put('/:id', authenticate, productController.updateProduct);
+router.put('/:id', authenticate, upload.single('image'), productController.updateProduct);
 
 /**
  * @swagger

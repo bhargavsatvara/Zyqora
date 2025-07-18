@@ -4,6 +4,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { productsAPI, categoriesAPI, brandsAPI } from '../services/api';
 import { useToast } from '../contexts/ToastContext';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+const FILE_BASE_URL = API_BASE_URL.replace(/\/api$/, '');
+
 export default function EditProduct() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -20,7 +23,8 @@ export default function EditProduct() {
     price: '',
     description: '',
     stock_qty: '',
-    images: []
+    image: null, // file or string (URL)
+    imagePreview: null // preview URL
   });
   const [errors, setErrors] = useState({});
 
@@ -35,7 +39,11 @@ export default function EditProduct() {
       setFetching(true);
       const response = await productsAPI.getProduct(id);
       const product = response.data;
-      
+      let imageUrl = product.image
+        ? product.image.startsWith('/uploads/')
+          ? FILE_BASE_URL + product.image
+          : product.image
+        : null;
       setFormData({
         name: product.name || '',
         sku: product.sku || '',
@@ -44,7 +52,8 @@ export default function EditProduct() {
         price: product.price || '',
         description: product.description || '',
         stock_qty: product.stock_qty || '',
-        images: product.images ? product.images.map(img => ({ preview: img })) : []
+        image: product.image || null, // keep the URL for now
+        imagePreview: imageUrl
       });
     } catch (error) {
       console.error('Error fetching product:', error);
@@ -81,84 +90,56 @@ export default function EditProduct() {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
-    
-    // Clear error when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData(prev => ({
         ...prev,
-        [name]: ''
+        image: file,
+        imagePreview: URL.createObjectURL(file)
       }));
     }
   };
 
-  const handleImageUpload = (e) => {
-    const files = Array.from(e.target.files);
-    const imageFiles = files.map(file => ({
-      file,
-      preview: URL.createObjectURL(file)
-    }));
-    
-    setFormData(prev => ({
-      ...prev,
-      images: [...prev.images, ...imageFiles]
-    }));
-  };
-
-  const removeImage = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index)
-    }));
+  const removeImage = () => {
+    setFormData(prev => ({ ...prev, image: null, imagePreview: null }));
   };
 
   const validateForm = () => {
     const newErrors = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = 'Product name is required';
-    }
-
-    if (!formData.sku.trim()) {
-      newErrors.sku = 'SKU is required';
-    }
-
-    if (!formData.category_id) {
-      newErrors.category_id = 'Category is required';
-    }
-
-    if (!formData.price || parseFloat(formData.price) <= 0) {
-      newErrors.price = 'Valid price is required';
-    }
-
-    if (!formData.stock_qty || parseInt(formData.stock_qty) < 0) {
-      newErrors.stock_qty = 'Valid stock quantity is required';
-    }
-
+    if (!formData.name.trim()) newErrors.name = 'Product name is required';
+    if (!formData.sku.trim()) newErrors.sku = 'SKU is required';
+    if (!formData.category_id) newErrors.category_id = 'Category is required';
+    if (!formData.price || parseFloat(formData.price) <= 0) newErrors.price = 'Valid price is required';
+    if (!formData.stock_qty || parseInt(formData.stock_qty) < 0) newErrors.stock_qty = 'Valid stock quantity is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-
+    if (!validateForm()) return;
     setLoading(true);
     try {
-      // Prepare form data for API
-      const productData = {
-        ...formData,
-        price: parseFloat(formData.price),
-        stock_qty: parseInt(formData.stock_qty)
-      };
-
-      // Handle image uploads (in a real app, you'd upload to cloud storage)
-      const imageUrls = formData.images.map(img => img.preview); // For demo, using preview URLs
-      productData.images = imageUrls;
-
-      await productsAPI.updateProduct(id, productData);
+      const data = new FormData();
+      data.append('name', formData.name);
+      data.append('sku', formData.sku);
+      data.append('category_id', formData.category_id);
+      data.append('brand_id', formData.brand_id);
+      data.append('price', formData.price);
+      data.append('description', formData.description);
+      data.append('stock_qty', formData.stock_qty);
+      if (formData.image && typeof formData.image !== 'string') {
+        data.append('image', formData.image);
+      } else if (formData.image && typeof formData.image === 'string') {
+        data.append('image', formData.image);
+      }
+      await productsAPI.updateProduct(id, data, true); // true = multipart
       showSuccess('Product updated successfully!');
       navigate('/products');
     } catch (error) {
@@ -194,15 +175,11 @@ export default function EditProduct() {
           </div>
         </div>
       </div>
-
-      {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Information */}
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
               <h2 className="text-xl font-bold text-slate-900 mb-6">Basic Information</h2>
-              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -331,20 +308,17 @@ export default function EditProduct() {
                 />
               </div>
             </div>
-
-            {/* Images */}
+            {/* Image Upload */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-              <h2 className="text-xl font-bold text-slate-900 mb-6">Product Images</h2>
-              
+              <h2 className="text-xl font-bold text-slate-900 mb-6">Product Image</h2>
               <div className="space-y-4">
                 <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center">
                   <Upload className="h-8 w-8 text-slate-400 mx-auto mb-2" />
-                  <p className="text-slate-600 mb-2">Upload product images</p>
+                  <p className="text-slate-600 mb-2">Upload product image</p>
                   <input
                     type="file"
-                    multiple
                     accept="image/*"
-                    onChange={handleImageUpload}
+                    onChange={handleImageChange}
                     className="hidden"
                     id="image-upload"
                   />
@@ -352,34 +326,28 @@ export default function EditProduct() {
                     htmlFor="image-upload"
                     className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 cursor-pointer transition-colors"
                   >
-                    Choose Files
+                    Choose File
                   </label>
                 </div>
-
-                {formData.images.length > 0 && (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {formData.images.map((image, index) => (
-                      <div key={index} className="relative">
-                        <img
-                          src={image.preview}
-                          alt={`Product ${index + 1}`}
-                          className="w-full h-24 object-cover rounded-lg"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeImage(index)}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ))}
+                {formData.imagePreview && (
+                  <div className="relative w-32 h-32 mx-auto">
+                    <img
+                      src={formData.imagePreview}
+                      alt="Product Preview"
+                      className="w-full h-full object-cover rounded-lg"
+                    />
+                    <button
+                      type="button"
+                      onClick={removeImage}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
                   </div>
                 )}
               </div>
             </div>
           </div>
-
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Product Summary */}
@@ -418,8 +386,10 @@ export default function EditProduct() {
                   <span className="text-sm font-medium text-slate-900">{formData.stock_qty || '—'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-slate-600">Images:</span>
-                  <span className="text-sm font-medium text-slate-900">{formData.images.length}</span>
+                  <span className="text-sm text-slate-600">Image:</span>
+                  <span className="text-sm font-medium text-slate-900">
+                    {formData.imagePreview ? 'Current' : 'No Image'}
+                  </span>
                 </div>
               </div>
             </div>
