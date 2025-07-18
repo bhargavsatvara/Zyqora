@@ -114,7 +114,7 @@ export default function AddCategory() {
             className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${errors.department_id ? 'border-red-300' : 'border-slate-200'}`}
           >
             <option value="">Select Department</option>
-            {departments.map(dept => (
+            {Array.isArray(departments) && departments.map(dept => (
               <option key={dept._id} value={dept._id}>{dept.name}</option>
             ))}
           </select>

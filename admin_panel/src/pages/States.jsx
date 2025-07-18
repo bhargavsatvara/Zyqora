@@ -8,6 +8,7 @@ export default function States() {
   const [countries, setCountries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeSearchTerm, setActiveSearchTerm] = useState('');
   const [showAdd, setShowAdd] = useState(false);
   const [showEdit, setShowEdit] = useState(null); // state object or null
   const [form, setForm] = useState({ name: '', country_id: '' });
@@ -24,13 +25,15 @@ export default function States() {
     fetchStates();
     fetchCountries();
     // eslint-disable-next-line
-  }, [currentPage, searchTerm]);
+  }, [currentPage, activeSearchTerm]);
 
   const fetchStates = async () => {
     setLoading(true);
     try {
-      const params = { page: currentPage, limit: 10, search: searchTerm || undefined };
+      const params = { page: currentPage, limit: 10, search: activeSearchTerm || undefined };
+      console.log('Fetching states with params:', params);
       const response = await statesAPI.getStates(params);
+      console.log('States API response:', response);
       let data = response.data;
       if (Array.isArray(data)) {
         setStates(data);
@@ -46,6 +49,7 @@ export default function States() {
         setTotalStates(0);
       }
     } catch (err) {
+      console.error('Error fetching states:', err);
       setStates([]);
       setTotalPages(1);
       setTotalStates(0);
@@ -57,8 +61,20 @@ export default function States() {
   const fetchCountries = async () => {
     try {
       const response = await countriesAPI.getCountries();
-      setCountries(response.data);
+      console.log('Countries API response:', response);
+      let countriesData = [];
+      if (response.data && response.data.data && response.data.data.countries) {
+        countriesData = response.data.data.countries;
+      } else if (response.data && response.data.countries) {
+        countriesData = response.data.countries;
+      } else if (Array.isArray(response.data)) {
+        countriesData = response.data;
+      } else {
+        countriesData = [];
+      }
+      setCountries(countriesData);
     } catch (err) {
+      console.error('Error fetching countries:', err);
       setCountries([]);
     }
   };
@@ -132,6 +148,9 @@ export default function States() {
   };
 
   const getCountryName = (countryId) => {
+    if (!Array.isArray(countries)) {
+      return 'Unknown';
+    }
     const country = countries.find(c => c._id === countryId);
     return country ? country.name : 'Unknown';
   };
@@ -160,15 +179,49 @@ export default function States() {
 
       {/* Search */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search states..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-4 pr-4 py-3 w-full border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-          />
+        <div className="flex gap-3">
+          <div className="flex-1 relative">
+            <input
+              type="text"
+              placeholder="Search states... (Press Enter to search)"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  setActiveSearchTerm(searchTerm);
+                  setCurrentPage(1); // Reset to first page when searching
+                }
+              }}
+              className="pl-4 pr-4 py-3 w-full border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            />
+          </div>
+          <button
+            onClick={() => {
+              setActiveSearchTerm(searchTerm);
+              setCurrentPage(1); // Reset to first page when searching
+            }}
+            className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
+          >
+            Search
+          </button>
+          {activeSearchTerm && (
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setActiveSearchTerm('');
+                setCurrentPage(1);
+              }}
+              className="px-6 py-3 bg-slate-200 text-slate-700 rounded-xl hover:bg-slate-300 transition-colors font-medium"
+            >
+              Clear
+            </button>
+          )}
         </div>
+        {activeSearchTerm && (
+          <div className="mt-3 text-sm text-slate-600">
+            Searching for: <span className="font-medium">"{activeSearchTerm}"</span>
+          </div>
+        )}
       </div>
 
       {/* States Table */}

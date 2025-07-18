@@ -21,9 +21,22 @@ export default function AddCity() {
   const fetchStates = async () => {
     try {
       const response = await statesAPI.getStates();
-      setStates(response.data);
+      console.log('States API response in AddCity:', response);
+      let statesData = [];
+      if (response.data && response.data.data && response.data.data.states) {
+        statesData = response.data.data.states;
+      } else if (response.data && response.data.states) {
+        statesData = response.data.states;
+      } else if (Array.isArray(response.data)) {
+        statesData = response.data;
+      } else {
+        statesData = [];
+      }
+      setStates(statesData);
     } catch (err) {
+      console.error('Error fetching states in AddCity:', err);
       setError('Failed to fetch states.');
+      setStates([]);
     }
   };
 
@@ -84,7 +97,7 @@ export default function AddCity() {
               <label className="block font-medium mb-1 text-slate-700">State <span className="text-red-500">*</span></label>
               <select name="state_id" value={form.state_id} onChange={handleChange} required className="w-full border border-slate-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 bg-slate-50">
                 <option value="">Select a state</option>
-                {states.map((state) => (
+                {Array.isArray(states) && states.map((state) => (
                   <option key={state._id} value={state._id}>{state.name}</option>
                 ))}
               </select>

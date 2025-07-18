@@ -2,9 +2,45 @@ const { Category } = require('../models');
 
 exports.getAllCategories = async (req, res) => {
   try {
-    const categories = await Category.find();
-    res.json(categories);
+    const { search, page = 1, limit = 10 } = req.query;
+    
+    // Build query
+    let query = {};
+    
+    // Add search functionality
+    if (search && search.trim()) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
+    }
+    
+    // Calculate pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    // Execute query with pagination
+    const categories = await Category.find(query)
+      .skip(skip)
+      .limit(parseInt(limit))
+      .sort({ createdAt: -1 });
+    
+    // Get total count for pagination
+    const totalCategories = await Category.countDocuments(query);
+    const totalPages = Math.ceil(totalCategories / parseInt(limit));
+    
+    res.json({
+      data: {
+        categories,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages,
+          totalRecords: totalCategories,
+          limit: parseInt(limit)
+        }
+      }
+    });
   } catch (err) {
+    console.error('Error in getAllCategories:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };

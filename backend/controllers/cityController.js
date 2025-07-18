@@ -2,10 +2,47 @@ const { City } = require('../models');
 
 exports.getAllCities = async (req, res) => {
   try {
-    const filter = req.query.state_id ? { state_id: req.query.state_id } : {};
-    const cities = await City.find(filter);
-    res.json(cities);
+    const { search, page = 1, limit = 10, state_id } = req.query;
+    
+    // Build query
+    let query = {};
+    
+    // Add state filter
+    if (state_id) {
+      query.state_id = state_id;
+    }
+    
+    // Add search functionality
+    if (search && search.trim()) {
+      query.name = { $regex: search, $options: 'i' };
+    }
+    
+    // Calculate pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    // Execute query with pagination
+    const cities = await City.find(query)
+      .skip(skip)
+      .limit(parseInt(limit))
+      .sort({ createdAt: -1 });
+    
+    // Get total count for pagination
+    const totalCities = await City.countDocuments(query);
+    const totalPages = Math.ceil(totalCities / parseInt(limit));
+    
+    res.json({
+      data: {
+        cities,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages,
+          totalRecords: totalCities,
+          limit: parseInt(limit)
+        }
+      }
+    });
   } catch (err) {
+    console.error('Error in getAllCities:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };

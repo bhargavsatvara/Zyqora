@@ -2,10 +2,51 @@ const { State } = require('../models');
 
 exports.getAllStates = async (req, res) => {
   try {
-    const filter = req.query.country_id ? { country_id: req.query.country_id } : {};
-    const states = await State.find(filter);
-    res.json(states);
+    const { search, page = 1, limit = 10, country_id } = req.query;
+    console.log('getAllStates called with query:', req.query);
+    
+    // Build query
+    let query = {};
+    
+    // Add country filter
+    if (country_id) {
+      query.country_id = country_id;
+    }
+    
+    // Add search functionality
+    if (search && search.trim()) {
+      query.name = { $regex: search, $options: 'i' };
+      console.log('Search query:', query);
+    }
+    
+    // Calculate pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    // Execute query with pagination
+    const states = await State.find(query)
+      .skip(skip)
+      .limit(parseInt(limit))
+      .sort({ createdAt: -1 });
+    
+    // Get total count for pagination
+    const totalStates = await State.countDocuments(query);
+    const totalPages = Math.ceil(totalStates / parseInt(limit));
+    
+    console.log('Found states:', states.length, 'Total:', totalStates);
+    
+    res.json({
+      data: {
+        states,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages,
+          totalRecords: totalStates,
+          limit: parseInt(limit)
+        }
+      }
+    });
   } catch (err) {
+    console.error('Error in getAllStates:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };

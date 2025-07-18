@@ -8,6 +8,7 @@ export default function Cities() {
   const [states, setStates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeSearchTerm, setActiveSearchTerm] = useState('');
   const [showAdd, setShowAdd] = useState(false);
   const [showEdit, setShowEdit] = useState(null); // city object or null
   const [form, setForm] = useState({ name: '', state_id: '' });
@@ -24,12 +25,12 @@ export default function Cities() {
     fetchCities();
     fetchStates();
     // eslint-disable-next-line
-  }, [currentPage, searchTerm]);
+  }, [currentPage, activeSearchTerm]);
 
   const fetchCities = async () => {
     setLoading(true);
     try {
-      const params = { page: currentPage, limit: 10, search: searchTerm || undefined };
+      const params = { page: currentPage, limit: 10, search: activeSearchTerm || undefined };
       const response = await citiesAPI.getCities(params);
       let data = response.data;
       if (Array.isArray(data)) {
@@ -57,8 +58,20 @@ export default function Cities() {
   const fetchStates = async () => {
     try {
       const response = await statesAPI.getStates();
-      setStates(response.data);
+      console.log('States API response:', response);
+      let statesData = [];
+      if (response.data && response.data.data && response.data.data.states) {
+        statesData = response.data.data.states;
+      } else if (response.data && response.data.states) {
+        statesData = response.data.states;
+      } else if (Array.isArray(response.data)) {
+        statesData = response.data;
+      } else {
+        statesData = [];
+      }
+      setStates(statesData);
     } catch (err) {
+      console.error('Error fetching states:', err);
       setStates([]);
     }
   };
@@ -132,6 +145,9 @@ export default function Cities() {
   };
 
   const getStateName = (stateId) => {
+    if (!Array.isArray(states)) {
+      return 'Unknown';
+    }
     const state = states.find(s => s._id === stateId);
     return state ? state.name : 'Unknown';
   };
@@ -160,15 +176,49 @@ export default function Cities() {
 
       {/* Search */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search cities..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-4 pr-4 py-3 w-full border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-          />
+        <div className="flex gap-3">
+          <div className="flex-1 relative">
+            <input
+              type="text"
+              placeholder="Search cities... (Press Enter to search)"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  setActiveSearchTerm(searchTerm);
+                  setCurrentPage(1); // Reset to first page when searching
+                }
+              }}
+              className="pl-4 pr-4 py-3 w-full border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            />
+          </div>
+          <button
+            onClick={() => {
+              setActiveSearchTerm(searchTerm);
+              setCurrentPage(1); // Reset to first page when searching
+            }}
+            className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
+          >
+            Search
+          </button>
+          {activeSearchTerm && (
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setActiveSearchTerm('');
+                setCurrentPage(1);
+              }}
+              className="px-6 py-3 bg-slate-200 text-slate-700 rounded-xl hover:bg-slate-300 transition-colors font-medium"
+            >
+              Clear
+            </button>
+          )}
         </div>
+        {activeSearchTerm && (
+          <div className="mt-3 text-sm text-slate-600">
+            Searching for: <span className="font-medium">"{activeSearchTerm}"</span>
+          </div>
+        )}
       </div>
 
       {/* Cities Table */}

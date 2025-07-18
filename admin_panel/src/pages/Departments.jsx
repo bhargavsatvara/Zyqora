@@ -8,10 +8,11 @@ export default function Departments() {
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeSearchTerm, setActiveSearchTerm] = useState('');
 
   useEffect(() => {
     fetchDepartments();
-  }, []);
+  }, [activeSearchTerm]);
 
   const fetchDepartments = async () => {
     setLoading(true);
@@ -40,8 +41,8 @@ export default function Departments() {
   // Filter departments by search term
   const filteredDepartments = departments.filter(
     d =>
-      d.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (d.description && d.description.toLowerCase().includes(searchTerm.toLowerCase()))
+      d.name.toLowerCase().includes(activeSearchTerm.toLowerCase()) ||
+      (d.description && d.description.toLowerCase().includes(activeSearchTerm.toLowerCase()))
   );
 
   if (loading) {
@@ -71,15 +72,46 @@ export default function Departments() {
 
       {/* Search Bar */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search departments..."
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            className="pl-4 pr-4 py-3 w-full border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-          />
+        <div className="flex gap-3">
+          <div className="flex-1 relative">
+            <input
+              type="text"
+              placeholder="Search departments... (Press Enter to search)"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  setActiveSearchTerm(searchTerm);
+                }
+              }}
+              className="pl-4 pr-4 py-3 w-full border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            />
+          </div>
+          <button
+            onClick={() => {
+              setActiveSearchTerm(searchTerm);
+            }}
+            className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
+          >
+            Search
+          </button>
+          {activeSearchTerm && (
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setActiveSearchTerm('');
+              }}
+              className="px-6 py-3 bg-slate-200 text-slate-700 rounded-xl hover:bg-slate-300 transition-colors font-medium"
+            >
+              Clear
+            </button>
+          )}
         </div>
+        {activeSearchTerm && (
+          <div className="mt-3 text-sm text-slate-600">
+            Searching for: <span className="font-medium">"{activeSearchTerm}"</span>
+          </div>
+        )}
       </div>
 
       {/* Departments Table */}

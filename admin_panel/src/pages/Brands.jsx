@@ -9,6 +9,7 @@ export default function Brands() {
   const [showModal, setShowModal] = useState(false);
   const [editingBrand, setEditingBrand] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeSearchTerm, setActiveSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -18,7 +19,7 @@ export default function Brands() {
 
   useEffect(() => {
     fetchBrands();
-  }, [currentPage, searchTerm, statusFilter]);
+  }, [currentPage, activeSearchTerm, statusFilter]);
 
   const fetchBrands = async () => {
     try {
@@ -26,7 +27,7 @@ export default function Brands() {
       const params = {
         page: currentPage,
         limit: 10,
-        search: searchTerm || undefined,
+        search: activeSearchTerm || undefined,
         status: statusFilter !== 'all' ? statusFilter : undefined,
       };
 
@@ -90,15 +91,49 @@ export default function Brands() {
 
       {/* Search */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search brands by name or description..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-4 pr-4 py-3 w-full border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-          />
+        <div className="flex gap-3">
+          <div className="flex-1 relative">
+            <input
+              type="text"
+              placeholder="Search brands... (Press Enter to search)"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  setActiveSearchTerm(searchTerm);
+                  setCurrentPage(1); // Reset to first page when searching
+                }
+              }}
+              className="pl-4 pr-4 py-3 w-full border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            />
+          </div>
+          <button
+            onClick={() => {
+              setActiveSearchTerm(searchTerm);
+              setCurrentPage(1); // Reset to first page when searching
+            }}
+            className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
+          >
+            Search
+          </button>
+          {activeSearchTerm && (
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setActiveSearchTerm('');
+                setCurrentPage(1);
+              }}
+              className="px-6 py-3 bg-slate-200 text-slate-700 rounded-xl hover:bg-slate-300 transition-colors font-medium"
+            >
+              Clear
+            </button>
+          )}
         </div>
+        {activeSearchTerm && (
+          <div className="mt-3 text-sm text-slate-600">
+            Searching for: <span className="font-medium">"{activeSearchTerm}"</span>
+          </div>
+        )}
       </div>
 
       {/* Brands Table */}

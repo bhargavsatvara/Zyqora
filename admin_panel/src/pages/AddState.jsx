@@ -21,9 +21,22 @@ export default function AddState() {
   const fetchCountries = async () => {
     try {
       const response = await countriesAPI.getCountries();
-      setCountries(response.data);
+      console.log('Countries API response in AddState:', response);
+      let countriesData = [];
+      if (response.data && response.data.data && response.data.data.countries) {
+        countriesData = response.data.data.countries;
+      } else if (response.data && response.data.countries) {
+        countriesData = response.data.countries;
+      } else if (Array.isArray(response.data)) {
+        countriesData = response.data;
+      } else {
+        countriesData = [];
+      }
+      setCountries(countriesData);
     } catch (err) {
+      console.error('Error fetching countries in AddState:', err);
       setError('Failed to fetch countries.');
+      setCountries([]);
     }
   };
 
@@ -84,7 +97,7 @@ export default function AddState() {
               <label className="block font-medium mb-1 text-slate-700">Country <span className="text-red-500">*</span></label>
               <select name="country_id" value={form.country_id} onChange={handleChange} required className="w-full border border-slate-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 bg-slate-50">
                 <option value="">Select a country</option>
-                {countries.map((country) => (
+                {Array.isArray(countries) && countries.map((country) => (
                   <option key={country._id} value={country._id}>{country.name}</option>
                 ))}
               </select>
