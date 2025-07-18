@@ -171,10 +171,6 @@ export const colorsAPI = {
 // Sizes API
 export const sizesAPI = {
   getSizes: (params) => api.get('/sizes', { params }),
-  getSize: (id) => api.get(`/sizes/${id}`),
-  createSize: (data) => api.post('/sizes', data),
-  updateSize: (id, data) => api.put(`/sizes/${id}`, data),
-  deleteSize: (id) => api.delete(`/sizes/${id}`),
 };
 
 // Materials API
@@ -197,6 +193,14 @@ export const productMaterialsAPI = {
   createProductMaterial: (data) => api.post('/product-materials', data),
   updateProductMaterial: (id, data) => api.put(`/product-materials/${id}`, data),
   deleteProductMaterial: (id) => api.delete(`/product-materials/${id}`),
+};
+
+export const productSizesAPI = {
+  getProductSizes: (params) => api.get('/product-sizes', { params }),
+  getProductSize: (id) => api.get(`/product-sizes/${id}`),
+  createProductSize: (data) => api.post('/product-sizes', data),
+  updateProductSize: (id, data) => api.put(`/product-sizes/${id}`, data),
+  deleteProductSize: (id) => api.delete(`/product-sizes/${id}`),
 };
 
 export default api; 
