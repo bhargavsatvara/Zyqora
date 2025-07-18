@@ -162,6 +162,10 @@ export const citiesAPI = {
 // Colors API
 export const colorsAPI = {
   getColors: (params) => api.get('/colors', { params }),
+  getColor: (id) => api.get(`/colors/${id}`),
+  createColor: (data) => api.post('/colors', data),
+  updateColor: (id, data) => api.put(`/colors/${id}`, data),
+  deleteColor: (id) => api.delete(`/colors/${id}`),
 };
 
 // Sizes API
