@@ -29,17 +29,11 @@ export default function Colors() {
     setLoading(true);
     try {
       const params = { page: currentPage, limit: 10, search: activeSearchTerm || undefined };
-      console.log('Fetching colors with params:', params);
       const response = await colorsAPI.getColors(params);
-      console.log('API response:', response);
       let data = response.data;
-      if (Array.isArray(data)) {
-        setColors(data);
-        setTotalPages(1);
-        setTotalColors(data.length);
-      } else if (data.data && data.data.colors) {
+      if (data.data && data.data.colors) {
         setColors(data.data.colors);
-        setTotalPages(data.data.pagination?.total || 1);
+        setTotalPages(data.data.pagination?.totalPages || 1);
         setTotalColors(data.data.pagination?.totalRecords || data.data.colors.length);
       } else {
         setColors([]);
@@ -47,7 +41,6 @@ export default function Colors() {
         setTotalColors(0);
       }
     } catch (err) {
-      console.error('Error fetching colors:', err);
       setColors([]);
       setTotalPages(1);
       setTotalColors(0);
