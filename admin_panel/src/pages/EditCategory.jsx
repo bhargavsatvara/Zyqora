@@ -13,7 +13,7 @@ export default function EditCategory() {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    department_id: ''
+    department_ids: []
   });
   const [errors, setErrors] = useState({});
 
@@ -32,7 +32,7 @@ export default function EditCategory() {
       setFormData({
         name: category.name || '',
         description: category.description || '',
-        department_id: category.department_id?._id || ''
+        department_ids: category.department_ids ? category.department_ids.map(dept => dept._id || dept) : []
       });
     } catch (error) {
       console.error('Error fetching category:', error);
@@ -60,11 +60,19 @@ export default function EditCategory() {
     }
   };
 
+  const handleDepartmentChange = (e) => {
+    const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+    setFormData(prev => ({ ...prev, department_ids: selectedOptions }));
+    if (errors.department_ids) {
+      setErrors(prev => ({ ...prev, department_ids: '' }));
+    }
+  };
+
   const validateForm = () => {
     const newErrors = {};
     if (!formData.name.trim()) newErrors.name = 'Category name is required';
     if (!formData.description.trim()) newErrors.description = 'Description is required';
-    if (!formData.department_id) newErrors.department_id = 'Department is required';
+    if (!formData.department_ids.length) newErrors.department_ids = 'At least one department is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -130,19 +138,20 @@ export default function EditCategory() {
           {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">Department *</label>
+          <label className="block text-sm font-medium text-slate-700 mb-2">Departments * (Hold Ctrl/Cmd to select multiple)</label>
           <select
-            name="department_id"
-            value={formData.department_id}
-            onChange={handleInputChange}
-            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${errors.department_id ? 'border-red-300' : 'border-slate-200'}`}
+            name="department_ids"
+            multiple
+            value={formData.department_ids}
+            onChange={handleDepartmentChange}
+            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all min-h-[120px] ${errors.department_ids ? 'border-red-300' : 'border-slate-200'}`}
           >
-            <option value="">Select Department</option>
             {departments.map(dept => (
               <option key={dept._id} value={dept._id}>{dept.name}</option>
             ))}
           </select>
-          {errors.department_id && <p className="text-red-500 text-sm mt-1">{errors.department_id}</p>}
+          {errors.department_ids && <p className="text-red-500 text-sm mt-1">{errors.department_ids}</p>}
+          <p className="text-xs text-slate-500 mt-1">Selected: {formData.department_ids.length} department(s)</p>
         </div>
         <div className="flex items-center justify-end gap-4 pt-6 border-t border-slate-200">
           <button

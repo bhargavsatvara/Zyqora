@@ -7,6 +7,7 @@ export default function EditDepartment() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [form, setForm] = useState({ name: '', description: '' });
+  const [createdAt, setCreatedAt] = useState('');
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -21,6 +22,7 @@ export default function EditDepartment() {
       const res = await departmentsAPI.getDepartment(id);
       const dept = res.data.data || res.data;
       setForm({ name: dept.name || '', description: dept.description || '' });
+      setCreatedAt(dept.createdAt || '');
     } catch (err) {
       alert('Error loading department: ' + (err.response?.data?.message || err.message));
       navigate('/departments');
@@ -77,6 +79,17 @@ export default function EditDepartment() {
         <h1 className="text-2xl font-bold text-slate-900">Edit Department</h1>
       </div>
       <form onSubmit={handleSubmit} className="space-y-6">
+        {createdAt && (
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Created At</label>
+            <input
+              type="text"
+              value={new Date(createdAt).toLocaleString()}
+              readOnly
+              className="w-full px-4 py-3 border rounded-xl bg-slate-100 text-slate-700 cursor-not-allowed"
+            />
+          </div>
+        )}
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-2">Department Name *</label>
           <input

@@ -12,11 +12,17 @@ const CategorySchema = new Schema({
     required: true,
     trim: true
   },
-  department_id: {
+  slug: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+    sparse: true
+  },
+  department_ids: [{
     type: Schema.Types.ObjectId,
-    ref: 'Department',
-    default: null
-  }
+    ref: 'Department'
+  }]
 }, {
   timestamps: true
 });

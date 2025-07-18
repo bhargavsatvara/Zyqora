@@ -9,6 +9,8 @@ export default function Departments() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeSearchTerm, setActiveSearchTerm] = useState('');
+  const [deleteId, setDeleteId] = useState(null);
+  const [deleteError, setDeleteError] = useState('');
 
   useEffect(() => {
     fetchDepartments();
@@ -26,13 +28,15 @@ export default function Departments() {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this department?')) return;
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    setDeleteError('');
     try {
-      await departmentsAPI.deleteDepartment(id);
-      setDepartments(departments.filter(d => d._id !== id));
+      await departmentsAPI.deleteDepartment(deleteId);
+      setDepartments(departments.filter(d => d._id !== deleteId));
+      setDeleteId(null);
     } catch (err) {
-      alert('Failed to delete department: ' + (err.response?.data?.message || err.message));
+      setDeleteError(err.response?.data?.message || err.message);
     }
   };
 
@@ -137,7 +141,7 @@ export default function Departments() {
                       <button onClick={() => navigate(`/departments/edit/${dept._id}`)} className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 p-2 rounded-lg transition-colors" title="Edit">
                         <Edit className="h-4 w-4" />
                       </button>
-                      <button onClick={() => handleDelete(dept._id)} className="text-red-600 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors" title="Delete">
+                      <button onClick={() => setDeleteId(dept._id)} className="text-red-600 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors" title="Delete">
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
@@ -168,6 +172,20 @@ export default function Departments() {
           </div>
         )}
       </div>
+      {/* Delete Confirmation Modal */}
+      {deleteId && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md p-8 relative">
+            <h2 className="text-xl font-bold text-slate-900 mb-2">Delete Department</h2>
+            <p className="mb-4 text-slate-700">Are you sure you want to delete this department? This action cannot be undone.</p>
+            <div className="flex gap-3 mt-4">
+              <button type="button" onClick={() => setDeleteId(null)} className="flex-1 px-4 py-2 border border-slate-200 rounded-lg bg-slate-50 hover:bg-slate-100 font-medium text-slate-700">Cancel</button>
+              <button type="button" onClick={handleDelete} className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 font-medium flex items-center justify-center gap-2">Delete</button>
+            </div>
+            {deleteError && <div className="text-red-600 text-sm font-medium mt-4">{deleteError}</div>}
+          </div>
+        </div>
+      )}
     </div>
   );
 } 

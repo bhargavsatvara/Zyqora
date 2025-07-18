@@ -1,11 +1,11 @@
-const { Product, Category, Brand } = require('../models');
+const { Product, Category, Brand, Department } = require('../models');
 const path = require('path');
 
 // All product endpoints now support the 'image' field (string URL)
 
 exports.getAllProducts = async (req, res) => {
   try {
-    const { search, page = 1, limit = 10, category_id, brand_id, min_price, max_price } = req.query;
+    const { search, page = 1, limit = 10, category_id, brand_id, department_id, min_price, max_price } = req.query;
     console.log('getAllProducts called with query:', req.query);
     
     // Build query
@@ -24,6 +24,7 @@ exports.getAllProducts = async (req, res) => {
     // Add filters
     if (category_id) query.category_id = category_id;
     if (brand_id) query.brand_id = brand_id;
+    if (department_id) query.department_id = department_id;
     if (min_price || max_price) {
       query.price = {};
       if (min_price) query.price.$gte = Number(min_price);
@@ -36,6 +37,7 @@ exports.getAllProducts = async (req, res) => {
     // Execute query with pagination and populate
     const products = await Product.find(query)
       .populate('category_id', 'name')
+      .populate('department_id', 'name')
       .populate('brand_id', 'name')
       .skip(skip)
       .limit(parseInt(limit))
@@ -68,6 +70,7 @@ exports.getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id)
       .populate('category_id', 'name')
+      .populate('department_id', 'name')
       .populate('brand_id', 'name');
     if (!product) return res.status(404).json({ message: 'Product not found' });
     res.json(product); // Includes 'image' field
@@ -94,6 +97,7 @@ exports.createProduct = async (req, res) => {
     // Populate the saved product
     const populatedProduct = await Product.findById(product._id)
       .populate('category_id', 'name')
+      .populate('department_id', 'name')
       .populate('brand_id', 'name');
     res.status(201).json(populatedProduct); // Includes 'image' field
   } catch (err) {
@@ -115,7 +119,7 @@ exports.updateProduct = async (req, res) => {
       req.params.id, 
       updateData, 
       { new: true }
-    ).populate('category_id', 'name').populate('brand_id', 'name');
+    ).populate('category_id', 'name').populate('department_id', 'name').populate('brand_id', 'name');
     if (!product) return res.status(404).json({ message: 'Product not found' });
     res.json(product); // Includes 'image' field
   } catch (err) {
@@ -159,7 +163,7 @@ exports.searchProducts = async (req, res) => {
         { description: { $regex: query, $options: 'i' } },
         { sku: { $regex: query, $options: 'i' } }
       ]
-    }).populate('category_id', 'name').populate('brand_id', 'name');
+    }).populate('category_id', 'name').populate('department_id', 'name').populate('brand_id', 'name');
     res.json(products); // Each product includes 'image' field
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
@@ -170,6 +174,7 @@ exports.getFeaturedProducts = async (req, res) => {
   try {
     const products = await Product.find()
       .populate('category_id', 'name')
+      .populate('department_id', 'name')
       .populate('brand_id', 'name')
       .sort({ created_at: -1 })
       .limit(10);

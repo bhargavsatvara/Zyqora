@@ -5,6 +5,7 @@ const ProductSchema = new Schema({
   name: { type: String, required: true },
   sku: String,
   category_id: { type: Schema.Types.ObjectId, ref: 'Category' },
+  department_id: { type: Schema.Types.ObjectId, ref: 'Department' },
   brand_id: { type: Schema.Types.ObjectId, ref: 'Brand' },
   price: Number,
   description: String,

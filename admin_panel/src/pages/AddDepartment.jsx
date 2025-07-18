@@ -8,6 +8,7 @@ export default function AddDepartment() {
   const [form, setForm] = useState({ name: '', description: '' });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState('');
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -28,8 +29,8 @@ export default function AddDepartment() {
     setLoading(true);
     try {
       await departmentsAPI.createDepartment(form);
-      alert('Department created successfully!');
-      navigate('/departments');
+      setSuccess('Department created successfully!');
+      setTimeout(() => navigate('/departments'), 1500);
     } catch (err) {
       setErrors({ name: err.response?.data?.message || err.message });
     } finally {
@@ -49,6 +50,11 @@ export default function AddDepartment() {
         <h1 className="text-2xl font-bold text-slate-900">Add Department</h1>
       </div>
       <form onSubmit={handleSubmit} className="space-y-6">
+        {success && (
+          <div className="flex items-center gap-2 text-green-600 font-medium bg-green-50 border border-green-200 rounded-lg px-4 py-2 mb-2">
+            {success}
+          </div>
+        )}
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-2">Department Name *</label>
           <input
