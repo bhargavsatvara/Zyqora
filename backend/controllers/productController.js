@@ -5,7 +5,7 @@ const path = require('path');
 
 exports.getAllProducts = async (req, res) => {
   try {
-    const { search, page = 1, limit = 10, category_id, brand_id, department_id, min_price, max_price } = req.query;
+    const { search, page = 1, limit = 10, category_id, brand_id, department_id, color_id, size_id, min_price, max_price } = req.query;
     console.log('getAllProducts called with query:', req.query);
     
     // Build query
@@ -35,13 +35,45 @@ exports.getAllProducts = async (req, res) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     
     // Execute query with pagination and populate
-    const products = await Product.find(query)
+    let products = await Product.find(query)
       .populate('category_id', 'name')
       .populate('department_id', 'name')
       .populate('brand_id', 'name')
       .skip(skip)
       .limit(parseInt(limit))
       .sort({ created_at: -1 });
+    
+    // Apply color and size filters if provided
+    if (color_id || size_id) {
+      const ProductColor = require('../models/product_color');
+      const ProductSize = require('../models/product_size');
+      
+      let productIds = [];
+      
+      if (color_id) {
+        const colorProducts = await ProductColor.find({ color_ids: color_id });
+        productIds = colorProducts.map(pc => pc.product_id);
+      }
+      
+      if (size_id) {
+        const sizeProducts = await ProductSize.find({ size_ids: size_id });
+        const sizeProductIds = sizeProducts.map(ps => ps.product_id);
+        
+        if (productIds.length > 0) {
+          // If both filters are applied, find intersection
+          productIds = productIds.filter(id => sizeProductIds.includes(id));
+        } else {
+          productIds = sizeProductIds;
+        }
+      }
+      
+      // Filter products by the found product IDs
+      if (productIds.length > 0) {
+        products = products.filter(product => productIds.includes(product._id.toString()));
+      } else {
+        products = [];
+      }
+    }
     
     // Get total count for pagination
     const totalProducts = await Product.countDocuments(query);

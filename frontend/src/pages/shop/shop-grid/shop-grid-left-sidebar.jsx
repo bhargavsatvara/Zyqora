@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
 import Navbar from "../../../components/navbar";
@@ -7,10 +7,80 @@ import Switcher from "../../../components/switcher";
 import Filter from "../../../components/filter";
 
 import {FiHeart, FiEye, FiBookmark, FiChevronLeft, FiChevronRight} from '../../../assets/icons/vander'
-import { newProduct } from "../../../data/data";
 import ScrollToTop from "../../../components/scroll-to-top";
 
 export default function ShopGridLeftSidebar(){
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalRecords, setTotalRecords] = useState(0);
+    const [filters, setFilters] = useState({
+        search: '',
+        category_id: '',
+        brand_id: '',
+        department_id: '',
+        min_price: '',
+        max_price: ''
+    });
+
+    useEffect(() => {
+        fetchProducts();
+    }, [currentPage, filters]);
+
+    const fetchProducts = async () => {
+        setLoading(true);
+        try {
+            const params = new URLSearchParams({
+                page: currentPage,
+                limit: 12,
+                ...filters
+            });
+            
+            const response = await fetch(`http://localhost:4000/api/products?${params}`);
+            const data = await response.json();
+            
+            if (data.data && data.data.products) {
+                setProducts(data.data.products);
+                setTotalPages(data.data.pagination?.totalPages || 1);
+                setTotalRecords(data.data.pagination?.totalRecords || 0);
+            }
+        } catch (error) {
+            console.error('Error fetching products:', error);
+            setProducts([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleFilterChange = (newFilters) => {
+        setFilters(prev => ({ ...prev, ...newFilters }));
+        setCurrentPage(1);
+    };
+
+    const handlePageChange = (page) => {
+        setCurrentPage(page);
+    };
+
+    const getImageUrl = (product) => {
+        if (!product.image) {
+            return '/assets/images/shop/default-product.jpg';
+        }
+        
+        // If image starts with http, it's an external URL
+        if (product.image.startsWith('http')) {
+            return product.image;
+        }
+        
+        // If image starts with /uploads, it's a local file
+        if (product.image.startsWith('/uploads')) {
+            return `http://localhost:4000${product.image}`;
+        }
+        
+        // Default fallback
+        return '/assets/images/shop/default-product.jpg';
+    };
+
     return(
         <>
         <Navbar navClass="defaultscroll is-sticky"/>
@@ -32,10 +102,10 @@ export default function ShopGridLeftSidebar(){
         <section className="relative md:py-24 py-16">
             <div className="container relative">
                 <div className="grid md:grid-cols-12 sm:grid-cols-2 grid-cols-1 gap-6">
-                    <Filter/>
+                    <Filter onFilterChange={handleFilterChange} filters={filters}/>
                     <div className="lg:col-span-9 md:col-span-8">
                         <div className="md:flex justify-between items-center mb-6">
-                            <span className="font-semibold">Showing 1-16 of 40 items</span>
+                            <span className="font-semibold">Showing {((currentPage - 1) * 12) + 1}-{Math.min(currentPage * 12, totalRecords)} of {totalRecords} items</span>
         
                             <div className="md:flex items-center">
                                 <label className="font-semibold md:me-2">Sort by:</label>
@@ -49,88 +119,99 @@ export default function ShopGridLeftSidebar(){
                                 </select>
                             </div>
                         </div>
-                        <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
-                        {newProduct.slice(0,15).map((item, index)=>{
-                        return(
-                            <div className="group" key={index}>
-                                <div className="relative overflow-hidden shadow dark:shadow-gray-800 group-hover:shadow-lg group-hover:dark:shadow-gray-800 rounded-md duration-500">
-                                    <img src={item.image} className="group-hover:scale-110 duration-500" alt=""/>
-            
-                                    <div className="absolute -bottom-20 group-hover:bottom-3 start-3 end-3 duration-500">
-                                        <Link to="/shop-cart" className="py-2 px-5 inline-block font-semibold tracking-wide align-middle duration-500 text-base text-center bg-slate-900 text-white w-full rounded-md">Add to Cart</Link>
+                        
+                        {loading ? (
+                            <div className="flex items-center justify-center py-20">
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+                            </div>
+                        ) : (
+                            <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
+                                {products.map((item, index) => (
+                                    <div className="group" key={item._id || index}>
+                                        <div className="relative overflow-hidden shadow dark:shadow-gray-800 group-hover:shadow-lg group-hover:dark:shadow-gray-800 rounded-md duration-500">
+                                            <img 
+                                                src={getImageUrl(item)} 
+                                                className="group-hover:scale-110 duration-500 w-full h-64 object-cover" 
+                                                alt={item.name}
+                                                onError={(e) => {
+                                                    e.target.src = '/assets/images/shop/default-product.jpg';
+                                                }}
+                                            />
+                
+                                            <div className="absolute -bottom-20 group-hover:bottom-3 start-3 end-3 duration-500">
+                                                <Link to="/shop-cart" className="py-2 px-5 inline-block font-semibold tracking-wide align-middle duration-500 text-base text-center bg-slate-900 text-white w-full rounded-md">Add to Cart</Link>
+                                            </div>
+                
+                                            <ul className="list-none absolute top-[10px] end-4 opacity-0 group-hover:opacity-100 duration-500 space-y-1">
+                                                <li><Link to="#" className="size-10 inline-flex items-center justify-center tracking-wide align-middle duration-500 text-center rounded-full bg-white text-slate-900 hover:bg-slate-900 hover:text-white shadow"><FiHeart className="size-4"></FiHeart></Link></li>
+                                                <li className="mt-1 ms-0"><Link to={`/product-detail-one/${item._id}`} className="size-10 inline-flex items-center justify-center tracking-wide align-middle duration-500 text-center rounded-full bg-white text-slate-900 hover:bg-slate-900 hover:text-white shadow"><FiEye className="size-4"></FiEye></Link></li>
+                                                <li className="mt-1 ms-0"><Link to="#" className="size-10 inline-flex items-center justify-center tracking-wide align-middle duration-500 text-center rounded-full bg-white text-slate-900 hover:bg-slate-900 hover:text-white shadow"><FiBookmark className="size-4"></FiBookmark></Link></li>
+                                            </ul>
+                                        </div>
+
+                                        <div className="mt-4">
+                                            <Link to={`/product-detail-one/${item._id}`} className="hover:text-orange-500 text-lg font-medium">{item.name}</Link>
+                                            <div className="flex justify-between items-center mt-1">
+                                                <p className="text-lg font-semibold">${item.price || 0}</p>
+                                                <ul className="font-medium text-amber-400 list-none">
+                                                    <li className="inline"><i className="mdi mdi-star"></i></li>
+                                                    <li className="inline"><i className="mdi mdi-star"></i></li>
+                                                    <li className="inline"><i className="mdi mdi-star"></i></li>
+                                                    <li className="inline"><i className="mdi mdi-star"></i></li>
+                                                    <li className="inline"><i className="mdi mdi-star"></i></li>
+                                                </ul>
+                                            </div>
+                                            {item.category_id && (
+                                                <p className="text-sm text-slate-500 mt-1">{item.category_id.name}</p>
+                                            )}
+                                        </div>
                                     </div>
-            
-                                    <ul className="list-none absolute top-[10px] end-4 opacity-0 group-hover:opacity-100 duration-500 space-y-1">
-                                        <li><Link to="#" className="size-10 inline-flex items-center justify-center tracking-wide align-middle duration-500 text-center rounded-full bg-white text-slate-900 hover:bg-slate-900 hover:text-white shadow"><FiHeart className="size-4"></FiHeart></Link></li>
-                                        <li className="mt-1 ms-0"><Link to="/shop-item-detail" className="size-10 inline-flex items-center justify-center tracking-wide align-middle duration-500 text-center rounded-full bg-white text-slate-900 hover:bg-slate-900 hover:text-white shadow"><FiEye className="size-4"></FiEye></Link></li>
-                                        <li className="mt-1 ms-0"><Link to="#" className="size-10 inline-flex items-center justify-center tracking-wide align-middle duration-500 text-center rounded-full bg-white text-slate-900 hover:bg-slate-900 hover:text-white shadow"><FiBookmark className="size-4"></FiBookmark></Link></li>
-                                    </ul>
-
-                                    <ul className="list-none absolute top-[10px] start-4">
-                                        {item.offer === true && (
-
-                                            <li><Link to="#" className="bg-orange-600 text-white text-[10px] font-bold px-2.5 py-0.5 rounded h-5">{item.tag}</Link></li>
-                                        )}
-                                        {item.tag === 'New' && (
-                                            <li><Link to="#" className="bg-red-600 text-white text-[10px] font-bold px-2.5 py-0.5 rounded h-5">{item.tag}</Link></li>
-                                        )}
-                                        {item.tag === 'Featured' && (
-                                            <li><Link to="#" className="bg-emerald-600 text-white text-[10px] font-bold px-2.5 py-0.5 rounded h-5">{item.tag}</Link></li>
-                                        )}
-                                    </ul>
-                                </div>
-
-                                <div className="mt-4">
-                                    <Link to={`/product-detail-one/${item.id}`} className="hover:text-orange-500 text-lg font-medium">{item.name}</Link>
-                                    <div className="flex justify-between items-center mt-1">
-                                        <p>{item.desRate} <del className="text-slate-400">{item.amount}</del></p>
-                                        <ul className="font-medium text-amber-400 list-none">
-                                            <li className="inline"><i className="mdi mdi-star"></i></li>
-                                            <li className="inline"><i className="mdi mdi-star"></i></li>
-                                            <li className="inline"><i className="mdi mdi-star"></i></li>
-                                            <li className="inline"><i className="mdi mdi-star"></i></li>
-                                            <li className="inline"><i className="mdi mdi-star"></i></li>
+                                ))}
+                            </div>
+                        )}
+        
+                        {totalPages > 1 && (
+                            <div className="grid md:grid-cols-12 grid-cols-1 mt-6">
+                                <div className="md:col-span-12 text-center">
+                                    <nav aria-label="Page navigation example">
+                                        <ul className="inline-flex items-center -space-x-px">
+                                            <li>
+                                                <button 
+                                                    onClick={() => handlePageChange(currentPage - 1)}
+                                                    disabled={currentPage === 1}
+                                                    className="size-[40px] inline-flex justify-center items-center text-slate-400 bg-white dark:bg-slate-900 rounded-s-3xl hover:text-white border border-gray-100 dark:border-gray-800 hover:border-orange-500 dark:hover:border-orange-500 hover:bg-orange-500 dark:hover:bg-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                >
+                                                    <FiChevronLeft className="size-5 rtl:rotate-180 rtl:-mt-1"></FiChevronLeft>
+                                                </button>
+                                            </li>
+                                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                                <li key={page}>
+                                                    <button 
+                                                        onClick={() => handlePageChange(page)}
+                                                        className={`size-[40px] inline-flex justify-center items-center ${
+                                                            currentPage === page 
+                                                                ? 'text-white bg-orange-500 border border-orange-500' 
+                                                                : 'text-slate-400 hover:text-white bg-white dark:bg-slate-900 border border-gray-100 dark:border-gray-800 hover:border-orange-500 dark:hover:border-orange-500 hover:bg-orange-500 dark:hover:bg-orange-500'
+                                                        }`}
+                                                    >
+                                                        {page}
+                                                    </button>
+                                                </li>
+                                            ))}
+                                            <li>
+                                                <button 
+                                                    onClick={() => handlePageChange(currentPage + 1)}
+                                                    disabled={currentPage === totalPages}
+                                                    className="size-[40px] inline-flex justify-center items-center text-slate-400 bg-white dark:bg-slate-900 rounded-e-3xl hover:text-white border border-gray-100 dark:border-gray-800 hover:border-orange-500 dark:hover:border-orange-500 hover:bg-orange-500 dark:hover:bg-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                >
+                                                    <FiChevronRight className="size-5 rtl:rotate-180 rtl:-mt-1"></FiChevronRight>
+                                                </button>
+                                            </li>
                                         </ul>
-                                    </div>
+                                    </nav>
                                 </div>
                             </div>
-                        )
-                    })}
-                        </div>
-        
-                    <div className="grid md:grid-cols-12 grid-cols-1 mt-6">
-                        <div className="md:col-span-12 text-center">
-                            <nav aria-label="Page navigation example">
-                                <ul className="inline-flex items-center -space-x-px">
-                                    <li>
-                                        <Link to="#" className="size-[40px] inline-flex justify-center items-center text-slate-400 bg-white dark:bg-slate-900 rounded-s-3xl hover:text-white border border-gray-100 dark:border-gray-800 hover:border-orange-500 dark:hover:border-orange-500 hover:bg-orange-500 dark:hover:bg-orange-500">
-                                            <FiChevronLeft className="size-5 rtl:rotate-180 rtl:-mt-1"></FiChevronLeft>
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link to="#" className="size-[40px] inline-flex justify-center items-center text-slate-400 hover:text-white bg-white dark:bg-slate-900 border border-gray-100 dark:border-gray-800 hover:border-orange-500 dark:hover:border-orange-500 hover:bg-orange-500 dark:hover:bg-orange-500">1</Link>
-                                    </li>
-                                    <li>
-                                        <Link to="#" className="size-[40px] inline-flex justify-center items-center text-slate-400 hover:text-white bg-white dark:bg-slate-900 border border-gray-100 dark:border-gray-800 hover:border-orange-500 dark:hover:border-orange-500 hover:bg-orange-500 dark:hover:bg-orange-500">2</Link>
-                                    </li>
-                                    <li>
-                                        <Link to="#" aria-current="page" className="z-10 size-[40px] inline-flex justify-center items-center text-white bg-orange-500 border border-orange-500">3</Link>
-                                    </li>
-                                    <li>
-                                        <Link to="#" className="size-[40px] inline-flex justify-center items-center text-slate-400 hover:text-white bg-white dark:bg-slate-900 border border-gray-100 dark:border-gray-800 hover:border-orange-500 dark:hover:border-orange-500 hover:bg-orange-500 dark:hover:bg-orange-500">4</Link>
-                                    </li>
-                                    <li>
-                                        <Link to="#" className="size-[40px] inline-flex justify-center items-center text-slate-400 hover:text-white bg-white dark:bg-slate-900 border border-gray-100 dark:border-gray-800 hover:border-orange-500 dark:hover:border-orange-500 hover:bg-orange-500 dark:hover:bg-orange-500">5</Link>
-                                    </li>
-                                    <li>
-                                        <Link to="#" className="size-[40px] inline-flex justify-center items-center text-slate-400 bg-white dark:bg-slate-900 rounded-e-3xl hover:text-white border border-gray-100 dark:border-gray-800 hover:border-orange-500 dark:hover:border-orange-500 hover:bg-orange-500 dark:hover:bg-orange-500">
-                                            <FiChevronRight className="size-5 rtl:rotate-180 rtl:-mt-1"></FiChevronRight>
-                                        </Link>
-                                    </li>
-                                </ul>
-                            </nav>
-                        </div>
-                    </div>
+                        )}
                     </div>
                 </div>
             </div>
