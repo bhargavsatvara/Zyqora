@@ -58,7 +58,7 @@ exports.getAllProducts = async (req, res) => {
         productIds = colorProducts.map(pc => pc.product_id);
         console.log('Color products found:', colorProducts.length);
       }
-      @
+      
       if (size_id) {
         console.log('Filtering by size_id:', size_id);
         const sizeProducts = await ProductSize.find({ size_ids: size_id });
