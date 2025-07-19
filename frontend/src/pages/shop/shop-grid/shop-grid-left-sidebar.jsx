@@ -105,7 +105,13 @@ export default function ShopGridLeftSidebar(){
                     <Filter onFilterChange={handleFilterChange} filters={filters}/>
                     <div className="lg:col-span-9 md:col-span-8">
                         <div className="md:flex justify-between items-center mb-6">
-                            <span className="font-semibold">Showing {((currentPage - 1) * 12) + 1}-{Math.min(currentPage * 12, totalRecords)} of {totalRecords} items</span>
+                            <span className="font-semibold">
+                                {products.length === 0 ? (
+                                    'No products found'
+                                ) : (
+                                    `Showing ${((currentPage - 1) * 12) + 1}-${Math.min(currentPage * 12, totalRecords)} of ${totalRecords} items`
+                                )}
+                            </span>
         
                             <div className="md:flex items-center">
                                 <label className="font-semibold md:me-2">Sort by:</label>
@@ -124,11 +130,37 @@ export default function ShopGridLeftSidebar(){
                             <div className="flex items-center justify-center py-20">
                                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
                             </div>
+                        ) : products.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-20">
+                                <div className="text-6xl mb-4 text-gray-300">
+                                    <i className="mdi mdi-package-variant"></i>
+                                </div>
+                                <h3 className="text-xl font-semibold mb-2 text-gray-700 dark:text-gray-300">No Products Found</h3>
+                                <p className="text-gray-500 dark:text-gray-400 text-center max-w-md">
+                                    We couldn't find any products matching your current filters. Try adjusting your search criteria or browse our full collection.
+                                </p>
+                                <button 
+                                    onClick={() => {
+                                        setFilters({
+                                            search: '',
+                                            category_id: '',
+                                            brand_id: '',
+                                            department_id: '',
+                                            min_price: '',
+                                            max_price: ''
+                                        });
+                                        setCurrentPage(1);
+                                    }}
+                                    className="mt-4 px-6 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
+                                >
+                                    Clear All Filters
+                                </button>
+                            </div>
                         ) : (
-                            <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
+                        <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
                                 {products.map((item, index) => (
                                     <div className="group" key={item._id || index}>
-                                        <div className="relative overflow-hidden shadow dark:shadow-gray-800 group-hover:shadow-lg group-hover:dark:shadow-gray-800 rounded-md duration-500">
+                                <div className="relative overflow-hidden shadow dark:shadow-gray-800 group-hover:shadow-lg group-hover:dark:shadow-gray-800 rounded-md duration-500">
                                             <img 
                                                 src={getImageUrl(item)} 
                                                 className="group-hover:scale-110 duration-500 w-full h-64 object-cover" 
@@ -137,53 +169,53 @@ export default function ShopGridLeftSidebar(){
                                                     e.target.src = '/assets/images/shop/default-product.jpg';
                                                 }}
                                             />
-                
-                                            <div className="absolute -bottom-20 group-hover:bottom-3 start-3 end-3 duration-500">
-                                                <Link to="/shop-cart" className="py-2 px-5 inline-block font-semibold tracking-wide align-middle duration-500 text-base text-center bg-slate-900 text-white w-full rounded-md">Add to Cart</Link>
-                                            </div>
-                
-                                            <ul className="list-none absolute top-[10px] end-4 opacity-0 group-hover:opacity-100 duration-500 space-y-1">
-                                                <li><Link to="#" className="size-10 inline-flex items-center justify-center tracking-wide align-middle duration-500 text-center rounded-full bg-white text-slate-900 hover:bg-slate-900 hover:text-white shadow"><FiHeart className="size-4"></FiHeart></Link></li>
+            
+                                    <div className="absolute -bottom-20 group-hover:bottom-3 start-3 end-3 duration-500">
+                                        <Link to="/shop-cart" className="py-2 px-5 inline-block font-semibold tracking-wide align-middle duration-500 text-base text-center bg-slate-900 text-white w-full rounded-md">Add to Cart</Link>
+                                    </div>
+            
+                                    <ul className="list-none absolute top-[10px] end-4 opacity-0 group-hover:opacity-100 duration-500 space-y-1">
+                                        <li><Link to="#" className="size-10 inline-flex items-center justify-center tracking-wide align-middle duration-500 text-center rounded-full bg-white text-slate-900 hover:bg-slate-900 hover:text-white shadow"><FiHeart className="size-4"></FiHeart></Link></li>
                                                 <li className="mt-1 ms-0"><Link to={`/product-detail-one/${item._id}`} className="size-10 inline-flex items-center justify-center tracking-wide align-middle duration-500 text-center rounded-full bg-white text-slate-900 hover:bg-slate-900 hover:text-white shadow"><FiEye className="size-4"></FiEye></Link></li>
-                                                <li className="mt-1 ms-0"><Link to="#" className="size-10 inline-flex items-center justify-center tracking-wide align-middle duration-500 text-center rounded-full bg-white text-slate-900 hover:bg-slate-900 hover:text-white shadow"><FiBookmark className="size-4"></FiBookmark></Link></li>
-                                            </ul>
-                                        </div>
+                                        <li className="mt-1 ms-0"><Link to="#" className="size-10 inline-flex items-center justify-center tracking-wide align-middle duration-500 text-center rounded-full bg-white text-slate-900 hover:bg-slate-900 hover:text-white shadow"><FiBookmark className="size-4"></FiBookmark></Link></li>
+                                    </ul>
+                                </div>
 
-                                        <div className="mt-4">
+                                <div className="mt-4">
                                             <Link to={`/product-detail-one/${item._id}`} className="hover:text-orange-500 text-lg font-medium">{item.name}</Link>
-                                            <div className="flex justify-between items-center mt-1">
+                                    <div className="flex justify-between items-center mt-1">
                                                 <p className="text-lg font-semibold">${item.price || 0}</p>
-                                                <ul className="font-medium text-amber-400 list-none">
-                                                    <li className="inline"><i className="mdi mdi-star"></i></li>
-                                                    <li className="inline"><i className="mdi mdi-star"></i></li>
-                                                    <li className="inline"><i className="mdi mdi-star"></i></li>
-                                                    <li className="inline"><i className="mdi mdi-star"></i></li>
-                                                    <li className="inline"><i className="mdi mdi-star"></i></li>
-                                                </ul>
+                                        <ul className="font-medium text-amber-400 list-none">
+                                            <li className="inline"><i className="mdi mdi-star"></i></li>
+                                            <li className="inline"><i className="mdi mdi-star"></i></li>
+                                            <li className="inline"><i className="mdi mdi-star"></i></li>
+                                            <li className="inline"><i className="mdi mdi-star"></i></li>
+                                            <li className="inline"><i className="mdi mdi-star"></i></li>
+                                        </ul>
                                             </div>
                                             {item.category_id && (
                                                 <p className="text-sm text-slate-500 mt-1">{item.category_id.name}</p>
                                             )}
-                                        </div>
                                     </div>
+                                </div>
                                 ))}
                             </div>
                         )}
         
                         {totalPages > 1 && (
-                            <div className="grid md:grid-cols-12 grid-cols-1 mt-6">
-                                <div className="md:col-span-12 text-center">
-                                    <nav aria-label="Page navigation example">
-                                        <ul className="inline-flex items-center -space-x-px">
-                                            <li>
+                    <div className="grid md:grid-cols-12 grid-cols-1 mt-6">
+                        <div className="md:col-span-12 text-center">
+                            <nav aria-label="Page navigation example">
+                                <ul className="inline-flex items-center -space-x-px">
+                                    <li>
                                                 <button 
                                                     onClick={() => handlePageChange(currentPage - 1)}
                                                     disabled={currentPage === 1}
                                                     className="size-[40px] inline-flex justify-center items-center text-slate-400 bg-white dark:bg-slate-900 rounded-s-3xl hover:text-white border border-gray-100 dark:border-gray-800 hover:border-orange-500 dark:hover:border-orange-500 hover:bg-orange-500 dark:hover:bg-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
                                                 >
-                                                    <FiChevronLeft className="size-5 rtl:rotate-180 rtl:-mt-1"></FiChevronLeft>
+                                            <FiChevronLeft className="size-5 rtl:rotate-180 rtl:-mt-1"></FiChevronLeft>
                                                 </button>
-                                            </li>
+                                    </li>
                                             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                                                 <li key={page}>
                                                     <button 
@@ -196,21 +228,21 @@ export default function ShopGridLeftSidebar(){
                                                     >
                                                         {page}
                                                     </button>
-                                                </li>
+                                    </li>
                                             ))}
-                                            <li>
+                                    <li>
                                                 <button 
                                                     onClick={() => handlePageChange(currentPage + 1)}
                                                     disabled={currentPage === totalPages}
                                                     className="size-[40px] inline-flex justify-center items-center text-slate-400 bg-white dark:bg-slate-900 rounded-e-3xl hover:text-white border border-gray-100 dark:border-gray-800 hover:border-orange-500 dark:hover:border-orange-500 hover:bg-orange-500 dark:hover:bg-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
                                                 >
-                                                    <FiChevronRight className="size-5 rtl:rotate-180 rtl:-mt-1"></FiChevronRight>
+                                            <FiChevronRight className="size-5 rtl:rotate-180 rtl:-mt-1"></FiChevronRight>
                                                 </button>
-                                            </li>
-                                        </ul>
-                                    </nav>
-                                </div>
-                            </div>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
                         )}
                     </div>
                 </div>
