@@ -43,6 +43,8 @@ exports.getAllProducts = async (req, res) => {
       .limit(parseInt(limit))
       .sort({ created_at: -1 });
     
+    console.log('Initial products found:', products.length);
+    
     // Apply color and size filters if provided
     if (color_id || size_id) {
       const ProductColor = require('../models/product_color');
@@ -51,17 +53,23 @@ exports.getAllProducts = async (req, res) => {
       let productIds = [];
       
       if (color_id) {
+        console.log('Filtering by color_id:', color_id);
         const colorProducts = await ProductColor.find({ color_ids: color_id });
         productIds = colorProducts.map(pc => pc.product_id);
+        console.log('Color products found:', colorProducts.length);
       }
-      
+      @
       if (size_id) {
+        console.log('Filtering by size_id:', size_id);
         const sizeProducts = await ProductSize.find({ size_ids: size_id });
         const sizeProductIds = sizeProducts.map(ps => ps.product_id);
+        console.log('Size products found:', sizeProducts.length);
+        console.log('Size product IDs:', sizeProductIds);
         
         if (productIds.length > 0) {
           // If both filters are applied, find intersection
-          productIds = productIds.filter(id => sizeProductIds.includes(id));
+          productIds = productIds.filter(id => sizeProductIds.includes(id.toString()));
+          console.log('After intersection, product IDs:', productIds.length);
         } else {
           productIds = sizeProductIds;
         }
@@ -69,8 +77,14 @@ exports.getAllProducts = async (req, res) => {
       
       // Filter products by the found product IDs
       if (productIds.length > 0) {
-        products = products.filter(product => productIds.includes(product._id.toString()));
+        console.log('Filtering products by IDs:', productIds);
+        const originalCount = products.length;
+        products = products.filter(product => 
+          productIds.some(id => id.toString() === product._id.toString())
+        );
+        console.log('Products after filtering:', products.length, 'out of', originalCount);
       } else {
+        console.log('No product IDs found, returning empty array');
         products = [];
       }
     }
@@ -79,7 +93,7 @@ exports.getAllProducts = async (req, res) => {
     const totalProducts = await Product.countDocuments(query);
     const totalPages = Math.ceil(totalProducts / parseInt(limit));
     
-    console.log('Found products:', products.length, 'Total:', totalProducts);
+    console.log('Final products found:', products.length, 'Total:', totalProducts);
     
     res.json({
       data: {

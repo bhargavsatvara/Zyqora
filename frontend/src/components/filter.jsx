@@ -140,7 +140,7 @@ export default function Filter({ onFilterChange, filters }){
         });
     };
 
-    const renderSection = (title, section, items, selectedItems, handleClick, showMore, setShowMore, maxItems = 5) => {
+    const renderSection = (title, section, items, selectedItems, handleClick, showMore, setShowMore, maxItems = 5, showSelection = true) => {
         const isExpanded = expandedSections[section];
         const hasMoreItems = items.length > maxItems;
         const displayItems = showMore ? items : items.slice(0, maxItems);
@@ -164,11 +164,13 @@ export default function Filter({ onFilterChange, filters }){
                                         onClick={() => handleClick(item._id)}
                                         className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300 hover:text-orange-500 transition-colors"
                                     >
-                                        <div className={`size-3 rounded-full border ${
-                                            selectedItems.includes(item._id) 
-                                                ? 'bg-orange-500 border-orange-500' 
-                                                : 'border-gray-300'
-                                        }`}></div>
+                                        {showSelection && (
+                                            <div className={`size-3 rounded-full border ${
+                                                selectedItems.includes(item._id) 
+                                                    ? 'bg-orange-500 border-orange-500' 
+                                                    : 'border-gray-300'
+                                            }`}></div>
+                                        )}
                                         <span>{item.name}</span>
                                     </button>
                                     <i className="mdi mdi-plus text-xs text-gray-400"></i>
@@ -267,7 +269,7 @@ export default function Filter({ onFilterChange, filters }){
         <div className="lg:col-span-3 md:col-span-4">
             <div className="rounded shadow dark:shadow-gray-800 p-4 sticky top-20">
                 <div className="flex justify-between items-center mb-4">
-                    <h5 className="text-xl font-medium">Filter</h5>
+                <h5 className="text-xl font-medium">Filter</h5>
                     {(selectedColors.length > 0 || selectedBrands.length > 0 || selectedSizes.length > 0 || selectedCategories.length > 0) && (
                         <button 
                             onClick={clearAllFilters}
@@ -297,10 +299,10 @@ export default function Filter({ onFilterChange, filters }){
                 </form>
 
                 <div className="space-y-0">
-                    {renderSection('Category', 'category', categories, selectedCategories, handleCategoryClick, showMoreCategories, setShowMoreCategories)}
-                    {renderSection('Size', 'size', sizes, selectedSizes, handleSizeClick, showMoreSizes, setShowMoreSizes)}
+                    {renderSection('Category', 'category', categories, selectedCategories, handleCategoryClick, showMoreCategories, setShowMoreCategories, 5, true)}
+                    {renderSection('Size', 'size', sizes, selectedSizes, handleSizeClick, showMoreSizes, setShowMoreSizes, 5, true)}
                     {renderColorSection()}
-                    {renderSection('Brands', 'brands', brands, selectedBrands, handleBrandClick, showMoreBrands, setShowMoreBrands)}
+                    {renderSection('Brands', 'brands', brands, selectedBrands, handleBrandClick, showMoreBrands, setShowMoreBrands, 5, true)}
                 </div>
             </div>
         </div>
