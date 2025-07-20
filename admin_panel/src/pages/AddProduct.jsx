@@ -70,7 +70,7 @@ export default function AddProduct() {
     try {
       const response = await fetch('http://localhost:4000/api/size-charts', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
         }
       });
       if (response.ok) {

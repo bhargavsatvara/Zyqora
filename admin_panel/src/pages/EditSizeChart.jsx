@@ -22,7 +22,7 @@ export default function EditSizeChart() {
     try {
       const response = await fetch(`http://localhost:4000/api/size-charts/${id}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
         }
       });
 
@@ -58,7 +58,7 @@ export default function EditSizeChart() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
         },
         body: JSON.stringify(formData)
       });

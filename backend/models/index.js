@@ -16,9 +16,6 @@ const Cart = require('./cart');
 const Order = require('./order');
 const Payment = require('./payment');
 const Review = require('./review');
-const ProductMaterial = require('./product_material');
-const ProductSize = require('./product_size');
-const ProductColor = require('./product_color');
 
 module.exports = {
   User,
@@ -39,7 +36,4 @@ module.exports = {
   Order,
   Payment,
   Review,
-  ProductMaterial,
-  ProductSize,
-  ProductColor
 }; 

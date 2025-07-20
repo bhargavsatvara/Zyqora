@@ -9,7 +9,8 @@ import {
   ChevronRight,
   FileText,
   Calendar,
-  User
+  User,
+  Eye
 } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
 import ConfirmModal from '../components/ConfirmModal';
@@ -24,6 +25,8 @@ export default function SizeCharts() {
   const [selectedItems, setSelectedItems] = useState([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteItemId, setDeleteItemId] = useState(null);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [viewedSizeChart, setViewedSizeChart] = useState(null);
   const { showSuccess, showError } = useToast();
 
   useEffect(() => {
@@ -201,9 +204,6 @@ export default function SizeCharts() {
                       Title
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Description
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Created
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -236,11 +236,6 @@ export default function SizeCharts() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900 max-w-xs">
-                          {truncateText(sizeChart.description)}
-                        </div>
-                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center text-sm text-gray-500">
                           <Calendar className="w-4 h-4 mr-2" />
@@ -249,6 +244,16 @@ export default function SizeCharts() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end space-x-2">
+                          <button
+                            onClick={() => {
+                              setViewedSizeChart(sizeChart);
+                              setViewModalOpen(true);
+                            }}
+                            className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
+                            title="View Size Chart"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
                           <Link
                             to={`/edit-size-chart/${sizeChart._id}`}
                             className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
@@ -338,6 +343,24 @@ export default function SizeCharts() {
           </>
         )}
       </div>
+
+      {/* View Modal */}
+      {viewModalOpen && viewedSizeChart && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-8 relative">
+            <button
+              onClick={() => setViewModalOpen(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700"
+            >
+              <span className="text-2xl">&times;</span>
+            </button>
+            <h2 className="text-2xl font-bold mb-2">{viewedSizeChart.title}</h2>
+            <div className="prose max-w-none border border-gray-200 rounded-lg p-4 bg-gray-50 overflow-x-auto" style={{ minHeight: 100 }}
+              dangerouslySetInnerHTML={{ __html: viewedSizeChart.description }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       <ConfirmModal
