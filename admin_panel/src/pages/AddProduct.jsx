@@ -3,6 +3,7 @@ import { ArrowLeft, Save, Upload, X, Plus, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { productsAPI, categoriesAPI, brandsAPI, departmentsAPI } from '../services/api';
 import { useToast } from '../contexts/ToastContext';
+import ProductAttributes from '../components/ProductAttributes';
 
 export default function AddProduct() {
   const navigate = useNavigate();
@@ -11,15 +12,18 @@ export default function AddProduct() {
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
   const [departments, setDepartments] = useState([]);
+  const [sizeCharts, setSizeCharts] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
     sku: '',
     category_id: '',
     department_id: '',
     brand_id: '',
+    size_chart_id: '',
     price: '',
     description: '',
     stock_qty: '',
+    attributes: [],
     image: null, // single file
     imagePreview: null // preview URL
   });
@@ -29,6 +33,7 @@ export default function AddProduct() {
     fetchCategories();
     fetchBrands();
     fetchDepartments();
+    fetchSizeCharts();
   }, []);
 
   const fetchCategories = async () => {
@@ -58,6 +63,23 @@ export default function AddProduct() {
       setDepartments(departmentsData);
     } catch (error) {
       console.error('Error fetching departments:', error);
+    }
+  };
+
+  const fetchSizeCharts = async () => {
+    try {
+      const response = await fetch('http://localhost:4000/api/size-charts', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const sizeChartsData = data.data?.sizeCharts || data.data || data || [];
+        setSizeCharts(sizeChartsData);
+      }
+    } catch (error) {
+      console.error('Error fetching size charts:', error);
     }
   };
 
@@ -110,9 +132,11 @@ export default function AddProduct() {
       data.append('category_id', formData.category_id);
       data.append('department_id', formData.department_id);
       data.append('brand_id', formData.brand_id);
+      data.append('size_chart_id', formData.size_chart_id);
       data.append('price', formData.price);
       data.append('description', formData.description);
       data.append('stock_qty', formData.stock_qty);
+      data.append('attributes', JSON.stringify(formData.attributes));
       if (formData.image) {
         data.append('image', formData.image);
       }
@@ -262,6 +286,25 @@ export default function AddProduct() {
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Size Chart
+                  </label>
+                  <select
+                    name="size_chart_id"
+                    value={formData.size_chart_id}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select Size Chart</option>
+                    {Array.isArray(sizeCharts) && sizeCharts.map(sizeChart => (
+                      <option key={sizeChart._id} value={sizeChart._id}>
+                        {sizeChart.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
                     Price *
                   </label>
                   <input
@@ -311,6 +354,13 @@ export default function AddProduct() {
                   placeholder="Enter product description..."
                 />
               </div>
+            </div>
+            {/* Product Attributes */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+              <ProductAttributes
+                attributes={formData.attributes}
+                onAttributesChange={(attributes) => setFormData(prev => ({ ...prev, attributes }))}
+              />
             </div>
             {/* Image Upload */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
@@ -383,6 +433,12 @@ export default function AddProduct() {
                   <span className="text-sm text-slate-600">Brand:</span>
                   <span className="text-sm font-medium text-slate-900">
                     {Array.isArray(brands) && brands.find(b => b._id === formData.brand_id)?.name || '—'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-600">Size Chart:</span>
+                  <span className="text-sm font-medium text-slate-900">
+                    {Array.isArray(sizeCharts) && sizeCharts.find(sc => sc._id === formData.size_chart_id)?.title || '—'}
                   </span>
                 </div>
                 <div className="flex justify-between">

@@ -21,6 +21,7 @@ const sizeRoutes = require('./sizes');
 const materialRoutes = require('./materials');
 const couponRoutes = require('./coupons');
 const adminRoutes = require('./admin');
+const sizeChartRoutes = require('./sizeCharts');
 
 // Mount routes
 router.use('/auth', authRoutes);
@@ -33,7 +34,7 @@ router.use('/reviews', reviewRoutes);
 router.use('/product-materials', require('./product_materials'));
 router.use('/product-sizes', require('./product_sizes'));
 router.use('/product-colors', require('./product_colors'));
-
+router.use('/size-charts', sizeChartRoutes);
 
 router.use('/categories', categoryRoutes);
 router.use('/brands', brandRoutes);

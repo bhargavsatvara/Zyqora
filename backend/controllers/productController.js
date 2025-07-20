@@ -39,6 +39,7 @@ exports.getAllProducts = async (req, res) => {
       .populate('category_id', 'name')
       .populate('department_id', 'name')
       .populate('brand_id', 'name')
+      .populate('size_chart_id', 'title')
       .skip(skip)
       .limit(parseInt(limit))
       .sort({ created_at: -1 });
@@ -117,7 +118,8 @@ exports.getProductById = async (req, res) => {
     const product = await Product.findById(req.params.id)
       .populate('category_id', 'name')
       .populate('department_id', 'name')
-      .populate('brand_id', 'name');
+      .populate('brand_id', 'name')
+      .populate('size_chart_id', 'title description');
     if (!product) return res.status(404).json({ message: 'Product not found' });
     res.json(product); // Includes 'image' field
   } catch (err) {
@@ -135,16 +137,29 @@ exports.createProduct = async (req, res) => {
       // Serve from /uploads/products/...
       imageUrl = `/uploads/products/${req.file.filename}`;
     }
+    
+    // Parse attributes if provided
+    let attributes = [];
+    if (req.body.attributes) {
+      try {
+        attributes = JSON.parse(req.body.attributes);
+      } catch (e) {
+        console.error('Error parsing attributes:', e);
+      }
+    }
+    
     const product = new Product({
       ...req.body,
-      image: imageUrl
+      image: imageUrl,
+      attributes: attributes
     });
     await product.save();
     // Populate the saved product
     const populatedProduct = await Product.findById(product._id)
       .populate('category_id', 'name')
       .populate('department_id', 'name')
-      .populate('brand_id', 'name');
+      .populate('brand_id', 'name')
+      .populate('size_chart_id', 'title');
     res.status(201).json(populatedProduct); // Includes 'image' field
   } catch (err) {
     console.error('Error creating product:', err);
@@ -161,11 +176,21 @@ exports.updateProduct = async (req, res) => {
     }
     const updateData = { ...req.body };
     if (imageUrl) updateData.image = imageUrl;
+    
+    // Parse attributes if provided
+    if (req.body.attributes) {
+      try {
+        updateData.attributes = JSON.parse(req.body.attributes);
+      } catch (e) {
+        console.error('Error parsing attributes:', e);
+      }
+    }
+    
     const product = await Product.findByIdAndUpdate(
       req.params.id, 
       updateData, 
       { new: true }
-    ).populate('category_id', 'name').populate('department_id', 'name').populate('brand_id', 'name');
+    ).populate('category_id', 'name').populate('department_id', 'name').populate('brand_id', 'name').populate('size_chart_id', 'title');
     if (!product) return res.status(404).json({ message: 'Product not found' });
     res.json(product); // Includes 'image' field
   } catch (err) {

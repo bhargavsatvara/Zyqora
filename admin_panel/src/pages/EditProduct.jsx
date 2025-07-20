@@ -3,6 +3,7 @@ import { ArrowLeft, Save, Upload, X, Plus, Trash2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { productsAPI, categoriesAPI, brandsAPI, departmentsAPI } from '../services/api';
 import { useToast } from '../contexts/ToastContext';
+import ProductAttributes from '../components/ProductAttributes';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 const FILE_BASE_URL = API_BASE_URL.replace(/\/api$/, '');
@@ -25,6 +26,7 @@ export default function EditProduct() {
     price: '',
     description: '',
     stock_qty: '',
+    attributes: [],
     image: null, // file or string (URL)
     imagePreview: null // preview URL
   });
@@ -56,6 +58,7 @@ export default function EditProduct() {
         price: product.price || '',
         description: product.description || '',
         stock_qty: product.stock_qty || '',
+        attributes: product.attributes || [],
         image: product.image || null, // keep the URL for now
         imagePreview: imageUrl
       });
@@ -150,6 +153,7 @@ export default function EditProduct() {
       data.append('price', formData.price);
       data.append('description', formData.description);
       data.append('stock_qty', formData.stock_qty);
+      data.append('attributes', JSON.stringify(formData.attributes));
       if (formData.image && typeof formData.image !== 'string') {
         data.append('image', formData.image);
       } else if (formData.image && typeof formData.image === 'string') {
@@ -358,6 +362,13 @@ export default function EditProduct() {
                   placeholder="Enter product description..."
                 />
               </div>
+            </div>
+            {/* Product Attributes */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+              <ProductAttributes
+                attributes={formData.attributes}
+                onAttributesChange={(attributes) => setFormData(prev => ({ ...prev, attributes }))}
+              />
             </div>
             {/* Image Upload */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">

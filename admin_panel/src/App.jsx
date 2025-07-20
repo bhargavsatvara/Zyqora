@@ -56,6 +56,9 @@ import EditProductSize from './pages/EditProductSize';
 import ProductColors from './pages/ProductColors';
 import AddProductColor from './pages/AddProductColor';
 import EditProductColor from './pages/EditProductColor';
+import SizeCharts from './pages/SizeCharts';
+import AddSizeChart from './pages/AddSizeChart';
+import EditSizeChart from './pages/EditSizeChart';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 
@@ -132,6 +135,9 @@ function AppContent() {
             <Route path="/materials" element={<Materials />} />
             <Route path="/materials/add" element={<AddMaterial />} />
             <Route path="/materials/edit/:id" element={<EditMaterial />} />
+            <Route path="/size-charts" element={<SizeCharts />} />
+            <Route path="/add-size-chart" element={<AddSizeChart />} />
+            <Route path="/edit-size-chart/:id" element={<EditSizeChart />} />
             <Route path="/product-materials" element={<ProductMaterials />} />
             <Route path="/product-materials/add" element={<AddProductMaterial />} />
             <Route path="/product-materials/edit/:id" element={<EditProductMaterial />} />
