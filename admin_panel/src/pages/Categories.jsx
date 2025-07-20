@@ -35,7 +35,7 @@ export default function Categories() {
       console.log('Categories API response:', response);
       // Try to handle different possible response structures
       let categoriesData = [];
-      let pagination = { total: 1, totalRecords: 0 };
+      let pagination = { totalPages: 1, totalRecords: 0 };
       if (response.data && response.data.data) {
         categoriesData = response.data.data.categories || [];
         pagination = response.data.data.pagination || pagination;
@@ -46,7 +46,7 @@ export default function Categories() {
         categoriesData = response.data;
       }
       setCategories(categoriesData);
-      setTotalPages(pagination.total);
+      setTotalPages(pagination.totalPages);
       setTotalCategories(pagination.totalRecords);
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -200,10 +200,10 @@ export default function Categories() {
                   Name
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  Description
+                  Departments
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  Departments
+                  Image
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                   Created
@@ -220,10 +220,14 @@ export default function Categories() {
                     <div className="text-sm font-medium text-slate-900">{category.name}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-slate-500">{category.description}</div>
+                    <div className="text-sm text-slate-900">{getDepartmentNames(category)}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-slate-900">{getDepartmentNames(category)}</div>
+                    {category.image ? (
+                      <img src={category.image} alt={category.name} className="w-12 h-12 object-cover rounded-lg border" />
+                    ) : (
+                      <span className="text-slate-400">No Image</span>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-slate-900">{formatDate(category.createdAt)}</div>
@@ -282,27 +286,28 @@ export default function Categories() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-slate-700">
-              Showing page {currentPage} of {totalPages} ({totalCategories} total categories)
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="p-2 text-slate-400 hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg hover:bg-slate-100 transition-colors"
-              >
-                {'<'}
-              </button>
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-                className="p-2 text-slate-400 hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg hover:bg-slate-100 transition-colors"
-              >
-                {'>'}
-              </button>
-            </div>
+        <div className="flex items-center justify-between bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+          <div className="text-sm text-slate-600">
+            Showing {((currentPage - 1) * 10) + 1} to {Math.min(currentPage * 10, totalCategories)} of {totalCategories} categories
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <span className="px-3 py-2 text-sm text-slate-600">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
           </div>
         </div>
       )}

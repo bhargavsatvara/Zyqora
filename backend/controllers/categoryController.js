@@ -83,7 +83,7 @@ exports.getCategoryById = async (req, res) => {
 
 exports.createCategory = async (req, res) => {
   try {
-    const { name, department_ids, ...rest } = req.body;
+    const { name, department_ids, image, ...rest } = req.body;
     
     // Generate slug from name
     const slug = slugify(name, { lower: true, strict: true });
@@ -93,6 +93,7 @@ exports.createCategory = async (req, res) => {
       name, 
       slug, 
       department_ids: department_ids || [],
+      image: image || '',
       ...rest 
     });
     
@@ -114,7 +115,7 @@ exports.createCategory = async (req, res) => {
 
 exports.updateCategory = async (req, res) => {
   try {
-    const { name, department_ids, ...rest } = req.body;
+    const { name, department_ids, image, ...rest } = req.body;
     
     // If name is being updated, generate new slug
     if (name) {
@@ -127,6 +128,7 @@ exports.updateCategory = async (req, res) => {
       { 
         name, 
         department_ids: department_ids || [],
+        image: image || '',
         ...rest 
       }, 
       { new: true }

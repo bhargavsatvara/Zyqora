@@ -12,7 +12,7 @@ export default function EditCategory() {
   const [departments, setDepartments] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
-    description: '',
+    image: '',
     department_ids: []
   });
   const [errors, setErrors] = useState({});
@@ -31,7 +31,7 @@ export default function EditCategory() {
       const category = response.data.data || response.data;
       setFormData({
         name: category.name || '',
-        description: category.description || '',
+        image: category.image || '',
         department_ids: category.department_ids ? category.department_ids.map(dept => dept._id || dept) : []
       });
     } catch (error) {
@@ -68,10 +68,16 @@ export default function EditCategory() {
     }
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData(prev => ({ ...prev, image: URL.createObjectURL(file) }));
+    }
+  };
+
   const validateForm = () => {
     const newErrors = {};
     if (!formData.name.trim()) newErrors.name = 'Category name is required';
-    if (!formData.description.trim()) newErrors.description = 'Description is required';
     if (!formData.department_ids.length) newErrors.department_ids = 'At least one department is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -126,16 +132,16 @@ export default function EditCategory() {
           {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">Description *</label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleInputChange}
-            rows={4}
-            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${errors.description ? 'border-red-300' : 'border-slate-200'}`}
-            placeholder="Enter category description..."
+          <label className="block text-sm font-medium text-slate-700 mb-2">Category Image</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           />
-          {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
+          {formData.image && (
+            <img src={formData.image} alt="Preview" className="mt-2 w-32 h-32 object-cover rounded-lg border" />
+          )}
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-2">Departments * (Hold Ctrl/Cmd to select multiple)</label>
