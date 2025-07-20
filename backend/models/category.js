@@ -11,7 +11,6 @@ const CategorySchema = new Schema({
   slug: {
     type: String,
     required: true,
-    unique: true,
     trim: true,
     sparse: true
   },
@@ -22,5 +21,10 @@ const CategorySchema = new Schema({
 }, {
   timestamps: true
 });
+
+// Compound index: unique name per department
+CategorySchema.index({ name: 1, department_ids: 1 }, { unique: true });
+// Compound index: unique slug per department
+CategorySchema.index({ slug: 1, department_ids: 1 }, { unique: true });
 
 module.exports = mongoose.model('Category', CategorySchema);

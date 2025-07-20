@@ -17,7 +17,7 @@ async function migrateCategoryIfNeeded(category) {
 
 exports.getAllCategories = async (req, res) => {
   try {
-    const { search, page = 1, limit = 10 } = req.query;
+    const { search, page = 1, limit = 10, department_id } = req.query;
     
     // Build query
     let query = {};
@@ -28,6 +28,10 @@ exports.getAllCategories = async (req, res) => {
         { name: { $regex: search, $options: 'i' } },
         { description: { $regex: search, $options: 'i' } }
       ];
+    }
+
+    if (department_id) {
+      query.department_ids = department_id;
     }
     
     // Calculate pagination
@@ -106,7 +110,7 @@ exports.createCategory = async (req, res) => {
   } catch (err) {
     console.error('Error in createCategory:', err);
     if (err.code === 11000) {
-      res.status(400).json({ message: 'Category with this name already exists' });
+      res.status(400).json({ message: 'Category with this name already exists in the selected department(s)' });
     } else {
       res.status(500).json({ message: err.message || 'Server error' });
     }
@@ -139,7 +143,7 @@ exports.updateCategory = async (req, res) => {
   } catch (err) {
     console.error('Error in updateCategory:', err);
     if (err.code === 11000) {
-      res.status(400).json({ message: 'Category with this name already exists' });
+      res.status(400).json({ message: 'Category with this name already exists in the selected department(s)' });
     } else {
       res.status(500).json({ message: err.message || 'Server error' });
     }

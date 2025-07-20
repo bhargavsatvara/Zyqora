@@ -33,10 +33,15 @@ export default function EditProduct() {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    fetchProduct();
-    fetchCategories();
     fetchBrands();
     fetchDepartments();
+    fetchSizeCharts();
+  }, []);
+
+  useEffect(() => {
+    if (id) {
+      fetchProduct();
+    }
   }, [id]);
 
   const fetchProduct = async () => {
@@ -62,6 +67,10 @@ export default function EditProduct() {
         image: product.image || null, // keep the URL for now
         imagePreview: imageUrl
       });
+      // Fetch categories for the product's department
+      if (product.department_id?._id || product.department_id) {
+        fetchCategories(product.department_id._id || product.department_id);
+      }
     } catch (error) {
       console.error('Error fetching product:', error);
       showError('Error fetching product: ' + (error.response?.data?.message || error.message));
@@ -71,9 +80,10 @@ export default function EditProduct() {
     }
   };
 
-  const fetchCategories = async () => {
+  const fetchCategories = async (departmentId) => {
     try {
-      const response = await categoriesAPI.getCategories();
+      const params = departmentId ? { department_id: departmentId } : {};
+      const response = await categoriesAPI.getCategories(params);
       const categoriesData = response.data.data?.categories || response.data.data || response.data || [];
       setCategories(categoriesData);
     } catch (error) {
@@ -105,8 +115,12 @@ export default function EditProduct() {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === 'checkbox' ? checked : value,
+      ...(name === 'department_id' ? { category_id: '' } : {})
     }));
+    if (name === 'department_id') {
+      fetchCategories(value);
+    }
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }

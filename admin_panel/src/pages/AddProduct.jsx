@@ -29,22 +29,23 @@ export default function AddProduct() {
   });
   const [errors, setErrors] = useState({});
 
-  useEffect(() => {
-    fetchCategories();
-    fetchBrands();
-    fetchDepartments();
-    fetchSizeCharts();
-  }, []);
-
-  const fetchCategories = async () => {
+  const fetchCategories = async (departmentId) => {
     try {
-      const response = await categoriesAPI.getCategories();
+      const params = departmentId ? { department_id: departmentId } : {};
+      const response = await categoriesAPI.getCategories(params);
       const categoriesData = response.data.data?.categories || response.data.data || response.data || [];
       setCategories(categoriesData);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
   };
+
+  useEffect(() => {
+    fetchCategories(); // fetch all categories on mount (or you can skip this)
+    fetchBrands();
+    fetchDepartments();
+    fetchSizeCharts();
+  }, []);
 
   const fetchBrands = async () => {
     try {
@@ -87,8 +88,12 @@ export default function AddProduct() {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === 'checkbox' ? checked : value,
+      ...(name === 'department_id' ? { category_id: '' } : {})
     }));
+    if (name === 'department_id') {
+      fetchCategories(value);
+    }
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -152,10 +157,12 @@ export default function AddProduct() {
   };
 
   // Filter categories based on selected department
-  const filteredCategories = formData.department_id 
-    ? categories.filter(category => 
-        category.department_ids && 
-        category.department_ids.some(deptId => deptId._id === formData.department_id || deptId === formData.department_id)
+  const filteredCategories = formData.department_id
+    ? categories.filter(category =>
+        category.department_ids &&
+        category.department_ids.some(
+          deptId => deptId === formData.department_id || (typeof deptId === 'object' && deptId._id === formData.department_id)
+        )
       )
     : categories;
 
