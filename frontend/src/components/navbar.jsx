@@ -22,6 +22,7 @@ import {
 } from "../assets/icons/vander";
 
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { useCart } from "../contexts/CartContext";
 
 export default function Navbar({ navClass, navlight }) {
   const [scrolling, setScrolling] = useState(false);
@@ -115,6 +116,26 @@ export default function Navbar({ navClass, navlight }) {
     } finally {
       setLoadingCategories(false);
     }
+  };
+
+  // Handle category click - navigate to shop with category filter
+  const handleCategoryClick = (category) => {
+    console.log("Category clicked:", category);
+    setDropdownOpen(false);
+    setHoveredDept(null);
+    
+    // Navigate to products page with category filter
+    navigate(`/products?category_id=${category._id}`);
+  };
+
+  // Handle department click - navigate to shop with department filter
+  const handleDepartmentClick = (department) => {
+    console.log("Department clicked:", department);
+    setDropdownOpen(false);
+    setHoveredDept(null);
+    
+    // Navigate to products page with department filter
+    navigate(`/products?department_id=${department._id}`);
   };
 
   // Compose menu: only departments (no Sale)
@@ -233,6 +254,10 @@ export default function Navbar({ navClass, navlight }) {
     navigate("/login");
   };
 
+  const { cartData, totals } = useCart();
+  const cartCount = cartData.reduce((sum, item) => sum + item.quantity, 0);
+  const cartTotal = totals.total;
+
   return (
     <nav id="topnav" className={`${navClass} ${scrolling ? "nav-sticky" : ""}`}>
       <div className="container relative flex items-center justify-between">
@@ -299,6 +324,7 @@ export default function Navbar({ navClass, navlight }) {
                     className="text-base font-medium whitespace-nowrap cursor-pointer text-gray-800 hover:text-orange-600 relative"
                     onMouseEnter={() => handleDeptMouseEnter(dep.name)}
                     onMouseLeave={handleDeptMouseLeave}
+                    onClick={() => handleDepartmentClick(dep)}
                   >
                     {dep.name}
                   </span>
@@ -364,7 +390,11 @@ export default function Navbar({ navClass, navlight }) {
                       </div>
                     ) : (
                       filteredCategories.map(cat => (
-                        <div key={cat._id} className="flex flex-col items-center group">
+                        <div 
+                          key={cat._id} 
+                          className="flex flex-col items-center group cursor-pointer"
+                          onClick={() => handleCategoryClick(cat)}
+                        >
                           <div className="w-14 h-14 rounded-full mb-2 object-cover border group-hover:scale-110 transition-transform bg-gray-100 flex items-center justify-center">
                             {cat.image ? (
                               <img src={cat.image} alt={cat.name} className="w-full h-full rounded-full object-cover" />
@@ -429,97 +459,53 @@ export default function Navbar({ navClass, navlight }) {
               onClick={() => setCartManu(!cartManu)}
             >
               <FiShoppingCart className="h-4 w-4"></FiShoppingCart>
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full px-1.5">
+                  {cartCount}
+                </span>
+              )}
             </button>
             {cartManu && (
               <div className="dropdown-menu absolute end-0 m-0 mt-4 z-10 w-64 rounded-md bg-white dark:bg-slate-900 shadow dark:shadow-gray-800">
                 <ul className="py-3 text-start">
-                  <li className="ms-0">
-                    <Link
-                      to="#"
-                      className="flex items-center justify-between py-1.5 px-4"
-                    >
+                  {cartData.map((item, index) => (
+                    <li key={index} className="flex items-center justify-between py-1.5 px-4 ms-0">
                       <span className="flex items-center">
                         <img
-                          src={product1}
+                          src={item.image?.startsWith('/uploads') ? `http://localhost:4000${item.image}` : item.image}
                           className="rounded shadow dark:shadow-gray-800 w-9"
-                          alt=""
+                          alt={item.name}
                         />
                         <span className="ms-3">
-                          <span className="block font-semibold">
-                            T-shirt (M)
-                          </span>
+                          <span className="block font-semibold">{item.name}</span>
                           <span className="block text-sm text-slate-400">
-                            $320 X 2
+                            ${item.price} X {item.quantity}
                           </span>
                         </span>
                       </span>
-                      <span className="font-semibold">$640</span>
-                    </Link>
-                  </li>
-
-                  <li className="ms-0">
-                    <Link
-                      to="#"
-                      className="flex items-center justify-between py-1.5 px-4"
-                    >
-                      <span className="flex items-center">
-                        <img
-                          src={product2}
-                          className="rounded shadow dark:shadow-gray-800 w-9"
-                          alt=""
-                        />
-                        <span className="ms-3">
-                          <span className="block font-semibold">Bag</span>
-                          <span className="block text-sm text-slate-400">
-                            $50 X 5
-                          </span>
-                        </span>
-                      </span>
-                      <span className="font-semibold">$250</span>
-                    </Link>
-                  </li>
-
-                  <li className="ms-0">
-                    <Link
-                      to="#"
-                      className="flex items-center justify-between py-1.5 px-4"
-                    >
-                      <span className="flex items-center">
-                        <img
-                          src={product3}
-                          className="rounded shadow dark:shadow-gray-800 w-9"
-                          alt=""
-                        />
-                        <span className="ms-3">
-                          <span className="block font-semibold">
-                            Watch (Men)
-                          </span>
-                          <span className="block text-sm text-slate-400">
-                            $800 X 1
-                          </span>
-                        </span>
-                      </span>
-                      <span className="font-semibold">$800</span>
-                    </Link>
-                  </li>
+                      <span className="font-semibold">${(item.price * item.quantity).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </li>
+                  ))}
 
                   <li className="border-t border-gray-100 dark:border-gray-800 my-2 ms-0"></li>
 
                   <li className="flex items-center justify-between py-1.5 px-4 ms-0">
                     <h6 className="font-semibold mb-0">Total($):</h6>
-                    <h6 className="font-semibold mb-0">$1690</h6>
+                    <h6 className="font-semibold mb-0">
+                      {cartTotal.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
+                    </h6>
                   </li>
 
                   <li className="py-1.5 px-4 ms-0">
                     <span className="text-center block">
                       <Link
-                        to="#"
+                        to="/shop-cart"
                         className="py-[5px] px-4 inline-block font-semibold tracking-wide align-middle duration-500 text-sm text-center rounded-md bg-orange-500 border border-orange-500 text-white me-1"
                       >
                         View Cart
                       </Link>
                       <Link
-                        to="#"
+                        to="/checkout"
                         className="py-[5px] px-4 inline-block font-semibold tracking-wide align-middle duration-500 text-sm text-center rounded-md bg-orange-500 border border-orange-500 text-white"
                       >
                         Checkout

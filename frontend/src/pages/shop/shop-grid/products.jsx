@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 import Navbar from "../../../components/navbar";
 import Footer from "../../../components/footer";
@@ -9,7 +9,8 @@ import Filter from "../../../components/filter";
 import {FiHeart, FiEye, FiBookmark, FiChevronLeft, FiChevronRight} from '../../../assets/icons/vander'
 import ScrollToTop from "../../../components/scroll-to-top";
 
-export default function ShopGridLeftSidebar(){
+export default function Products(){
+    const [searchParams] = useSearchParams();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
@@ -23,6 +24,24 @@ export default function ShopGridLeftSidebar(){
         min_price: '',
         max_price: ''
     });
+
+    // Handle URL parameters on component mount
+    useEffect(() => {
+        const categoryId = searchParams.get('category_id');
+        const departmentId = searchParams.get('department_id');
+        const brandId = searchParams.get('brand_id');
+        const search = searchParams.get('search');
+        
+        if (categoryId || departmentId || brandId || search) {
+            setFilters(prev => ({
+                ...prev,
+                category_id: categoryId || '',
+                department_id: departmentId || '',
+                brand_id: brandId || '',
+                search: search || ''
+            }));
+        }
+    }, [searchParams]);
 
     useEffect(() => {
         fetchProducts();
@@ -87,14 +106,14 @@ export default function ShopGridLeftSidebar(){
         <section className="relative table w-full py-20 lg:py-24 md:pt-28 bg-gray-50 dark:bg-slate-800">
             <div className="container relative">
                 <div className="grid grid-cols-1 mt-14">
-                    <h3 className="text-3xl leading-normal font-semibold">Fashion</h3>
+                    <h3 className="text-3xl leading-normal font-semibold">Products</h3>
                 </div>
 
                 <div className="relative mt-3">
                     <ul className="tracking-[0.5px] mb-0 inline-block">
                         <li className="inline-block uppercase text-[13px] font-bold duration-500 ease-in-out hover:text-orange-500"><Link to="/">Zyqora</Link></li>
                         <li className="inline-block text-base text-slate-950 dark:text-white mx-0.5 ltr:rotate-0 rtl:rotate-180"><i className="mdi mdi-chevron-right"></i></li>
-                        <li className="inline-block uppercase text-[13px] font-bold text-orange-500" aria-current="page">Shop Grid</li>
+                        <li className="inline-block uppercase text-[13px] font-bold text-orange-500" aria-current="page">Products</li>
                     </ul>
                 </div>
             </div>
@@ -253,4 +272,4 @@ export default function ShopGridLeftSidebar(){
         <ScrollToTop/>
         </>
     )
-}
+} 

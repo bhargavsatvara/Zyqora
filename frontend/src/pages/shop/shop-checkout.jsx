@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 import Navbar from "../../components/navbar";
@@ -8,6 +8,93 @@ import Switcher from "../../components/switcher";
 import ScrollToTop from "../../components/scroll-to-top";
 
 export default function ShopCheckOut(){
+    const [cartData, setCartData] = useState([]);
+    const [totals, setTotals] = useState({ subtotal: 0, tax: 0, total: 0 });
+
+    // Country/State/City logic
+    const [countries, setCountries] = useState([]);
+    const [states, setStates] = useState([]);
+    const [cities, setCities] = useState([]);
+    const [selectedCountry, setSelectedCountry] = useState('');
+    const [selectedState, setSelectedState] = useState('');
+    const [selectedCity, setSelectedCity] = useState('');
+    const [zipCode, setZipCode] = useState('');
+
+    // Fetch countries on mount
+    useEffect(() => {
+        async function fetchCountries() {
+            try {
+                const res = await fetch('http://localhost:4000/api/countries');
+                const data = await res.json();
+                setCountries((data.data && data.data.countries) ? data.data.countries : []);
+            } catch (e) {
+                setCountries([]);
+            }
+        }
+        fetchCountries();
+    }, []);
+
+    // Fetch states when country changes
+    useEffect(() => {
+        if (!selectedCountry) {
+            setStates([]);
+            setCities([]);
+            setSelectedState('');
+            setSelectedCity('');
+            return;
+        }
+        async function fetchStates() {
+            try {
+                const res = await fetch(`http://localhost:4000/api/states?country_id=${selectedCountry}`);
+                const data = await res.json();
+                setStates((data.data && data.data.states) ? data.data.states : []);
+            } catch (e) {
+                setStates([]);
+            }
+        }
+        fetchStates();
+    }, [selectedCountry]);
+
+    // Fetch cities when state changes
+    useEffect(() => {
+        if (!selectedState) {
+            setCities([]);
+            setSelectedCity('');
+            return;
+        }
+        async function fetchCities() {
+            try {
+                const res = await fetch(`http://localhost:4000/api/cities?state_id=${selectedState}`);
+                const data = await res.json();
+                setCities((data.data && data.data.cities) ? data.data.cities : []);
+            } catch (e) {
+                setCities([]);
+            }
+        }
+        fetchCities();
+    }, [selectedState]);
+
+    useEffect(() => {
+        async function fetchCart() {
+            try {
+                const response = await fetch("http://localhost:4000/api/cart");
+                const data = await response.json();
+                if (data.success) {
+                    setCartData(data.data.items || []);
+                    setTotals({
+                        subtotal: data.data.subtotal || 0,
+                        tax: data.data.tax || 0,
+                        total: data.data.total || 0,
+                    });
+                }
+            } catch (e) {
+                setCartData([]);
+                setTotals({ subtotal: 0, tax: 0, total: 0 });
+            }
+        }
+        fetchCart();
+    }, []);
+
     return(
         <>
         <Navbar navClass="defaultscroll is-sticky"/>
@@ -71,19 +158,45 @@ export default function ShopCheckOut(){
 
                                     <div className="lg:col-span-4">
                                         <label className="font-semibold">Country:</label>
-                                        <select className="form-select form-input mt-2 w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border border-gray-100 dark:border-gray-800 focus:ring-0">
-                                            <option value="USA">USA</option>
-                                            <option value="CAD">Canada</option>
-                                            <option value="CHINA">China</option>
+                                        <select
+                                            className="form-select form-input mt-2 w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border border-gray-100 dark:border-gray-800 focus:ring-0"
+                                            value={selectedCountry}
+                                            onChange={e => setSelectedCountry(e.target.value)}
+                                        >
+                                            <option value="">Select Country</option>
+                                            {Array.isArray(countries) && countries.map(country => (
+                                                <option key={country._id} value={country._id}>{country.name}</option>
+                                            ))}
                                         </select>
                                     </div>
 
                                     <div className="lg:col-span-4">
                                         <label className="font-semibold">State:</label>
-                                        <select className="form-select form-input mt-2 w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border border-gray-100 dark:border-gray-800 focus:ring-0">
-                                            <option value="CAL">California</option>
-                                            <option value="TEX">Texas</option>
-                                            <option value="FLOR">Florida</option>
+                                        <select
+                                            className="form-select form-input mt-2 w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border border-gray-100 dark:border-gray-800 focus:ring-0"
+                                            value={selectedState}
+                                            onChange={e => setSelectedState(e.target.value)}
+                                            disabled={!selectedCountry}
+                                        >
+                                            <option value="">Select State</option>
+                                            {Array.isArray(states) && states.map(state => (
+                                                <option key={state._id} value={state._id}>{state.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="lg:col-span-4">
+                                        <label className="form-label font-semibold">City:</label>
+                                        <select
+                                            className="form-select form-input mt-2 w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border border-gray-100 dark:border-gray-800 focus:ring-0"
+                                            value={selectedCity}
+                                            onChange={e => setSelectedCity(e.target.value)}
+                                            disabled={!selectedState}
+                                        >
+                                            <option value="">Select City</option>
+                                            {Array.isArray(cities) && cities.map(city => (
+                                                <option key={city._id} value={city._id}>{city.name}</option>
+                                            ))}
                                         </select>
                                     </div>
 
@@ -173,56 +286,54 @@ export default function ShopCheckOut(){
                         <div className="p-6 rounded-md shadow dark:shadow-gray-800">
                             <div className="flex justify-between items-center">
                                 <h5 className="text-lg font-semibold">Your Cart</h5>
-
-                                <Link to="#" className="bg-orange-500 flex justify-center items-center text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full h-5">3</Link>
+                                <span className="bg-orange-500 flex justify-center items-center text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full h-5">
+                                    {cartData.length}
+                                </span>
                             </div>
-
                             <div className="mt-4 rounded-md shadow dark:shadow-gray-800">
-                                <div className="p-3 flex justify-between items-center">
-                                    <div>
-                                        <h5 className="font-semibold">Product Name</h5>
-                                        <p className="text-sm text-slate-400">Brief description</p>
+                                {cartData.map((item, idx) => (
+                                    <div key={idx} className="p-3 flex justify-between items-center border-b border-gray-100 dark:border-gray-800">
+                                        <div className="flex items-center">
+                                            <img
+                                                src={item.image?.startsWith('/uploads') ? `http://localhost:4000${item.image}` : item.image}
+                                                alt={item.name}
+                                                className="w-10 h-10 rounded object-cover mr-3"
+                                            />
+                                            <div>
+                                                <h5 className="font-semibold">{item.name}</h5>
+                                                <p className="text-sm text-slate-400">
+                                                    {item.size && <>Size: {item.size} </>}
+                                                    {item.color && <>Color: {item.color}</>}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-slate-400 font-semibold">
+                                                {item.quantity} x ${item.price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                            </p>
+                                            <p className="font-semibold">
+                                                ${(item.price * item.quantity).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                            </p>
+                                        </div>
                                     </div>
-
-                                    <p className="text-slate-400 font-semibold">$ 12</p>
-                                </div>
-                                <div className="p-3 flex justify-between items-center border border-gray-100 dark:border-gray-800">
+                                ))}
+                                <div className="p-3 flex justify-between items-center border-t border-gray-100 dark:border-gray-800">
                                     <div>
-                                        <h5 className="font-semibold">Second product</h5>
-                                        <p className="text-sm text-slate-400">Brief description</p>
+                                        <h5 className="font-semibold">Subtotal</h5>
                                     </div>
-
-                                    <p className="text-slate-400 font-semibold">$ 18</p>
+                                    <p className="font-semibold">${totals.subtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                                 </div>
-                                <div className="p-3 flex justify-between items-center border border-gray-100 dark:border-gray-800">
+                                <div className="p-3 flex justify-between items-center border-t border-gray-100 dark:border-gray-800">
                                     <div>
-                                        <h5 className="font-semibold">Third item</h5>
-                                        <p className="text-sm text-slate-400">Brief description</p>
+                                        <h5 className="font-semibold">Tax</h5>
                                     </div>
-
-                                    <p className="text-slate-400 font-semibold">$ 20</p>
+                                    <p className="font-semibold">${totals.tax.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                                 </div>
-                                <div className="p-3 flex justify-between items-center border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-slate-800 text-green-600">
-                                    <div>
-                                        <h5 className="font-semibold">Promo code</h5>
-                                        <p className="text-sm text-green-600">EXAMPLECODE</p>
-                                    </div>
-
-                                    <p className="text-red-600 font-semibold">-$ 10</p>
-                                </div>
-                                <div className="p-3 flex justify-between items-center border border-gray-100 dark:border-gray-800">
+                                <div className="p-3 flex justify-between items-center border-t border-gray-100 dark:border-gray-800">
                                     <div>
                                         <h5 className="font-semibold">Total (USD)</h5>
                                     </div>
-
-                                    <p className="font-semibold">$ 30</p>
-                                </div>
-                            </div>
-
-                            <div className="subcribe-form mt-6">
-                                <div className="relative max-w-xl">
-                                    <input type="email" id="subcribe" name="email" className="py-4 pe-40 ps-6 w-full h-[50px] outline-none text-black dark:text-white rounded-full bg-white dark:bg-slate-900 shadow dark:shadow-gray-800" placeholder="Promo code"/>
-                                    <button type="submit" className="py-2 px-5 inline-block font-semibold tracking-wide align-middle duration-500 text-base text-center absolute top-[2px] end-[3px] h-[46px] bg-orange-500 text-white rounded-full">Redeem</button>
+                                    <p className="font-semibold">${totals.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                                 </div>
                             </div>
                         </div>

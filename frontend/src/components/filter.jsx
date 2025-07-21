@@ -7,14 +7,17 @@ export default function Filter({ onFilterChange, filters }){
     const [brands, setBrands] = useState([]);
     const [sizes, setSizes] = useState([]);
     const [categories, setCategories] = useState([]);
+    const [departments, setDepartments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedColors, setSelectedColors] = useState([]);
     const [selectedBrands, setSelectedBrands] = useState([]);
     const [selectedSizes, setSelectedSizes] = useState([]);
     const [selectedCategories, setSelectedCategories] = useState([]);
+    const [selectedDepartments, setSelectedDepartments] = useState([]);
 
     // Section visibility states
     const [expandedSections, setExpandedSections] = useState({
+        department: true,
         category: true,
         size: false,
         color: true
@@ -25,35 +28,130 @@ export default function Filter({ onFilterChange, filters }){
     const [showMoreBrands, setShowMoreBrands] = useState(false);
     const [showMoreSizes, setShowMoreSizes] = useState(false);
     const [showMoreColors, setShowMoreColors] = useState(false);
+    const [showMoreDepartments, setShowMoreDepartments] = useState(false);
 
     useEffect(() => {
         fetchFilterData();
     }, []);
 
+    // Update selected states when filters change from URL
+    useEffect(() => {
+        if (filters.category_id && filters.category_id !== selectedCategories[0]) {
+            setSelectedCategories([filters.category_id]);
+        }
+        if (filters.brand_id && filters.brand_id !== selectedBrands[0]) {
+            setSelectedBrands([filters.brand_id]);
+        }
+        if (filters.color_id && filters.color_id !== selectedColors[0]) {
+            setSelectedColors([filters.color_id]);
+        }
+        if (filters.size_id && filters.size_id !== selectedSizes[0]) {
+            setSelectedSizes([filters.size_id]);
+        }
+        if (filters.department_id && filters.department_id !== selectedDepartments[0]) {
+            setSelectedDepartments([filters.department_id]);
+            // Fetch categories for the selected department
+            fetchCategoriesForDepartment(filters.department_id);
+        }
+    }, [filters.category_id, filters.brand_id, filters.color_id, filters.size_id, filters.department_id]);
+
+    // Fetch available sizes based on current filters
+    const fetchAvailableSizes = async () => {
+        try {
+            // Build query parameters based on current filters
+            const params = new URLSearchParams();
+            if (filters.department_id) params.append('department_id', filters.department_id);
+            if (filters.category_id) params.append('category_id', filters.category_id);
+            if (filters.brand_id) params.append('brand_id', filters.brand_id);
+            if (filters.color_id) params.append('color_id', filters.color_id);
+            if (filters.min_price) params.append('min_price', filters.min_price);
+            if (filters.max_price) params.append('max_price', filters.max_price);
+            
+            console.log('Fetching available sizes with params:', params.toString());
+            const res = await fetch(`http://localhost:4000/api/products?${params.toString()}&limit=1000`);
+            const data = await res.json();
+            
+            if (data.data && data.data.products) {
+                // Extract unique sizes from products
+                const sizeSet = new Set();
+                data.data.products.forEach(product => {
+                    if (product.attributes) {
+                        const sizeAttribute = product.attributes.find(attr => 
+                            attr.attribute_name && attr.attribute_name.toLowerCase().includes('size')
+                        );
+                        if (sizeAttribute && sizeAttribute.attribute_values) {
+                            sizeAttribute.attribute_values.forEach(size => {
+                                if (size && size.trim()) {
+                                    sizeSet.add(size.trim());
+                                }
+                            });
+                        }
+                    }
+                });
+                
+                const availableSizes = Array.from(sizeSet).map(sizeName => ({
+                    _id: sizeName, // Use size name as ID for consistency
+                    name: sizeName
+                }));
+                
+                console.log('Available sizes found:', availableSizes);
+                setSizes(availableSizes);
+            }
+        } catch (error) {
+            console.error('Error fetching available sizes:', error);
+        }
+    };
+
     const fetchFilterData = async () => {
         setLoading(true);
         try {
-            // Fetch colors, brands, sizes, and categories in parallel
-            const [colorsRes, brandsRes, sizesRes, categoriesRes] = await Promise.all([
+            // Fetch colors, brands, categories, and departments in parallel
+            const [colorsRes, brandsRes, categoriesRes, departmentsRes] = await Promise.all([
                 fetch('http://localhost:4000/api/colors'),
                 fetch('http://localhost:4000/api/brands'),
-                fetch('http://localhost:4000/api/sizes'),
-                fetch('http://localhost:4000/api/categories')
+                fetch('http://localhost:4000/api/categories'),
+                fetch('http://localhost:4000/api/departments')
             ]);
 
             const colorsData = await colorsRes.json();
             const brandsData = await brandsRes.json();
-            const sizesData = await sizesRes.json();
             const categoriesData = await categoriesRes.json();
+            const departmentsData = await departmentsRes.json();
 
             setColors(colorsData.data?.colors || []);
             setBrands(brandsData.data?.brands || []);
-            setSizes(sizesData.data?.sizes || []);
             setCategories(categoriesData.data?.categories || []);
+            setDepartments(departmentsData || []);
+            
+            // Fetch available sizes based on current filters
+            await fetchAvailableSizes();
         } catch (error) {
             console.error('Error fetching filter data:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Fetch categories for a specific department
+    const fetchCategoriesForDepartment = async (departmentId) => {
+        try {
+            console.log(`Fetching categories for department: ${departmentId}`);
+            const res = await fetch(`http://localhost:4000/api/categories?department_id=${departmentId}`);
+            const data = await res.json();
+            
+            let categoriesData = [];
+            if (data.data && data.data.categories) {
+                categoriesData = data.data.categories;
+            } else if (data.categories) {
+                categoriesData = data.categories;
+            } else if (Array.isArray(data)) {
+                categoriesData = data;
+            }
+            
+            console.log(`Found ${categoriesData.length} categories for department ${departmentId}`);
+            setCategories(categoriesData);
+        } catch (error) {
+            console.error(`Error fetching categories for department ${departmentId}:`, error);
         }
     };
 
@@ -68,6 +166,30 @@ export default function Filter({ onFilterChange, filters }){
         }));
     };
 
+    const handleDepartmentClick = (departmentId) => {
+        const newSelectedDepartments = selectedDepartments.includes(departmentId)
+            ? selectedDepartments.filter(id => id !== departmentId)
+            : [departmentId]; // Only allow one department selection
+        
+        setSelectedDepartments(newSelectedDepartments);
+        onFilterChange({ department_id: newSelectedDepartments.length > 0 ? newSelectedDepartments[0] : '' });
+        
+        // Clear category selection when department changes
+        setSelectedCategories([]);
+        onFilterChange({ category_id: '' });
+        
+        // Fetch categories for the selected department
+        if (newSelectedDepartments.length > 0) {
+            fetchCategoriesForDepartment(newSelectedDepartments[0]);
+        } else {
+            // If no department selected, show all categories
+            fetchFilterData();
+        }
+        
+        // Refresh available sizes after department change
+        setTimeout(() => fetchAvailableSizes(), 100);
+    };
+
     const handleCategoryClick = (categoryId) => {
         const newSelectedCategories = selectedCategories.includes(categoryId)
             ? selectedCategories.filter(id => id !== categoryId)
@@ -75,6 +197,9 @@ export default function Filter({ onFilterChange, filters }){
         
         setSelectedCategories(newSelectedCategories);
         onFilterChange({ category_id: newSelectedCategories.length > 0 ? newSelectedCategories[0] : '' });
+        
+        // Refresh available sizes after category change
+        setTimeout(() => fetchAvailableSizes(), 100);
     };
 
     const handleColorClick = (colorId) => {
@@ -84,6 +209,9 @@ export default function Filter({ onFilterChange, filters }){
         
         setSelectedColors(newSelectedColors);
         onFilterChange({ color_id: newSelectedColors.length > 0 ? newSelectedColors[0] : '' });
+        
+        // Refresh available sizes after color change
+        setTimeout(() => fetchAvailableSizes(), 100);
     };
 
     const handleBrandClick = (brandId) => {
@@ -93,6 +221,9 @@ export default function Filter({ onFilterChange, filters }){
         
         setSelectedBrands(newSelectedBrands);
         onFilterChange({ brand_id: newSelectedBrands.length > 0 ? newSelectedBrands[0] : '' });
+        
+        // Refresh available sizes after brand change
+        setTimeout(() => fetchAvailableSizes(), 100);
     };
 
     const handleSizeClick = (sizeId) => {
@@ -128,6 +259,7 @@ export default function Filter({ onFilterChange, filters }){
         setSelectedBrands([]);
         setSelectedSizes([]);
         setSelectedCategories([]);
+        setSelectedDepartments([]);
         onFilterChange({
             search: '',
             color_id: '',
@@ -138,6 +270,8 @@ export default function Filter({ onFilterChange, filters }){
             min_price: '',
             max_price: ''
         });
+        // Reset categories to show all categories and refresh available sizes
+        fetchFilterData();
     };
 
     const renderSection = (title, section, items, selectedItems, handleClick, showMore, setShowMore, maxItems = 5, showSelection = true) => {
@@ -270,7 +404,7 @@ export default function Filter({ onFilterChange, filters }){
             <div className="rounded shadow dark:shadow-gray-800 p-4 sticky top-20">
                 <div className="flex justify-between items-center mb-4">
                 <h5 className="text-xl font-medium">Filter</h5>
-                    {(selectedColors.length > 0 || selectedBrands.length > 0 || selectedSizes.length > 0 || selectedCategories.length > 0) && (
+                    {(selectedColors.length > 0 || selectedBrands.length > 0 || selectedSizes.length > 0 || selectedCategories.length > 0 || selectedDepartments.length > 0) && (
                         <button 
                             onClick={clearAllFilters}
                             className="text-sm text-orange-500 hover:text-orange-600 font-medium"
@@ -299,6 +433,7 @@ export default function Filter({ onFilterChange, filters }){
                 </form>
 
                 <div className="space-y-0">
+                    {renderSection('Department', 'department', departments, selectedDepartments, handleDepartmentClick, showMoreDepartments, setShowMoreDepartments, 5, true)}
                     {renderSection('Category', 'category', categories, selectedCategories, handleCategoryClick, showMoreCategories, setShowMoreCategories, 5, true)}
                     {renderSection('Size', 'size', sizes, selectedSizes, handleSizeClick, showMoreSizes, setShowMoreSizes, 5, true)}
                     {renderColorSection()}

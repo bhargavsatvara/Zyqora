@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const cartController = require('../controllers/cartController');
-const { authenticate } = require('../middleware/auth');
+// const { authenticate } = require('../middleware/auth'); // Temporarily disabled
 
 /**
  * @swagger
@@ -16,13 +16,10 @@ const { authenticate } = require('../middleware/auth');
  *   get:
  *     summary: Get cart items
  *     tags: [Cart]
- *     security:
- *       - bearerAuth: []
  *     responses:
  *       200: { description: Cart items }
- *       401: { description: Unauthorized }
  */
-router.get('/', authenticate, cartController.getCart);
+router.get('/', cartController.getCart);
 
 /**
  * @swagger
@@ -30,25 +27,27 @@ router.get('/', authenticate, cartController.getCart);
  *   post:
  *     summary: Add item to cart
  *     tags: [Cart]
- *     security:
- *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required: [productId, quantity]
+ *             required: [product_id, name, price, quantity]
  *             properties:
- *               productId: { type: string }
+ *               product_id: { type: string }
+ *               name: { type: string }
+ *               price: { type: number }
+ *               image: { type: string }
  *               quantity: { type: number }
  *               color: { type: string }
  *               size: { type: string }
+ *               stock_qty: { type: number }
  *     responses:
  *       200: { description: Item added to cart }
- *       401: { description: Unauthorized }
+ *       400: { description: Bad request }
  */
-router.post('/add', authenticate, cartController.addItem);
+router.post('/add', cartController.addItem);
 
 /**
  * @swagger
@@ -56,8 +55,6 @@ router.post('/add', authenticate, cartController.addItem);
  *   put:
  *     summary: Update cart item
  *     tags: [Cart]
- *     security:
- *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -70,28 +67,30 @@ router.post('/add', authenticate, cartController.addItem);
  *               quantity: { type: number }
  *     responses:
  *       200: { description: Cart item updated }
- *       401: { description: Unauthorized }
  */
-router.put('/update', authenticate, cartController.updateItem);
+router.put('/update', cartController.updateItem);
 
 /**
  * @swagger
- * /cart/remove/{itemId}:
- *   delete:
+ * /cart/remove:
+ *   post:
  *     summary: Remove item from cart
  *     tags: [Cart]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: itemId
- *         required: true
- *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [product_id, size, color]
+ *             properties:
+ *               product_id: { type: string }
+ *               size: { type: string }
+ *               color: { type: string }
  *     responses:
  *       200: { description: Item removed from cart }
- *       401: { description: Unauthorized }
  */
-router.delete('/remove/:itemId', authenticate, cartController.removeItem);
+router.post('/remove', cartController.removeItem);
 
 /**
  * @swagger
@@ -99,12 +98,9 @@ router.delete('/remove/:itemId', authenticate, cartController.removeItem);
  *   delete:
  *     summary: Clear cart
  *     tags: [Cart]
- *     security:
- *       - bearerAuth: []
  *     responses:
  *       200: { description: Cart cleared }
- *       401: { description: Unauthorized }
  */
-router.delete('/clear', authenticate, cartController.clearCart);
+router.delete('/clear', cartController.clearCart);
 
 module.exports = router; 
