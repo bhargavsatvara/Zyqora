@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Store, Eye, EyeOff, Shield } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 export default function Login() {
   const [email, setEmail] = useState('admin@example.com');
@@ -8,6 +10,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
   const { login } = useAuth();
 
   const handleSubmit = async (e) => {
@@ -16,11 +19,11 @@ export default function Login() {
     setError('');
 
     const success = await login(email, password);
-    
-    if (!success) {
+    if (success) {
+      navigate('/');
+    } else {
       setError('Invalid email or password');
     }
-    
     setLoading(false);
   };
 

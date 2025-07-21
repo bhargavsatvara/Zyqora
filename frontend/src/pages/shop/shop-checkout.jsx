@@ -309,10 +309,10 @@ export default function ShopCheckOut(){
                                         </div>
                                         <div className="text-right">
                                             <p className="text-slate-400 font-semibold">
-                                                {item.quantity} x ${item.price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                                {item.quantity} x {item.price.toLocaleString('en-CA', { style: 'currency', currency: 'CAD' })}
                                             </p>
                                             <p className="font-semibold">
-                                                ${(item.price * item.quantity).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                                {(item.price * item.quantity).toLocaleString('en-CA', { style: 'currency', currency: 'CAD' })}
                                             </p>
                                         </div>
                                     </div>
@@ -321,19 +321,19 @@ export default function ShopCheckOut(){
                                     <div>
                                         <h5 className="font-semibold">Subtotal</h5>
                                     </div>
-                                    <p className="font-semibold">${totals.subtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                                    <p className="font-semibold">{totals.subtotal.toLocaleString('en-CA', { style: 'currency', currency: 'CAD' })}</p>
                                 </div>
                                 <div className="p-3 flex justify-between items-center border-t border-gray-100 dark:border-gray-800">
                                     <div>
                                         <h5 className="font-semibold">Tax</h5>
                                     </div>
-                                    <p className="font-semibold">${totals.tax.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                                    <p className="font-semibold">{totals.tax.toLocaleString('en-CA', { style: 'currency', currency: 'CAD' })}</p>
                                 </div>
                                 <div className="p-3 flex justify-between items-center border-t border-gray-100 dark:border-gray-800">
                                     <div>
-                                        <h5 className="font-semibold">Total (USD)</h5>
+                                        <h5 className="font-semibold">Total (CAD)</h5>
                                     </div>
-                                    <p className="font-semibold">${totals.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                                    <p className="font-semibold">{totals.total.toLocaleString('en-CA', { style: 'currency', currency: 'CAD' })}</p>
                                 </div>
                             </div>
                         </div>

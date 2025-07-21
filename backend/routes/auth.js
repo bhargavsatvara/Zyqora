@@ -171,5 +171,6 @@ router.post('/logout', authenticate, authController.logout);
  *       200: { description: Email verified successfully }
  *       400: { description: Invalid or expired token }
  */
+router.post('/admin-login', authController.adminLogin);
 
 module.exports = router; 

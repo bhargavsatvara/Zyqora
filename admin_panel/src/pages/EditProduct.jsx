@@ -35,7 +35,6 @@ export default function EditProduct() {
   useEffect(() => {
     fetchBrands();
     fetchDepartments();
-    fetchSizeCharts();
   }, []);
 
   useEffect(() => {

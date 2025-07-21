@@ -261,6 +261,15 @@ export default function ProductDetail({ product }) {
         }
     };
 
+    const handleShopNow = () => {
+        const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+        if (token) {
+            navigate("/shop-checkout");
+        } else {
+            navigate("/login");
+        }
+    };
+
     if (!product) {
         return (
             <div className="sticky top-20">
@@ -426,9 +435,12 @@ export default function ProductDetail({ product }) {
                 )}
 
                 <div className="flex gap-3 mt-6">
-                    <Link to="/shop-cart" className="py-3 px-6 inline-block font-semibold tracking-wide align-middle text-base text-center bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors">
+                    <button 
+                        onClick={handleShopNow}
+                        className="py-3 px-6 inline-block font-semibold tracking-wide align-middle text-base text-center bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors"
+                    >
                         Shop Now
-                    </Link>
+                    </button>
                     <button 
                         onClick={handleAddToCart}
                         disabled={isAddingToCart || (product.stock_qty !== undefined && product.stock_qty === 0)}

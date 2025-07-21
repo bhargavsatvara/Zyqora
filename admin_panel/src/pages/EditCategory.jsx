@@ -46,7 +46,15 @@ export default function EditCategory() {
   const fetchDepartments = async () => {
     try {
       const response = await departmentsAPI.getDepartments({ limit: 100 });
-      setDepartments(response.data.data.departments || []);
+      if (response.data && response.data.departments) {
+        setDepartments(response.data.departments);
+      } else if (response.data && response.data.data && response.data.data.departments) {
+        setDepartments(response.data.data.departments);
+      } else if (response.data) {
+        setDepartments(response.data);
+      } else {
+        setDepartments([]);
+      }
     } catch (error) {
       console.error('Error fetching departments:', error);
     }

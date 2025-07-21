@@ -505,7 +505,7 @@ export default function Navbar({ navClass, navlight }) {
                         View Cart
                       </Link>
                       <Link
-                        to="/checkout"
+                        to={isAuthenticated ? "/shop-checkout" : "/login"}
                         className="py-[5px] px-4 inline-block font-semibold tracking-wide align-middle duration-500 text-sm text-center rounded-md bg-orange-500 border border-orange-500 text-white"
                       >
                         Checkout

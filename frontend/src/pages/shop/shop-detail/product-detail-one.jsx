@@ -1,5 +1,5 @@
 import React,{useState, useEffect} from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 
 import Tagline from "../../../components/tagline";
 import Navbar from "../../../components/navbar";
@@ -20,31 +20,31 @@ export default function ProductDetailOne(){
     const [photoIndex, setActiveIndex] = useState(0);
     const [isOpen, setOpen] = useState(false);
     const [images, setImages] = useState([]);
+    const navigate = useNavigate();
 
     useEffect(() => {
+        async function fetchProduct() {
+            try {
+                setLoading(true);
+                const response = await fetch(`http://localhost:4000/api/products/${id}`);
+                const data = await response.json();
+                
+                if (data) {
+                    setProduct(data);
+                    // Set images for lightbox - use product image if available
+                    const productImages = data.image ? [data.image] : [];
+                    setImages(productImages);
+                }
+            } catch (error) {
+                console.error('Error fetching product:', error);
+            } finally {
+                setLoading(false);
+            }
+        }
         if (id) {
             fetchProduct();
         }
     }, [id]);
-
-    const fetchProduct = async () => {
-        try {
-            setLoading(true);
-            const response = await fetch(`http://localhost:4000/api/products/${id}`);
-            const data = await response.json();
-            
-            if (data) {
-                setProduct(data);
-                // Set images for lightbox - use product image if available
-                const productImages = data.image ? [data.image] : [];
-                setImages(productImages);
-            }
-        } catch (error) {
-            console.error('Error fetching product:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const getImageUrl = (imagePath) => {
         if (!imagePath) {
@@ -69,6 +69,16 @@ export default function ProductDetailOne(){
         setActiveIndex(index)
         setOpen(true);
     }
+
+    const handleShopNow = () => {
+        console.log("Shop Now clicked");
+        const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+        if (token) {
+            navigate("/shop-checkout");
+        } else {
+            navigate("/login");
+        }
+    };
 
     if (loading) {
         return (

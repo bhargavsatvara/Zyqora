@@ -31,7 +31,7 @@ export default function AddProduct() {
 
   const fetchCategories = async (departmentId) => {
     try {
-      const params = departmentId ? { department_id: departmentId } : {};
+      const params = departmentId ? { department_id: departmentId, limit: 1000 } : { limit: 1000 };
       const response = await categoriesAPI.getCategories(params);
       const categoriesData = response.data.data?.categories || response.data.data || response.data || [];
       setCategories(categoriesData);
@@ -49,7 +49,7 @@ export default function AddProduct() {
 
   const fetchBrands = async () => {
     try {
-      const response = await brandsAPI.getBrands();
+      const response = await brandsAPI.getBrands({ limit: 1000 });
       const brandsData = response.data.data?.brands || response.data.data || response.data || [];
       setBrands(brandsData);
     } catch (error) {
@@ -159,9 +159,9 @@ export default function AddProduct() {
   // Filter categories based on selected department
   const filteredCategories = formData.department_id
     ? categories.filter(category =>
-        category.department_ids &&
+        Array.isArray(category.department_ids) &&
         category.department_ids.some(
-          deptId => deptId === formData.department_id || (typeof deptId === 'object' && deptId._id === formData.department_id)
+          deptId => (deptId && ((typeof deptId === 'object' ? deptId._id : deptId) === formData.department_id))
         )
       )
     : categories;

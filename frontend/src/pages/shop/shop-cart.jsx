@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import Navbar from "../../components/navbar";
 import MobileApp from "../../components/mobile-app";
@@ -19,6 +19,7 @@ export default function Shopcart(props){
     });
     const [message, setMessage] = useState('');
     const [deletingItem, setDeletingItem] = useState(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetchCartData();
@@ -145,6 +146,15 @@ export default function Shopcart(props){
             console.error('Error clearing cart:', error);
             setMessage('Error clearing cart');
             setTimeout(() => setMessage(''), 3000);
+        }
+    };
+
+    const handleProceedToCheckout = () => {
+        const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+        if (token) {
+            navigate("/shop-checkout");
+        } else {
+            navigate("/login");
         }
     };
 
@@ -278,7 +288,12 @@ export default function Shopcart(props){
                         <div className="grid lg:grid-cols-12 md:grid-cols-2 grid-cols-1 mt-6 gap-6">
                             <div className="lg:col-span-9 md:order-1 order-3">
                                 <div className="space-x-1">
-                                    <Link to="/shop-checkout" className="py-2 px-5 inline-block font-semibold tracking-wide align-middle text-base text-center bg-orange-500 text-white rounded-md mt-2">Proceed to Checkout</Link>
+                                    <button 
+                                        onClick={handleProceedToCheckout}
+                                        className="py-2 px-5 inline-block font-semibold tracking-wide align-middle text-base text-center bg-orange-500 text-white rounded-md mt-2"
+                                    >
+                                        Proceed to Checkout
+                                    </button>
                                     <Link to="/products" className="py-2 px-5 inline-block font-semibold tracking-wide align-middle text-base text-center rounded-md bg-orange-500/5 hover:bg-orange-500 text-orange-500 hover:text-white mt-2">Continue Shopping</Link>
                                     <button 
                                         onClick={clearCart}

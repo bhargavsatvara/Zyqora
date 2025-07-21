@@ -59,7 +59,12 @@ export default function Login() {
       storage.setItem("token", res.data.token);
       storage.setItem("user", JSON.stringify(res.data.user));
 
-      navigate("/");
+      // Check user role and redirect
+      if (res.data.user.role === "admin") {
+        window.location.href = "/admin"; // Change to your admin panel route if different
+      } else {
+        navigate("/");
+      }
     } catch (err) {
       setError(err.response?.data?.message || "Login failed. Please try again.");
     } finally {

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authAPI } from '../services/api';
+import axios from 'axios'; // Added axios import
 
 const AuthContext = createContext(undefined);
 
@@ -35,9 +36,11 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     try {
-      const response = await authAPI.login({ email, password });
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/auth/admin-login`,
+        { email, password }
+      );
       const { token, user: userData } = response.data;
-      
       localStorage.setItem('adminToken', token);
       localStorage.setItem('adminUser', JSON.stringify(userData));
       setUser(userData);
