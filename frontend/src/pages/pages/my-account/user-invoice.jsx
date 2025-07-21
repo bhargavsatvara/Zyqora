@@ -29,7 +29,7 @@ export default function Invoice(){
                                         <img src={logoLight} className="hidden dark:block" alt=""/>
                                         <div className="flex mt-4">
                                             <FiLink className="h-4 w-4 me-3 mt-1"></FiLink>
-                                            <Link to="https://1.envato.market/Zyqora-reactjs" target="_blank" className="text-orange-500 dark:text-white font-medium">https://1.envato.market/Zyqora-reactjs</Link>
+                                            <Link to="https://zyqora.com" target="_blank" className="text-orange-500 dark:text-white font-medium">https://zyqora.com</Link>
                                         </div>
                                     </div>
 

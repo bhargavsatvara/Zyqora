@@ -1,15 +1,254 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 
 import Navbar from "../../components/navbar";
 import MobileApp from "../../components/mobile-app";
 import Footer from "../../components/footer";
 import Switcher from "../../components/switcher";
 import ScrollToTop from "../../components/scroll-to-top";
+import { useCart } from "../../contexts/CartContext";
+
+const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
+
+function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedCountry, selectedState, setSelectedState, selectedCity, setSelectedCity, zipCode, setZipCode }) {
+    const { cartData, totals, fetchCart } = useCart();
+    const [form, setForm] = useState({
+        firstName: '',
+        lastName: '',
+        username: '',
+        email: '',
+        address: '',
+        address2: '',
+    });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+    const stripe = useStripe();
+    const elements = useElements();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        fetchCart(); // Always fetch latest cart on mount
+    }, [fetchCart]);
+
+    const handleInput = e => {
+        setForm(f => ({ ...f, [e.target.name]: e.target.value }));
+    };
+
+    const handleSubmit = async e => {
+        e.preventDefault();
+        setError('');
+        setSuccess('');
+        setLoading(true);
+        if (!stripe || !elements) {
+            setError('Stripe not loaded');
+            setLoading(false);
+            return;
+        }
+        // Require city selection
+        if (!selectedCity) {
+            setError('Please select a city.');
+            setLoading(false);
+            return;
+        }
+        // 1. Prepare billing address and cart items
+        const countryNameToCode = {
+            'Canada': 'CA',
+            'United States': 'US',
+            'India': 'IN',
+            // Add more as needed
+        };
+        const countryCode = countries.find(c => c._id === selectedCountry)?.code || countryNameToCode[countries.find(c => c._id === selectedCountry)?.name] || '';
+        const billingAddress = {
+            street: form.address,
+            city: cities.find(c => c._id === selectedCity)?.name || '',
+            state: states.find(s => s._id === selectedState)?.name || '',
+            country: countryCode,
+            zipCode,
+        };
+        const cartItems = cartData.map(item => ({
+            product_id: item.product_id,
+            name: item.name,
+            sku: item.sku, // Ensure sku is included
+            quantity: item.quantity,
+            price: item.price,
+            subtotal: item.price * item.quantity,
+            tax: (item.price * item.quantity * 0.1),
+            total: (item.price * item.quantity * 1.1),
+            size: item.size || '',   // Always include size
+            color: item.color || ''  // Always include color
+        }));
+        // 2. Get PaymentIntent client_secret from backend
+        let clientSecret;
+        try {
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            const res = await fetch('http://localhost:4000/api/orders/checkout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    billingAddress,
+                    cartItems,
+                    totalAmount: totals.total,
+                    subtotal: totals.subtotal,
+                    tax: totals.tax
+                })
+            });
+            const data = await res.json();
+            if (res.ok && data.clientSecret) {
+                clientSecret = data.clientSecret;
+            } else {
+                setError(data.message || 'Payment initiation failed');
+                setLoading(false);
+                return;
+            }
+        } catch (err) {
+            setError('Payment initiation failed: ' + err.message);
+            setLoading(false);
+            return;
+        }
+        // 3. Confirm card payment with Stripe.js
+        const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+            payment_method: {
+                card: elements.getElement(CardElement),
+                billing_details: {
+                    name: `${form.firstName} ${form.lastName}`,
+                    email: form.email,
+                    address: {
+                        line1: form.address,
+                        line2: form.address2,
+                        city: cities.find(c => c._id === selectedCity)?.name || '',
+                        state: states.find(s => s._id === selectedState)?.name || '',
+                        country: countryCode,
+                        postal_code: zipCode
+                    }
+                }
+            }
+        });
+        if (stripeError) {
+            setError(stripeError.message);
+            setLoading(false);
+            return;
+        }
+        if (paymentIntent.status !== 'succeeded') {
+            setError('Payment not successful.');
+            setLoading(false);
+            return;
+        }
+        // 4. After payment, send order creation request to backend
+        try {
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            const res = await fetch('http://localhost:4000/api/orders/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    billingAddress,
+                    cartItems,
+                    totalAmount: totals.total,
+                    subtotal: totals.subtotal,
+                    tax: totals.tax,
+                    paymentIntentId: paymentIntent.id
+                })
+            });
+            const data = await res.json();
+            if (res.ok && (data.success || data._id)) {
+                setSuccess('Order placed successfully!');
+                setTimeout(() => navigate('/'), 2000);
+            } else {
+                setError(data.message || 'Order failed');
+            }
+        } catch (err) {
+            setError('Order failed: ' + err.message);
+        }
+        setLoading(false);
+    };
+
+    return (
+        <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-8 space-y-8">
+          <h2 className="text-2xl font-bold mb-4">Billing Address</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block font-semibold mb-1">First Name <span className="text-red-600">*</span></label>
+              <input type="text" name="firstName" value={form.firstName} onChange={handleInput} className="w-full py-3 px-4 border rounded-lg focus:ring-2 focus:ring-orange-400" required />
+            </div>
+            <div>
+              <label className="block font-semibold mb-1">Last Name <span className="text-red-600">*</span></label>
+              <input type="text" name="lastName" value={form.lastName} onChange={handleInput} className="w-full py-3 px-4 border rounded-lg focus:ring-2 focus:ring-orange-400" required />
+            </div>
+            <div>
+              <label className="block font-semibold mb-1">Username</label>
+              <input type="text" name="username" value={form.username} onChange={handleInput} className="w-full py-3 px-4 border rounded-lg focus:ring-2 focus:ring-orange-400" />
+            </div>
+            <div>
+              <label className="block font-semibold mb-1">Your Email <span className="text-red-600">*</span></label>
+              <input type="email" name="email" value={form.email} onChange={handleInput} className="w-full py-3 px-4 border rounded-lg focus:ring-2 focus:ring-orange-400" required />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block font-semibold mb-1">Address <span className="text-red-600">*</span></label>
+              <input type="text" name="address" value={form.address} onChange={handleInput} className="w-full py-3 px-4 border rounded-lg focus:ring-2 focus:ring-orange-400" required />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block font-semibold mb-1">Address 2</label>
+              <input type="text" name="address2" value={form.address2} onChange={handleInput} className="w-full py-3 px-4 border rounded-lg focus:ring-2 focus:ring-orange-400" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label className="font-semibold mb-1 block">Country</label>
+              <select value={selectedCountry} onChange={e => setSelectedCountry(e.target.value)} className="form-select w-full py-3 px-4 border rounded-lg focus:ring-2 focus:ring-orange-400">
+                <option value="">Select Country</option>
+                {Array.isArray(countries) && countries.map(country => (
+                  <option key={country._id} value={country._id}>{country.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="font-semibold mb-1 block">State</label>
+              <select value={selectedState} onChange={e => setSelectedState(e.target.value)} className="form-select w-full py-3 px-4 border rounded-lg focus:ring-2 focus:ring-orange-400" disabled={!selectedCountry}>
+                <option value="">Select State</option>
+                {Array.isArray(states) && states.map(state => (
+                  <option key={state._id} value={state._id}>{state.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="font-semibold mb-1 block">City</label>
+              <select value={selectedCity} onChange={e => setSelectedCity(e.target.value)} className="form-select w-full py-3 px-4 border rounded-lg focus:ring-2 focus:ring-orange-400" disabled={!selectedState}>
+                <option value="">Select City</option>
+                {Array.isArray(cities) && cities.map(city => (
+                  <option key={city._id} value={city._id}>{city.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="md:col-span-3">
+              <label className="block font-semibold mb-1">Zip Code <span className="text-red-600">*</span></label>
+              <input type="number" value={zipCode} onChange={e => setZipCode(e.target.value)} className="w-full py-3 px-4 border rounded-lg focus:ring-2 focus:ring-orange-400" required />
+            </div>
+          </div>
+          <h2 className="text-2xl font-bold mb-4 mt-8">Payment</h2>
+          <div className="mb-4">
+            <CardElement options={{ hidePostalCode: true }} className="p-3 border rounded-lg" />
+          </div>
+          {error && <div className="text-red-600 mb-2">{error}</div>}
+          {success && <div className="text-green-600 mb-2">{success}</div>}
+          <button type="submit" className="w-full py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition">
+            {loading ? 'Processing...' : 'Continue to checkout'}
+          </button>
+        </form>
+    );
+}
 
 export default function ShopCheckOut(){
-    const [cartData, setCartData] = useState([]);
-    const [totals, setTotals] = useState({ subtotal: 0, tax: 0, total: 0 });
+    // Remove local cart state, use CartContext instead
+    // const [cartData, setCartData] = useState([]);
+    // const [totals, setTotals] = useState({ subtotal: 0, tax: 0, total: 0 });
 
     // Country/State/City logic
     const [countries, setCountries] = useState([]);
@@ -19,6 +258,7 @@ export default function ShopCheckOut(){
     const [selectedState, setSelectedState] = useState('');
     const [selectedCity, setSelectedCity] = useState('');
     const [zipCode, setZipCode] = useState('');
+    const { cartData, totals } = useCart(); // <-- Add this line
 
     // Fetch countries on mount
     useEffect(() => {
@@ -74,27 +314,6 @@ export default function ShopCheckOut(){
         fetchCities();
     }, [selectedState]);
 
-    useEffect(() => {
-        async function fetchCart() {
-            try {
-                const response = await fetch("http://localhost:4000/api/cart");
-                const data = await response.json();
-                if (data.success) {
-                    setCartData(data.data.items || []);
-                    setTotals({
-                        subtotal: data.data.subtotal || 0,
-                        tax: data.data.tax || 0,
-                        total: data.data.total || 0,
-                    });
-                }
-            } catch (e) {
-                setCartData([]);
-                setTotals({ subtotal: 0, tax: 0, total: 0 });
-            }
-        }
-        fetchCart();
-    }, []);
-
     return(
         <>
         <Navbar navClass="defaultscroll is-sticky"/>
@@ -119,167 +338,22 @@ export default function ShopCheckOut(){
                 <div className="grid lg:grid-cols-12 md:grid-cols-2 grid-cols-1 gap-6">
                     <div className="lg:col-span-8">
                         <div className="p-6 rounded-md shadow dark:shadow-gray-800">
-                            <h3 className="text-xl leading-normal font-semibold">Billing address</h3>
-
-                            <form>
-                                <div className="grid lg:grid-cols-12 grid-cols-1 mt-6 gap-5">
-                                    <div className="lg:col-span-6">
-                                        <label className="form-label font-semibold">First Name : <span className="text-red-600">*</span></label>
-                                        <input type="text" className="w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border border-gray-100 dark:border-gray-800 focus:ring-0 mt-2" placeholder="First Name:" id="firstname" name="name" required=""/>
-                                    </div>
-
-                                    <div className="lg:col-span-6">
-                                        <label className="form-label font-semibold">Last Name : <span className="text-red-600">*</span></label>
-                                        <input type="text" className="w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border border-gray-100 dark:border-gray-800 focus:ring-0 mt-2" placeholder="Last Name:" id="lastname" name="name" required=""/>
-                                    </div>
-
-                                    <div className="lg:col-span-6">
-                                        <label className="form-label font-semibold">Username</label>
-                                        <div className="relative mt-2">
-                                            <span className="absolute top-0.5 start-0.5 w-9 h-9 text-xl bg-gray-100 dark:bg-slate-800 inline-flex justify-center items-center text-dark dark:text-white rounded" id="basic-addon1"><i className="mdi mdi-at"></i></span>
-                                            <input type="text" className="ps-12 w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border border-gray-100 dark:border-gray-800 focus:ring-0" placeholder="Username" required/>
-                                        </div>
-                                    </div>
-
-                                    <div className="lg:col-span-6">
-                                        <label className="form-label font-semibold">Your Email : <span className="text-red-600">*</span></label>
-                                        <input type="email" className="w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border border-gray-100 dark:border-gray-800 focus:ring-0 mt-2" placeholder="Email" name="email" required=""/>
-                                    </div>
-
-                                    <div className="lg:col-span-12">
-                                        <label className="form-label font-semibold">Address : <span className="text-red-600">*</span></label>
-                                        <input type="text" className="w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border border-gray-100 dark:border-gray-800 focus:ring-0 mt-2" placeholder="Address:" id="address" name="name" required=""/>
-                                    </div>
-
-                                    <div className="lg:col-span-12">
-                                        <label className="form-label font-semibold">Address 2 : </label>
-                                        <input type="text" className="w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border border-gray-100 dark:border-gray-800 focus:ring-0 mt-2" placeholder="Address:" id="address" name="name" required=""/>
-                                    </div>
-
-                                    <div className="lg:col-span-4">
-                                        <label className="font-semibold">Country:</label>
-                                        <select
-                                            className="form-select form-input mt-2 w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border border-gray-100 dark:border-gray-800 focus:ring-0"
-                                            value={selectedCountry}
-                                            onChange={e => setSelectedCountry(e.target.value)}
-                                        >
-                                            <option value="">Select Country</option>
-                                            {Array.isArray(countries) && countries.map(country => (
-                                                <option key={country._id} value={country._id}>{country.name}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    <div className="lg:col-span-4">
-                                        <label className="font-semibold">State:</label>
-                                        <select
-                                            className="form-select form-input mt-2 w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border border-gray-100 dark:border-gray-800 focus:ring-0"
-                                            value={selectedState}
-                                            onChange={e => setSelectedState(e.target.value)}
-                                            disabled={!selectedCountry}
-                                        >
-                                            <option value="">Select State</option>
-                                            {Array.isArray(states) && states.map(state => (
-                                                <option key={state._id} value={state._id}>{state.name}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    <div className="lg:col-span-4">
-                                        <label className="form-label font-semibold">City:</label>
-                                        <select
-                                            className="form-select form-input mt-2 w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border border-gray-100 dark:border-gray-800 focus:ring-0"
-                                            value={selectedCity}
-                                            onChange={e => setSelectedCity(e.target.value)}
-                                            disabled={!selectedState}
-                                        >
-                                            <option value="">Select City</option>
-                                            {Array.isArray(cities) && cities.map(city => (
-                                                <option key={city._id} value={city._id}>{city.name}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    <div className="lg:col-span-4">
-                                        <label className="form-label font-semibold">Zip Code : <span className="text-red-600">*</span></label>
-                                        <input type="number" className="w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border border-gray-100 dark:border-gray-800 focus:ring-0 mt-2" placeholder="Zip:" id="zipcode" name="number" required=""/>
-                                    </div>
-
-                                    <div className="lg:col-span-12">
-                                        <div className="flex items-center w-full mb-0">
-                                            <input className="form-checkbox rounded border-gray-100 dark:border-gray-800 text-orange-500 focus:border-orange-300 focus:ring focus:ring-offset-0 focus:ring-orange-200 focus:ring-opacity-50 me-2" type="checkbox" value="" id="sameaddress"/>
-                                            <label className="form-check-label text-slate-400" htmlFor="sameaddress">Shipping address is the same as my billing address</label>
-                                        </div>
-
-                                        <div className="flex items-center w-full mb-0">
-                                            <input className="form-checkbox rounded border-gray-100 dark:border-gray-800 text-orange-500 focus:border-orange-300 focus:ring focus:ring-offset-0 focus:ring-orange-200 focus:ring-opacity-50 me-2" type="checkbox" value="" id="savenexttime"/>
-                                            <label className="form-check-label text-slate-400" htmlFor="savenexttime">Save this information for next time</label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </form>
-
-                            <h3 className="text-xl leading-normal font-semibold mt-6">Payment</h3>
-
-                            <form>
-                                <div>
-                                    <div className="grid lg:grid-cols-12 grid-cols-1 mt-6 gap-5">
-                                        <div className="lg:col-span-12">
-                                            <div className="block">
-                                                <div>
-                                                    <label className="inline-flex items-center">
-                                                        <input type="radio" className="form-radio border-gray-100 dark:border-gray-800 text-orange-500 focus:border-orange-300 focus:ring focus:ring-offset-0 focus:ring-orange-200 focus:ring-opacity-50 me-2" name="radio-colors" value="1" readOnly defaultChecked/>
-                                                        <span className="text-slate-400">Credit card</span>
-                                                    </label>
-                                                </div>
-                                            </div>
-    
-                                            <div className="block mt-2">
-                                                <div>
-                                                    <label className="inline-flex items-center">
-                                                        <input type="radio" className="form-radio border-gray-100 dark:border-gray-800 text-orange-500 focus:border-orange-300 focus:ring focus:ring-offset-0 focus:ring-orange-200 focus:ring-opacity-50 me-2" name="radio-colors" value="1" readOnly/>
-                                                        <span className="text-slate-400">Debit Card</span>
-                                                    </label>
-                                                </div>
-                                            </div>
-    
-                                            <div className="block mt-2">
-                                                <div>
-                                                    <label className="inline-flex items-center">
-                                                        <input type="radio" className="form-radio border-gray-100 dark:border-gray-800 text-orange-500 focus:border-orange-300 focus:ring focus:ring-offset-0 focus:ring-orange-200 focus:ring-opacity-50 me-2" name="radio-colors" value="1" readOnly/>
-                                                        <span className="text-slate-400">PayPal</span>
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="lg:col-span-6">
-                                            <label className="form-label font-semibold">Account Holder Name : <span className="text-red-600">*</span></label>
-                                            <input type="text" className="w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border border-gray-100 dark:border-gray-800 focus:ring-0 mt-2" placeholder="Name:" id="accountname" name="name" required=""/>
-                                        </div>
-    
-                                        <div className="lg:col-span-6">
-                                            <label className="form-label font-semibold">Credit card number : <span className="text-red-600">*</span></label>
-                                            <input type="number" className="w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border border-gray-100 dark:border-gray-800 focus:ring-0 mt-2" placeholder="**** **** **** ****" id="cardnumber" name="number" required=""/>
-                                        </div>
-    
-                                        <div className="lg:col-span-3">
-                                            <label className="form-label font-semibold">Expiration : <span className="text-red-600">*</span></label>
-                                            <input type="number" className="w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border border-gray-100 dark:border-gray-800 focus:ring-0 mt-2" placeholder="" id="expiration" name="number" required=""/>
-                                        </div>
-    
-                                        <div className="lg:col-span-3">
-                                            <label className="form-label font-semibold">CVV : <span className="text-red-600">*</span></label>
-                                            <input type="number" className="w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border border-gray-100 dark:border-gray-800 focus:ring-0 mt-2" placeholder="" id="cvv" name="number" required=""/>
-                                        </div>
-                                    </div>
-                                </div>
-                            </form>
-                            <div className="mt-4">
-                                <input type="submit" className="py-2 px-5 inline-block tracking-wide align-middle duration-500 text-base text-center bg-orange-500 text-white rounded-md w-full" value="Continue to checkout"/>
-                            </div>
+                            <Elements stripe={stripePromise}>
+                                <CheckoutForm
+                                    countries={countries}
+                                    states={states}
+                                    cities={cities}
+                                    selectedCountry={selectedCountry}
+                                    setSelectedCountry={setSelectedCountry}
+                                    selectedState={selectedState}
+                                    setSelectedState={setSelectedState}
+                                    selectedCity={selectedCity}
+                                    setSelectedCity={setSelectedCity}
+                                    zipCode={zipCode}
+                                    setZipCode={setZipCode}
+                                />
+                            </Elements>
                         </div>
-
                     </div>
 
                     <div className="lg:col-span-4">
@@ -340,8 +414,6 @@ export default function ShopCheckOut(){
                     </div>
                 </div>
             </div>
-
-            <MobileApp/>
         </section>
         <Footer/>
         <Switcher/>

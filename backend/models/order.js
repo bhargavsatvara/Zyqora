@@ -3,7 +3,6 @@ const Schema = mongoose.Schema;
 const Counter = require('./counter');
 
 const OrderSchema = new Schema({
-  order_id: { type: String, unique: true, required: true }, // custom order id
   user_id: { type: Schema.Types.ObjectId, ref: 'User' },
   status: {
     type: String,
@@ -24,19 +23,6 @@ const OrderSchema = new Schema({
 });
 
 OrderSchema.pre('save', async function(next) {
-  if (this.isNew && !this.order_id) {
-    try {
-      const counter = await Counter.findByIdAndUpdate(
-        { _id: 'order' },
-        { $inc: { seq: 1 } },
-        { new: true, upsert: true }
-      );
-      // Pad with leading zeros to always have at least 2 digits
-      this.order_id = counter.seq.toString().padStart(2, '0');
-    } catch (err) {
-      return next(err);
-    }
-  }
   this.updated_at = Date.now();
   next();
 });

@@ -220,18 +220,13 @@ export default function ProductDetail({ product }) {
                 stock_qty: product.stock_qty
             };
 
-            console.log('=== FRONTEND ADD TO CART ===');
-            console.log('Product:', product);
-            console.log('Selected size:', selectedSize);
-            console.log('Selected color:', selectedColor);
-            console.log('Quantity:', quantity);
-            console.log('Cart item being sent:', cartItem);
-
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
             // Add to cart API call
             const response = await fetch('http://localhost:4000/api/cart/add', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    ...(token && { 'Authorization': `Bearer ${token}` })
                 },
                 body: JSON.stringify(cartItem)
             });
@@ -336,6 +331,11 @@ export default function ProductDetail({ product }) {
                     <li className="mb-1 flex ms-0"><i className="mdi mdi-check-circle-outline text-orange-500 text-xl me-2"></i> Comfortable Fit</li>
                     <li className="mb-1 flex ms-0"><i className="mdi mdi-check-circle-outline text-orange-500 text-xl me-2"></i> Durable Construction</li>
                 </ul>
+                {product.brand_id?.name && (
+                  <div className="mt-4 text-gray-700">
+                    <span className="font-semibold">Brand:</span> {product.brand_id.name}
+                  </div>
+                )}
             </div>
 
             <div className="grid lg:grid-cols-2 grid-cols-1 gap-6 mt-4">

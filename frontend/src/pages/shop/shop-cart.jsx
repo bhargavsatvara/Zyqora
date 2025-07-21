@@ -35,7 +35,12 @@ export default function Shopcart(props){
     const fetchCartData = async () => {
         try {
             setLoading(true);
-            const response = await fetch('http://localhost:4000/api/cart');
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            const response = await fetch('http://localhost:4000/api/cart', {
+                headers: {
+                    ...(token && { 'Authorization': `Bearer ${token}` })
+                }
+            });
             const data = await response.json();
             
             if (data.success) {
@@ -78,10 +83,12 @@ export default function Shopcart(props){
         });
 
         try {
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
             const response = await fetch('http://localhost:4000/api/cart/update', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
+                    ...(token && { 'Authorization': `Bearer ${token}` })
                 },
                 body: JSON.stringify({
                     itemId: itemId,
@@ -99,9 +106,13 @@ export default function Shopcart(props){
 
     const removeFromCart = async (item) => {
         try {
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
             const response = await fetch('http://localhost:4000/api/cart/remove', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    ...(token && { 'Authorization': `Bearer ${token}` })
+                },
                 body: JSON.stringify({
                     product_id: item.product_id,
                     size: item.size,
@@ -130,8 +141,12 @@ export default function Shopcart(props){
 
     const clearCart = async () => {
         try {
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
             const response = await fetch('http://localhost:4000/api/cart/clear', {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: {
+                    ...(token && { 'Authorization': `Bearer ${token}` })
+                }
             });
 
             if (response.ok) {

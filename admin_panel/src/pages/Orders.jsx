@@ -27,8 +27,9 @@ export default function Orders() {
       };
 
       const response = await ordersAPI.getOrders(params);
-      const { orders: ordersData, pagination } = response.data.data;
-      
+      console.log('Orders API response:', response.data);
+      const apiData = response.data && response.data.data ? response.data.data : { orders: [], pagination: { total: 0, totalRecords: 0 } };
+      const { orders: ordersData, pagination } = apiData;
       setOrders(ordersData);
       setTotalPages(pagination.total);
       setTotalOrders(pagination.totalRecords);
@@ -41,8 +42,8 @@ export default function Orders() {
 
   const filteredOrders = orders.filter(order => {
     const matchesSearch = order._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (order.user?.name && order.user.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                         (order.user?.email && order.user.email.toLowerCase().includes(searchTerm.toLowerCase()));
+                         (order.user_id?.name && order.user_id.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         (order.user_id?.email && order.user_id.email.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
     
     return matchesSearch && matchesStatus;
@@ -257,30 +258,43 @@ export default function Orders() {
                 <tr key={order._id} className="hover:bg-slate-50 transition-colors">
                   <td className="px-6 py-4">
                     <p className="font-semibold text-slate-900">#{order._id.slice(-8)}</p>
-                    <p className="text-sm text-slate-600">{order.items?.length || 0} items</p>
+                    <div className="text-sm text-slate-600">
+                      {order.order_items?.map(item => (
+                        <div key={item._id} className="mb-1">
+                          <div>Product: {item.product_name}</div>
+                          <div>Brand: {item.product_id?.brand_id?.name || 'N/A'}</div>
+                          <div>Color: {item.color}</div>
+                          <div>Size: {item.size}</div>
+                        </div>
+                      ))}
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <div>
-                      <p className="font-semibold text-slate-900">{order.user?.name || 'Unknown'}</p>
-                      <p className="text-sm text-slate-600">{order.user?.email || 'No email'}</p>
+                      <p className="font-semibold text-slate-900">{order.user_id?.name || 'Unknown'}</p>
+                      <p className="text-sm text-slate-600">{order.user_id?.email || 'No email'}</p>
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <p className="font-bold text-slate-900">{formatPrice(order.totalAmount || 0)}</p>
-                    {order.paymentStatus && (
-                      <p className="text-xs text-slate-500">{order.paymentStatus}</p>
-                    )}
+                    <p className="font-bold text-slate-900">
+                      ${Number(order.total_amount?.$numberDecimal || 0).toFixed(2)}
+                    </p>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      {getStatusIcon(order.status)}
-                      <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}>
-                        {order.status}
-                      </span>
-                    </div>
+                    <select
+                      value={order.status}
+                      onChange={e => updateOrderStatus(order._id, e.target.value)}
+                      className="border rounded px-2 py-1"
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="processing">Processing</option>
+                      <option value="shipped">Shipped</option>
+                      <option value="delivered">Delivered</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-600">
-                    {formatDate(order.createdAt)}
+                    {new Date(order.created_at).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">

@@ -4,6 +4,8 @@
   "description": "React Js Fashion Store eCommerce Tailwind CSS Landing Template",
   "private": true,
   "dependencies": {
+    "@stripe/react-stripe-js": "^3.7.0",
+    "@stripe/stripe-js": "^7.5.0",
     "@tailwindcss/forms": "^0.5.7",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",

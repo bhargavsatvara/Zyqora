@@ -257,7 +257,7 @@ export const popularProduct = [
 export const footerSocial = [
     {
         icon:FiShoppingCart,
-        link:'https://1.envato.market/Zyqora-reactjs'
+        link:'https://zyqora.com'
     },
     {
         icon:FiDribbble,

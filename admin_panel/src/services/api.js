@@ -81,10 +81,10 @@ export const productsAPI = {
 
 // Orders API
 export const ordersAPI = {
-  getOrders: (params) => api.get('/orders', { params }),
+  getOrders: (params) => api.get('/orders/admin', { params }),
   getOrder: (id) => api.get(`/orders/${id}`),
   updateOrderStatus: (id, status) =>
-    api.put(`/orders/${id}/status`, { status }),
+    api.put(`/orders/admin/${id}/status`, { status }),
   deleteOrder: (id) => api.delete(`/orders/${id}`),
 };
 

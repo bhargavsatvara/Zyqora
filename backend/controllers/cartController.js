@@ -7,9 +7,9 @@ const normalizeProductId = (productId) => {
 
 exports.getCart = async (req, res) => {
   try {
-    
-    // Use guest user for now, in production this would come from req.user
-    const userId = 'guest';
+    console.log('req.user:', req.user);
+    // Use logged-in user if available, otherwise guest
+    const userId = req.user ? req.user.toString() : 'guest';
     let cart = await Cart.findOne({ user_id: userId });
     
     if (!cart) {
@@ -41,6 +41,7 @@ exports.getCart = async (req, res) => {
 // Add item to cart
 exports.addItem = async (req, res) => {
   try {
+    console.log('req.user:', req.user);
     const { product_id, name, price, image, quantity, size, color, stock_qty } = req.body;
     
     // Validate required fields
@@ -55,8 +56,8 @@ exports.addItem = async (req, res) => {
       });
     }
 
-    // Use guest user for now, in production this would come from req.user
-    const userId = 'guest';
+    // Use logged-in user if available, otherwise guest
+    const userId = req.user ? req.user.toString() : 'guest';
     let cart = await Cart.findOne({ user_id: userId });
     if (!cart) {
       cart = new Cart({ 
@@ -117,11 +118,12 @@ exports.addItem = async (req, res) => {
 // Update cart item
 exports.updateItem = async (req, res) => {
   try {
+    console.log('req.user:', req.user);
     const { itemId, quantity } = req.body;
     if (!itemId || quantity === undefined) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
-    const userId = 'guest';
+    const userId = req.user ? req.user.toString() : 'guest';
     let cart = await Cart.findOne({ user_id: userId });
     if (!cart) return res.status(404).json({ message: 'Cart not found' });
     const items = cart.items || [];
@@ -152,8 +154,9 @@ exports.updateItem = async (req, res) => {
 // Remove item from cart
 exports.removeItem = async (req, res) => {
   try {
+    console.log('req.user:', req.user);
     const { product_id, size, color } = req.body;
-    const userId = 'guest';
+    const userId = req.user ? req.user.toString() : 'guest';
     let cart = await Cart.findOne({ user_id: userId });
     if (!cart) return res.status(404).json({ message: 'Cart not found' });
 
@@ -186,8 +189,9 @@ exports.removeItem = async (req, res) => {
 // Clear cart
 exports.clearCart = async (req, res) => {
   try {
-    // Use guest user for now, in production this would come from req.user
-    const userId = 'guest';
+    console.log('req.user:', req.user);
+    // Use logged-in user if available, otherwise guest
+    const userId = req.user ? req.user.toString() : 'guest';
     let cart = await Cart.findOne({ user_id: userId });
     if (!cart) {
       return res.status(404).json({ message: 'Cart not found' });

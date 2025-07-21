@@ -190,7 +190,9 @@ export default function Products(){
                                             />
             
                                     <div className="absolute -bottom-20 group-hover:bottom-3 start-3 end-3 duration-500">
-                                        <Link to="/shop-cart" className="py-2 px-5 inline-block font-semibold tracking-wide align-middle duration-500 text-base text-center bg-slate-900 text-white w-full rounded-md">Add to Cart</Link>
+                                        <Link to={`/product-detail-one/${item._id}`} className="py-2 px-5 inline-block font-semibold tracking-wide align-middle duration-500 text-base text-center bg-slate-900 text-white w-full rounded-md">
+                                            View Details
+                                        </Link>
                                     </div>
             
                                     <ul className="list-none absolute top-[10px] end-4 opacity-0 group-hover:opacity-100 duration-500 space-y-1">

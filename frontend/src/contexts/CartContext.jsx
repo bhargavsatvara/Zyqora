@@ -10,14 +10,26 @@ export function CartProvider({ children }) {
   const [cartData, setCartData] = useState([]);
   const [totals, setTotals] = useState({ subtotal: 0, tax: 0, total: 0 });
 
-  // Fetch cart from backend on mount
+  // Fetch cart from backend on mount and when auth token changes
   useEffect(() => {
+    const handleStorageChange = () => {
+      fetchCart();
+    };
+    window.addEventListener('storage', handleStorageChange);
     fetchCart();
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   const fetchCart = async () => {
     try {
-      const response = await fetch("http://localhost:4000/api/cart");
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      const response = await fetch("http://localhost:4000/api/cart", {
+        headers: {
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        }
+      });
       const data = await response.json();
       if (data.success) {
         setCartData(data.data.items || []);

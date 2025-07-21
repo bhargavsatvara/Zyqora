@@ -57,8 +57,8 @@ export default function ProductAboutTab({ product }){
                                 <tbody>
                                     {colors.length > 0 && (
                                         <tr className="bg-white dark:bg-slate-900">
-                                            <td className="font-semibold pb-4" style={{width: '100px'}}>Color</td>
-                                            <td className="text-slate-400 pb-4">{colors.join(', ')}</td>
+                                            <td className="font-semibold py-4" style={{width: '100px'}}>Color</td>
+                                            <td className="text-slate-400 py-4">{colors.join(', ')}</td>
                                         </tr>
                                     )}
 
@@ -71,8 +71,15 @@ export default function ProductAboutTab({ product }){
 
                                     {sizes.length > 0 && (
                                         <tr className="bg-white dark:bg-slate-900 border-t border-gray-100 dark:border-gray-700">
-                                            <td className="font-semibold pt-4">Size</td>
-                                            <td className="text-slate-400 pt-4">{sizes.join(', ')}</td>
+                                            <td className="font-semibold py-4">Size</td>
+                                            <td className="text-slate-400 py-4">{sizes.join(', ')}</td>
+                                        </tr>
+                                    )}
+
+                                    {product.brand_id?.name && (
+                                        <tr className="bg-white dark:bg-slate-900 border-t border-gray-100 dark:border-gray-700">
+                                            <td className="font-semibold py-4">Brand</td>
+                                            <td className="text-slate-400 py-4">{product.brand_id.name}</td>
                                         </tr>
                                     )}
 
