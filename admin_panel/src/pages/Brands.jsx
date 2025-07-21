@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Award, Eye, Package, Search } from 'lucide-react';
 import { brandsAPI } from '../services/api';
 import { useNavigate } from 'react-router-dom';
+import Toast from '../components/Toast';
 
 export default function Brands() {
   const [brands, setBrands] = useState([]);
@@ -14,12 +15,20 @@ export default function Brands() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalBrands, setTotalBrands] = useState(0);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchBrands();
   }, [currentPage, activeSearchTerm, statusFilter]);
+
+  useEffect(() => {
+    if (toast.show) {
+      const timer = setTimeout(() => setToast({ ...toast, show: false }), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const fetchBrands = async () => {
     try {
@@ -49,9 +58,9 @@ export default function Brands() {
       try {
         await brandsAPI.deleteBrand(brandId);
         setBrands(prev => prev.filter(brand => brand._id !== brandId));
-        alert('Brand deleted successfully!');
+        setToast({ show: true, message: 'Brand deleted successfully!', type: 'success' });
       } catch (error) {
-        alert('Error deleting brand: ' + (error.response?.data?.message || error.message));
+        setToast({ show: true, message: error.response?.data?.message || error.message, type: 'error' });
       }
     }
   };
@@ -241,6 +250,14 @@ export default function Brands() {
             </button>
           </div>
         </div>
+      )}
+      {/* Toast Message */}
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
       )}
     </div>
   );

@@ -83,6 +83,34 @@ export default function ProductAboutTab({ product }){
                                         </tr>
                                     )}
 
+                                    {product.size_chart_id && (
+                                        <tr className="bg-white dark:bg-slate-900 border-t border-gray-100 dark:border-gray-700">
+                                            <td className="font-semibold py-4">Size Chart</td>
+                                            <td className="text-slate-400 py-4">
+                                                {product.size_chart_id.title && (
+                                                    <div className="font-semibold mb-2">{product.size_chart_id.title}</div>
+                                                )}
+                                                {product.size_chart_id.image && (
+                                                    <div className="mb-2">
+                                                        <img
+                                                            src={product.size_chart_id.image.startsWith('/uploads')
+                                                                ? `http://localhost:4000${product.size_chart_id.image}`
+                                                                : product.size_chart_id.image}
+                                                            alt={product.size_chart_id.title}
+                                                            className="w-full max-w-xs rounded shadow"
+                                                        />
+                                                    </div>
+                                                )}
+                                                {product.size_chart_id.description && (
+                                                    <div
+                                                      className="overflow-x-auto"
+                                                      dangerouslySetInnerHTML={{ __html: product.size_chart_id.description }}
+                                                    />
+                                                )}
+                                            </td>
+                                        </tr>
+                                    )}
+
                                     {colors.length === 0 && materials.length === 0 && sizes.length === 0 && (
                                         <tr className="bg-white dark:bg-slate-900">
                                             <td className="font-semibold pb-4" style={{width: '100px'}}>Information</td>

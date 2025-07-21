@@ -3,6 +3,7 @@ import { ArrowLeft, Save } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { categoriesAPI } from '../services/api';
 import { departmentsAPI } from '../services/api';
+import Toast from '../components/Toast';
 
 export default function AddCategory() {
   const navigate = useNavigate();
@@ -16,10 +17,18 @@ export default function AddCategory() {
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState('');
   const [submitError, setSubmitError] = useState('');
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   useEffect(() => {
     fetchDepartments();
   }, []);
+
+  useEffect(() => {
+    if (toast.show) {
+      const timer = setTimeout(() => setToast({ ...toast, show: false }), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const fetchDepartments = async () => {
     try {
@@ -77,10 +86,10 @@ export default function AddCategory() {
     setSubmitError('');
     try {
       await categoriesAPI.createCategory(formData);
-      setSuccess('Category created successfully!');
+      setToast({ show: true, message: 'Category created successfully!', type: 'success' });
       setTimeout(() => navigate('/categories'), 1500);
     } catch (error) {
-      setSubmitError(error.response?.data?.message || error.message);
+      setToast({ show: true, message: error.response?.data?.message || error.message, type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -98,15 +107,12 @@ export default function AddCategory() {
         <h1 className="text-2xl font-bold text-slate-900">Add New Category</h1>
       </div>
       <form onSubmit={handleSubmit} className="space-y-6">
-        {success && (
-          <div className="flex items-center gap-2 text-green-600 font-medium bg-green-50 border border-green-200 rounded-lg px-4 py-2 mb-2">
-            {success}
-          </div>
-        )}
-        {submitError && (
-          <div className="flex items-center gap-2 text-red-600 font-medium bg-red-50 border border-red-200 rounded-lg px-4 py-2 mb-2">
-            {submitError}
-          </div>
+        {toast.show && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast({ ...toast, show: false })}
+          />
         )}
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-2">Category Name *</label>

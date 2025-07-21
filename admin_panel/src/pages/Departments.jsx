@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { departmentsAPI } from '../services/api';
+import Toast from '../components/Toast';
 
 export default function Departments() {
   const navigate = useNavigate();
@@ -11,10 +12,18 @@ export default function Departments() {
   const [activeSearchTerm, setActiveSearchTerm] = useState('');
   const [deleteId, setDeleteId] = useState(null);
   const [deleteError, setDeleteError] = useState('');
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   useEffect(() => {
     fetchDepartments();
   }, [activeSearchTerm]);
+
+  useEffect(() => {
+    if (toast.show) {
+      const timer = setTimeout(() => setToast({ ...toast, show: false }), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const fetchDepartments = async () => {
     setLoading(true);
@@ -34,9 +43,10 @@ export default function Departments() {
     try {
       await departmentsAPI.deleteDepartment(deleteId);
       setDepartments(departments.filter(d => d._id !== deleteId));
+      setToast({ show: true, message: 'Department deleted successfully!', type: 'success' });
       setDeleteId(null);
     } catch (err) {
-      setDeleteError(err.response?.data?.message || err.message);
+      setToast({ show: true, message: err.response?.data?.message || err.message, type: 'error' });
     }
   };
 
@@ -182,9 +192,16 @@ export default function Departments() {
               <button type="button" onClick={() => setDeleteId(null)} className="flex-1 px-4 py-2 border border-slate-200 rounded-lg bg-slate-50 hover:bg-slate-100 font-medium text-slate-700">Cancel</button>
               <button type="button" onClick={handleDelete} className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 font-medium flex items-center justify-center gap-2">Delete</button>
             </div>
-            {deleteError && <div className="text-red-600 text-sm font-medium mt-4">{deleteError}</div>}
           </div>
         </div>
+      )}
+      {/* Toast Message */}
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
       )}
     </div>
   );

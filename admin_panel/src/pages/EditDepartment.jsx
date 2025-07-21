@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Save } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { departmentsAPI } from '../services/api';
+import Toast from '../components/Toast';
 
 export default function EditDepartment() {
   const navigate = useNavigate();
@@ -11,10 +12,18 @@ export default function EditDepartment() {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   useEffect(() => {
     if (id) fetchDepartment();
   }, [id]);
+
+  useEffect(() => {
+    if (toast.show) {
+      const timer = setTimeout(() => setToast({ ...toast, show: false }), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const fetchDepartment = async () => {
     try {
@@ -24,8 +33,8 @@ export default function EditDepartment() {
       setForm({ name: dept.name || '', description: dept.description || '' });
       setCreatedAt(dept.createdAt || '');
     } catch (err) {
-      alert('Error loading department: ' + (err.response?.data?.message || err.message));
-      navigate('/departments');
+      setToast({ show: true, message: 'Error loading department: ' + (err.response?.data?.message || err.message), type: 'error' });
+      setTimeout(() => navigate('/departments'), 1500);
     } finally {
       setInitialLoading(false);
     }
@@ -50,10 +59,10 @@ export default function EditDepartment() {
     setLoading(true);
     try {
       await departmentsAPI.updateDepartment(id, form);
-      alert('Department updated successfully!');
-      navigate('/departments');
+      setToast({ show: true, message: 'Department updated successfully!', type: 'success' });
+      setTimeout(() => navigate('/departments'), 1500);
     } catch (err) {
-      setErrors({ name: err.response?.data?.message || err.message });
+      setToast({ show: true, message: err.response?.data?.message || err.message, type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -140,6 +149,13 @@ export default function EditDepartment() {
           </button>
         </div>
       </form>
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
+      )}
     </div>
   );
 } 

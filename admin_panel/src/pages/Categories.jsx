@@ -3,6 +3,7 @@ import { Plus, Edit, Trash2, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { categoriesAPI } from '../services/api';
 import { departmentsAPI } from '../services/api';
+import Toast from '../components/Toast';
 
 export default function Categories() {
   const navigate = useNavigate();
@@ -17,11 +18,19 @@ export default function Categories() {
   const [deleteId, setDeleteId] = useState(null);
   const [deleteError, setDeleteError] = useState('');
   const [success, setSuccess] = useState('');
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   useEffect(() => {
     fetchCategories();
     fetchDepartments();
   }, [currentPage, activeSearchTerm]);
+
+  useEffect(() => {
+    if (toast.show) {
+      const timer = setTimeout(() => setToast({ ...toast, show: false }), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const fetchCategories = async () => {
     try {
@@ -77,11 +86,11 @@ export default function Categories() {
     try {
       await categoriesAPI.deleteCategory(deleteId);
       setCategories(prev => prev.filter(category => category._id !== deleteId));
-      setSuccess('Category deleted successfully!');
+      setToast({ show: true, message: 'Category deleted successfully!', type: 'success' });
       setDeleteId(null);
       setTimeout(() => setSuccess(''), 1500);
     } catch (error) {
-      setDeleteError(error.response?.data?.message || error.message);
+      setToast({ show: true, message: error.response?.data?.message || error.message, type: 'error' });
     }
   };
 
@@ -313,10 +322,12 @@ export default function Categories() {
       )}
 
       {/* Success Message */}
-      {success && (
-        <div className="flex items-center gap-2 text-green-600 font-medium bg-green-50 border border-green-200 rounded-lg px-4 py-2 mb-2">
-          {success}
-        </div>
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
       )}
 
       {/* Delete Confirmation Modal */}

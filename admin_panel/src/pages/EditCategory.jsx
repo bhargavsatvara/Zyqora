@@ -3,6 +3,7 @@ import { ArrowLeft, Save } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { categoriesAPI } from '../services/api';
 import { departmentsAPI } from '../services/api';
+import Toast from '../components/Toast';
 
 export default function EditCategory() {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ export default function EditCategory() {
     department_ids: []
   });
   const [errors, setErrors] = useState({});
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   useEffect(() => {
     if (id) {
@@ -23,6 +25,13 @@ export default function EditCategory() {
       fetchDepartments();
     }
   }, [id]);
+
+  useEffect(() => {
+    if (toast.show) {
+      const timer = setTimeout(() => setToast({ ...toast, show: false }), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const fetchCategory = async () => {
     try {
@@ -97,11 +106,10 @@ export default function EditCategory() {
     setLoading(true);
     try {
       await categoriesAPI.updateCategory(id, formData);
-      alert('Category updated successfully!');
-      navigate('/categories');
+      setToast({ show: true, message: 'Category updated successfully!', type: 'success' });
+      setTimeout(() => navigate('/categories'), 1500);
     } catch (error) {
-      console.error('Error updating category:', error);
-      alert('Error updating category: ' + (error.response?.data?.message || error.message));
+      setToast({ show: true, message: error.response?.data?.message || error.message, type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -127,6 +135,13 @@ export default function EditCategory() {
         <h1 className="text-2xl font-bold text-slate-900">Edit Category</h1>
       </div>
       <form onSubmit={handleSubmit} className="space-y-6">
+        {toast.show && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast({ ...toast, show: false })}
+          />
+        )}
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-2">Category Name *</label>
           <input

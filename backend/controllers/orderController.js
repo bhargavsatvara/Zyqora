@@ -5,6 +5,8 @@ const OrderItem = require('../models/order_item');
 const Size = require('../models/size');
 const Color = require('../models/color');
 const Order = require('../models/order');
+const Product = require('../models/product'); // Add this import
+const mongoose = require('mongoose'); // Add this import
 
 exports.createOrder = async (req, res) => {
   try {
@@ -59,6 +61,14 @@ exports.createOrder = async (req, res) => {
       });
       await orderItem.save();
       orderItemIds.push(orderItem._id);
+
+      // Decrement product stock
+      const updatedProduct = await Product.findByIdAndUpdate(
+        new mongoose.Types.ObjectId(item.product_id),
+        { $inc: { stock_qty: -Number(item.quantity) } },
+        { new: true }
+      );
+      console.log('Updated product:', updatedProduct);
     }
 
     // 4. Update the order with order_items
