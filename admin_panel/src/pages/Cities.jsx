@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
 import { citiesAPI, statesAPI } from '../services/api';
 import { useNavigate } from 'react-router-dom';
+import Toast from '../components/Toast';
 
 export default function Cities() {
   const [cities, setCities] = useState([]);
@@ -19,6 +20,7 @@ export default function Cities() {
   const [totalCities, setTotalCities] = useState(0);
   const [deleteCityId, setDeleteCityId] = useState(null);
   const [deleteError, setDeleteError] = useState('');
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,6 +28,13 @@ export default function Cities() {
     fetchStates();
     // eslint-disable-next-line
   }, [currentPage, activeSearchTerm]);
+
+  useEffect(() => {
+    if (toast.show) {
+      const timer = setTimeout(() => setToast({ ...toast, show: false }), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const fetchCities = async () => {
     setLoading(true);
@@ -87,21 +96,21 @@ export default function Cities() {
     setError('');
     setSuccess('');
     if (!form.name.trim()) {
-      setError('City name is required');
+      setToast({ show: true, message: 'City name is required', type: 'error' });
       return;
     }
     if (!form.state_id) {
-      setError('State is required');
+      setToast({ show: true, message: 'State is required', type: 'error' });
       return;
     }
     try {
       await citiesAPI.createCity(form);
-      setSuccess('City added successfully!');
+      setToast({ show: true, message: 'City added successfully!', type: 'success' });
       setShowAdd(false);
       setForm({ name: '', state_id: '' });
       fetchCities();
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
+      setToast({ show: true, message: err.response?.data?.message || err.message, type: 'error' });
     }
   };
 
@@ -114,21 +123,21 @@ export default function Cities() {
     setError('');
     setSuccess('');
     if (!form.name.trim()) {
-      setError('City name is required');
+      setToast({ show: true, message: 'City name is required', type: 'error' });
       return;
     }
     if (!form.state_id) {
-      setError('State is required');
+      setToast({ show: true, message: 'State is required', type: 'error' });
       return;
     }
     try {
       await citiesAPI.updateCity(showEdit._id, form);
-      setSuccess('City updated successfully!');
+      setToast({ show: true, message: 'City updated successfully!', type: 'success' });
       setShowEdit(null);
       setForm({ name: '', state_id: '' });
       fetchCities();
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
+      setToast({ show: true, message: err.response?.data?.message || err.message, type: 'error' });
     }
   };
 
@@ -137,10 +146,11 @@ export default function Cities() {
     setDeleteError('');
     try {
       await citiesAPI.deleteCity(deleteCityId);
+      setToast({ show: true, message: 'City deleted successfully!', type: 'success' });
       setDeleteCityId(null);
       fetchCities();
     } catch (err) {
-      setDeleteError(err.response?.data?.message || err.message);
+      setToast({ show: true, message: err.response?.data?.message || err.message, type: 'error' });
     }
   };
 
@@ -363,6 +373,15 @@ export default function Cities() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Toast Message */}
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
       )}
     </div>
   );

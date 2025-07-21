@@ -1,70 +1,95 @@
-# Getting Started with Create React App
+# Zyqora E-Commerce Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Project Title & Description
 
-## Available Scripts
+**Zyqora E-Commerce Frontend**
 
-In the project directory, you can run:
+This is the frontend for Zyqora, a modern, full-featured e-commerce platform. It provides a seamless shopping experience for users, including product browsing, cart management, secure checkout with Stripe, and user account management. The frontend is built with React and styled using Tailwind CSS for a responsive, accessible, and visually appealing UI.
 
-### `npm start`
+---
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Setup Instructions
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+1. **Clone the repository:**
+   ```bash
+   git clone <your-repo-url>
+   cd frontend
+   ```
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+3. **Set up environment variables:**
+   - Create a `.env` file in the `frontend` directory.
+   - Add your Stripe publishable key:
+     ```env
+     REACT_APP_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
+     ```
+   - (Optional) Set API base URL if different from default.
+4. **Start the development server:**
+   ```bash
+   npm run dev
+   ```
+5. **Visit the app:**
+   - Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-### `npm test`
+---
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Technology Stack
 
-### `npm run build`
+- **React.js** (with functional components & hooks)
+- **Tailwind CSS** (utility-first styling)
+- **Vite** (fast dev server & build tool)
+- **Stripe.js** (payment integration)
+- **Axios** (API requests)
+- **React Router** (routing)
+- **Context API** (state management)
+- **Node.js/Express** (backend, see separate repo)
+- **MongoDB/Mongoose** (database, see backend)
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+---
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## LIVE Site Link
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+[https://zyqora-frontend.vercel.app](https://zyqora-frontend.vercel.app)  
+*(Replace with your actual deployed URL if different)*
 
-### `npm run eject`
+---
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## Team Members & Contributions
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- **Bhargav Sathvara**  
+  - Project Lead, Full Stack Development, Stripe Integration, Cart & Checkout Logic, Admin Panel, UI/UX
+- **[Add more team members here]**
+  - [Describe their contributions]
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+---
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Current Features
 
-## Learn More
+- User authentication (login, signup, password reset)
+- Product catalog with filtering and search
+- Product detail pages with size, color, and brand info
+- Add to cart, update quantity, remove items
+- Guest cart and cart merging on login
+- Secure Stripe payment integration
+- Order history and order details
+- Responsive, accessible UI (with aria roles)
+- Admin panel (separate app) for product, order, and user management
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+---
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Future Plans
 
-### Code Splitting
+- Add product reviews and ratings
+- Implement wishlist and recently viewed products
+- Add user profile editing and address book
+- Improve accessibility and add more ARIA attributes
+- Add PWA support for offline access
+- Integrate with more payment gateways
+- Enhance analytics and reporting for admins
+- Add multi-language support
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+---
 
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+*For backend and admin panel setup, see their respective README files.*

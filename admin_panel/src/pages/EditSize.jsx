@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { sizesAPI } from '../services/api';
 import { Save, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
+import Toast from '../components/Toast';
 
 export default function EditSize() {
   const { id } = useParams();
@@ -14,10 +15,18 @@ export default function EditSize() {
   const [fetching, setFetching] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   useEffect(() => {
     fetchSize();
   }, [id]);
+
+  useEffect(() => {
+    if (toast.show) {
+      const timer = setTimeout(() => setToast({ ...toast, show: false }), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const fetchSize = async () => {
     try {
@@ -52,16 +61,16 @@ export default function EditSize() {
     setSuccess('');
     const validationError = validate();
     if (validationError) {
-      setError(validationError);
+      setToast({ show: true, message: validationError, type: 'error' });
       return;
     }
     setLoading(true);
     try {
       await sizesAPI.updateSize(id, form);
-      setSuccess('Size updated successfully!');
+      setToast({ show: true, message: 'Size updated successfully!', type: 'success' });
       setTimeout(() => navigate('/sizes'), 1200);
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
+      setToast({ show: true, message: err.response?.data?.message || err.message, type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -117,15 +126,12 @@ export default function EditSize() {
             </div>
           </div>
           {/* Feedback */}
-          {error && (
-            <div className="flex items-center gap-2 text-red-600 font-medium bg-red-50 border border-red-200 rounded-lg px-4 py-2">
-              <AlertCircle className="h-5 w-5" /> {error}
-            </div>
-          )}
-          {success && (
-            <div className="flex items-center gap-2 text-green-600 font-medium bg-green-50 border border-green-200 rounded-lg px-4 py-2">
-              <CheckCircle className="h-5 w-5" /> {success}
-            </div>
+          {toast.show && (
+            <Toast
+              message={toast.message}
+              type={toast.type}
+              onClose={() => setToast({ ...toast, show: false })}
+            />
           )}
           {/* Actions */}
           <div className="flex gap-3 mt-4">

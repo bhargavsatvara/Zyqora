@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { statesAPI, countriesAPI } from '../services/api';
 import { Plus, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
+import Toast from '../components/Toast';
 
 export default function AddState() {
   const [form, setForm] = useState({
@@ -12,11 +13,19 @@ export default function AddState() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchCountries();
   }, []);
+
+  useEffect(() => {
+    if (toast.show) {
+      const timer = setTimeout(() => setToast({ ...toast, show: false }), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const fetchCountries = async () => {
     try {
@@ -57,16 +66,16 @@ export default function AddState() {
     setSuccess('');
     const validationError = validate();
     if (validationError) {
-      setError(validationError);
+      setToast({ show: true, message: validationError, type: 'error' });
       return;
     }
     setLoading(true);
     try {
       await statesAPI.createState(form);
-      setSuccess('State added successfully!');
+      setToast({ show: true, message: 'State added successfully!', type: 'success' });
       setTimeout(() => navigate('/states'), 1200);
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
+      setToast({ show: true, message: err.response?.data?.message || err.message, type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -104,15 +113,12 @@ export default function AddState() {
             </div>
           </div>
           {/* Feedback */}
-          {error && (
-            <div className="flex items-center gap-2 text-red-600 font-medium bg-red-50 border border-red-200 rounded-lg px-4 py-2">
-              <AlertCircle className="h-5 w-5" /> {error}
-            </div>
-          )}
-          {success && (
-            <div className="flex items-center gap-2 text-green-600 font-medium bg-green-50 border border-green-200 rounded-lg px-4 py-2">
-              <CheckCircle className="h-5 w-5" /> {success}
-            </div>
+          {toast.show && (
+            <Toast
+              message={toast.message}
+              type={toast.type}
+              onClose={() => setToast({ ...toast, show: false })}
+            />
           )}
           {/* Actions */}
           <div className="flex gap-3 mt-4">

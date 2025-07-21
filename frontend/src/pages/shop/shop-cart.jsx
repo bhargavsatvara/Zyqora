@@ -201,8 +201,8 @@ export default function Shopcart(props){
    
     return(
         <>
-        <Navbar navClass="defaultscroll is-sticky"/>
-        <section className="relative table w-full py-20 lg:py-24 md:pt-28 bg-gray-50 dark:bg-slate-800">
+        <Navbar navClass="defaultscroll is-sticky" role="navigation"/>
+        <section className="relative table w-full py-20 lg:py-24 md:pt-28 bg-gray-50 dark:bg-slate-800" role="banner">
             <div className="container relative">
                 <div className="grid grid-cols-1 mt-14">
                     <h3 className="text-3xl leading-normal font-semibold">Shopping Cart</h3>
@@ -218,11 +218,11 @@ export default function Shopcart(props){
             </div>
         </section>
 
-        <section className="relative md:py-24 py-16">
+        <section className="relative md:py-24 py-16" role="main">
             <div className="container relative">
                 {/* Success Message */}
                 {message && (
-                    <div className="mb-6 p-4 bg-green-100 text-green-800 rounded-lg">
+                    <div className="mb-6 p-4 bg-green-100 text-green-800 rounded-lg" role="status">
                         <div className="flex items-center">
                             <i className="mdi mdi-check-circle text-green-600 mr-2"></i>
                             {message}
@@ -245,7 +245,7 @@ export default function Shopcart(props){
                 ) : (
                     <div className="grid lg:grid-cols-1">
                         <div className="relative overflow-x-auto shadow dark:shadow-gray-800 rounded-md">
-                            <table className="w-full text-start">
+                            <table className="w-full text-start" role="table">
                                 <thead className="text-sm uppercase bg-slate-50 dark:bg-slate-800">
                                     <tr>
                                         <th scope="col" className="p-4 w-4"></th>
