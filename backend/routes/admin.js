@@ -7,7 +7,7 @@ const Order = require('../models/order');
 const Review = require('../models/review');
 const Category = require('../models/category');
 const Brand = require('../models/brand');
-const Coupon = require('../models/coupon');
+const Coupon = require('../models/Coupon');
 
 // Apply admin middleware to all routes
 router.use(authenticate, authorizeAdmin);
