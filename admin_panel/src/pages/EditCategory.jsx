@@ -117,6 +117,7 @@ export default function EditCategory() {
     if (!validateForm()) return;
     setLoading(true);
     try {
+      console.log('Updating category with image:', formData.image);
       await categoriesAPI.updateCategory(id, formData);
       setToast({ show: true, message: 'Category updated successfully!', type: 'success' });
       setTimeout(() => navigate('/categories'), 1500);
