@@ -134,8 +134,7 @@ exports.createProduct = async (req, res) => {
     // Accept 'image' field in req.body or file upload
     let imageUrl = req.body.image;
     if (req.file) {
-      // Serve from /uploads/products/...
-      imageUrl = `/uploads/products/${req.file.filename}`;
+      imageUrl = req.file.path; // Cloudinary URL
     }
     
     // Parse attributes if provided
@@ -172,7 +171,7 @@ exports.updateProduct = async (req, res) => {
     // Accept 'image' field in req.body or file upload
     let imageUrl = req.body.image;
     if (req.file) {
-      imageUrl = `/uploads/products/${req.file.filename}`;
+      imageUrl = req.file.path; // Cloudinary URL
     }
     const updateData = { ...req.body };
     if (imageUrl) updateData.image = imageUrl;

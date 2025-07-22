@@ -20,9 +20,6 @@ app.use(express.urlencoded({ extended: true }));
 // Swagger documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 
-// Serve uploads directory statically
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
 // Import routes after models are defined
 const router = require("./routes");
 app.use('/api', router);
