@@ -22,8 +22,10 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   // const API_BASE = process.env.REACT_APP_BACKEND_URL || "http://localhost:4000/api/auth";
-  const API_BASE = `${import.meta.env.VITE_API_URL || 'https://zyqora.onrender.com/api'}`;
+
   console.log('Login :: import.meta.env ::', import.meta.env);
+  console.log('Login :: API_BASE ::', import.meta.env.VITE_API_URL);
+  const API_BASE = `${import.meta.env.VITE_API_URL || 'https://zyqora.onrender.com/api'}`;
   console.log('Login :: API_BASE ::', API_BASE);
   // Debug: Log the login URL
   // console.log('Login URL:', loginUrl);
