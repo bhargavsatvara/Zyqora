@@ -13,13 +13,7 @@ dotenv.config();
 const app = express();
 
 // Middleware
-app.use(cors({
-  origin: [
-    'https://zyqora-ten.vercel.app', // frontend
-    'https://zyqora-admin.vercel.app' // admin panel (if used)
-  ],
-  credentials: true
-}));
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
