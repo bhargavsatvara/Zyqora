@@ -4,8 +4,26 @@ import { commentsData } from "../data/data";
 
 import {FiUser, FiMail, FiMessageCircle} from '../assets/icons/vander'
 
-export default function ProductAboutTab(){
+export default function ProductAboutTab({ product }){
     let[activeTab, setActiveTab] = useState(1)
+
+    // Extract attributes from product
+    const getAttributeValues = (attributeName) => {
+        if (!product?.attributes || !Array.isArray(product.attributes)) {
+            return [];
+        }
+        
+        const attribute = product.attributes.find(attr => 
+            attr.attribute_name && attr.attribute_name.toLowerCase().includes(attributeName.toLowerCase())
+        );
+        
+        return attribute ? attribute.attribute_values || [] : [];
+    };
+
+    const colors = getAttributeValues('color');
+    const materials = getAttributeValues('material');
+    const sizes = getAttributeValues('size');
+
     return(
         <div className="grid md:grid-cols-12 grid-cols-1 mt-6 gap-6">
             <div className="lg:col-span-3 md:col-span-5">
@@ -28,27 +46,77 @@ export default function ProductAboutTab(){
                 <div id="myTabContent" className="p-6 bg-white dark:bg-slate-900 shadow dark:shadow-gray-800 rounded-md">
                     {activeTab === 1 && (
                         <div>
-                            <p className="text-slate-400">Due to its widespread use as filler text for layouts, non-readability is of great importance: human perception is tuned to recognize certain patterns and repetitions in texts. If the distribution of letters and 'words' is random, the reader will not be distracted from making a neutral judgement on the visual impact and readability of the typefaces (typography), or the distribution of text on the page (layout or type area). For this reason, dummy text usually consists of a more or less random series of words or syllables.</p>
+                            <p className="text-slate-400">
+                                {product?.description || "No description available for this product."}
+                            </p>
                         </div>
                     )}
                     {activeTab === 2 && (
                         <div>
                             <table className="w-full text-start">
                                 <tbody>
-                                    <tr className="bg-white dark:bg-slate-900">
-                                        <td className="font-semibold pb-4" style={{width: '100px'}}>Color</td>
-                                        <td className="text-slate-400 pb-4">Red, White, Black, Orange</td>
-                                    </tr>
+                                    {colors.length > 0 && (
+                                        <tr className="bg-white dark:bg-slate-900">
+                                            <td className="font-semibold py-4" style={{width: '100px'}}>Color</td>
+                                            <td className="text-slate-400 py-4">{colors.join(', ')}</td>
+                                        </tr>
+                                    )}
 
-                                    <tr className="bg-white dark:bg-slate-900 border-t border-gray-100 dark:border-gray-700">
-                                        <td className="font-semibold py-4">Material</td>
-                                        <td className="text-slate-400 py-4">Cotton</td>
-                                    </tr>
+                                    {materials.length > 0 && (
+                                        <tr className="bg-white dark:bg-slate-900 border-t border-gray-100 dark:border-gray-700">
+                                            <td className="font-semibold py-4">Material</td>
+                                            <td className="text-slate-400 py-4">{materials.join(', ')}</td>
+                                        </tr>
+                                    )}
 
-                                    <tr className="bg-white dark:bg-slate-900 border-t border-gray-100 dark:border-gray-700">
-                                        <td className="font-semibold pt-4">Size</td>
-                                        <td className="text-slate-400 pt-4">S, M, L, XL, XXL</td>
-                                    </tr>
+                                    {sizes.length > 0 && (
+                                        <tr className="bg-white dark:bg-slate-900 border-t border-gray-100 dark:border-gray-700">
+                                            <td className="font-semibold py-4">Size</td>
+                                            <td className="text-slate-400 py-4">{sizes.join(', ')}</td>
+                                        </tr>
+                                    )}
+
+                                    {product.brand_id?.name && (
+                                        <tr className="bg-white dark:bg-slate-900 border-t border-gray-100 dark:border-gray-700">
+                                            <td className="font-semibold py-4">Brand</td>
+                                            <td className="text-slate-400 py-4">{product.brand_id.name}</td>
+                                        </tr>
+                                    )}
+
+                                    {product.size_chart_id && (
+                                        <tr className="bg-white dark:bg-slate-900 border-t border-gray-100 dark:border-gray-700">
+                                            <td className="font-semibold py-4">Size Chart</td>
+                                            <td className="text-slate-400 py-4">
+                                                {product.size_chart_id.title && (
+                                                    <div className="font-semibold mb-2">{product.size_chart_id.title}</div>
+                                                )}
+                                                {product.size_chart_id.image && (
+                                                    <div className="mb-2">
+                                                        <img
+                                                            src={product.size_chart_id.image.startsWith('/uploads')
+                                                                ? `http://localhost:4000${product.size_chart_id.image}`
+                                                                : product.size_chart_id.image}
+                                                            alt={product.size_chart_id.title}
+                                                            className="w-full max-w-xs rounded shadow"
+                                                        />
+                                                    </div>
+                                                )}
+                                                {product.size_chart_id.description && (
+                                                    <div
+                                                      className="overflow-x-auto"
+                                                      dangerouslySetInnerHTML={{ __html: product.size_chart_id.description }}
+                                                    />
+                                                )}
+                                            </td>
+                                        </tr>
+                                    )}
+
+                                    {colors.length === 0 && materials.length === 0 && sizes.length === 0 && (
+                                        <tr className="bg-white dark:bg-slate-900">
+                                            <td className="font-semibold pb-4" style={{width: '100px'}}>Information</td>
+                                            <td className="text-slate-400 pb-4">No additional information available for this product.</td>
+                                        </tr>
+                                    )}
                                 </tbody>
                             </table>
                         </div>

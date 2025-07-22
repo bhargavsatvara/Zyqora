@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
 import { sizesAPI } from '../services/api';
 import { useNavigate } from 'react-router-dom';
+import Toast from '../components/Toast';
 
 export default function Sizes() {
   const [sizes, setSizes] = useState([]);
@@ -18,12 +19,20 @@ export default function Sizes() {
   const [totalSizes, setTotalSizes] = useState(0);
   const [deleteSizeId, setDeleteSizeId] = useState(null);
   const [deleteError, setDeleteError] = useState('');
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchSizes();
     // eslint-disable-next-line
   }, [currentPage, activeSearchTerm]);
+
+  useEffect(() => {
+    if (toast.show) {
+      const timer = setTimeout(() => setToast({ ...toast, show: false }), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const fetchSizes = async () => {
     setLoading(true);
@@ -70,17 +79,17 @@ export default function Sizes() {
     setError('');
     setSuccess('');
     if (!form.name.trim()) {
-      setError('Size name is required');
+      setToast({ show: true, message: 'Size name is required', type: 'error' });
       return;
     }
     try {
       await sizesAPI.createSize(form);
-      setSuccess('Size added successfully!');
+      setToast({ show: true, message: 'Size added successfully!', type: 'success' });
       setShowAdd(false);
       setForm({ name: '', description: '' });
       fetchSizes();
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
+      setToast({ show: true, message: err.response?.data?.message || err.message, type: 'error' });
     }
   };
 
@@ -93,17 +102,17 @@ export default function Sizes() {
     setError('');
     setSuccess('');
     if (!form.name.trim()) {
-      setError('Size name is required');
+      setToast({ show: true, message: 'Size name is required', type: 'error' });
       return;
     }
     try {
       await sizesAPI.updateSize(showEdit._id, form);
-      setSuccess('Size updated successfully!');
+      setToast({ show: true, message: 'Size updated successfully!', type: 'success' });
       setShowEdit(null);
       setForm({ name: '', description: '' });
       fetchSizes();
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
+      setToast({ show: true, message: err.response?.data?.message || err.message, type: 'error' });
     }
   };
 
@@ -112,10 +121,11 @@ export default function Sizes() {
     setDeleteError('');
     try {
       await sizesAPI.deleteSize(deleteSizeId);
+      setToast({ show: true, message: 'Size deleted successfully!', type: 'success' });
       setDeleteSizeId(null);
       fetchSizes();
     } catch (err) {
-      setDeleteError(err.response?.data?.message || err.message);
+      setToast({ show: true, message: err.response?.data?.message || err.message, type: 'error' });
     }
   };
 
@@ -325,6 +335,15 @@ export default function Sizes() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Toast Message */}
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
       )}
     </div>
   );

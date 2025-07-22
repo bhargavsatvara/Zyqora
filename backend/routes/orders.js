@@ -1,7 +1,9 @@
+// routes/order.js
+
 const express = require('express');
 const router = express.Router();
 const orderController = require('../controllers/orderController');
-const { authenticate } = require('../middleware/auth');
+const { authenticate, authorizeAdmin } = require('../middleware/auth');
 
 /**
  * @swagger
@@ -12,17 +14,67 @@ const { authenticate } = require('../middleware/auth');
 
 /**
  * @swagger
+ * /orders/admin:
+ *   get:
+ *     summary: Admin – Get all orders with user info and items
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Items per page
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Filter by Order ID
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *         description: Filter by status (pending, processing, etc.)
+ *     responses:
+ *       200:
+ *         description: Paginated list of all orders
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ */
+router.get(
+  '/admin',
+  authenticate,
+  authorizeAdmin,
+  orderController.getAllOrdersAdmin
+);
+
+/**
+ * @swagger
  * /orders:
  *   get:
- *     summary: Get all orders
+ *     summary: Get all orders for current user
  *     tags: [Orders]
  *     security:
  *       - bearerAuth: []
  *     responses:
- *       200: { description: List of orders }
- *       401: { description: Unauthorized }
+ *       200:
+ *         description: List of orders
+ *       401:
+ *         description: Unauthorized
  */
-router.get('/', authenticate, orderController.getAllOrders);
+router.get(
+  '/',
+  authenticate,
+  orderController.getAllOrders
+);
 
 /**
  * @swagger
@@ -36,13 +88,22 @@ router.get('/', authenticate, orderController.getAllOrders);
  *       - in: path
  *         name: id
  *         required: true
- *         schema: { type: string }
+ *         schema:
+ *           type: string
+ *         description: Order ID
  *     responses:
- *       200: { description: Order details }
- *       401: { description: Unauthorized }
- *       404: { description: Order not found }
+ *       200:
+ *         description: Order details
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Order not found
  */
-router.get('/:id', authenticate, orderController.getOrderById);
+router.get(
+  '/:id',
+  authenticate,
+  orderController.getOrderById
+);
 
 /**
  * @swagger
@@ -58,23 +119,30 @@ router.get('/:id', authenticate, orderController.getOrderById);
  *         application/json:
  *           schema:
  *             type: object
- *             required: [items, shippingAddress, paymentMethod]
+ *             required:
+ *               - billingAddress
+ *               - cartItems
+ *               - totalAmount
  *             properties:
- *               items: 
+ *               billingAddress:
+ *                 type: object
+ *               cartItems:
  *                 type: array
- *                 items:
- *                   type: object
- *                   properties:
- *                     productId: { type: string }
- *                     quantity: { type: number }
- *               shippingAddress: { type: string }
- *               paymentMethod: { type: string }
- *               couponCode: { type: string }
+ *               totalAmount:
+ *                 type: number
  *     responses:
- *       201: { description: Order created successfully }
- *       401: { description: Unauthorized }
+ *       201:
+ *         description: Order created successfully
+ *       400:
+ *         description: Cart is empty
+ *       401:
+ *         description: Unauthorized
  */
-router.post('/create', authenticate, orderController.createOrder);
+router.post(
+  '/create',
+  authenticate,
+  orderController.createOrder
+);
 
 /**
  * @swagger
@@ -88,22 +156,33 @@ router.post('/create', authenticate, orderController.createOrder);
  *       - in: path
  *         name: id
  *         required: true
- *         schema: { type: string }
+ *         schema:
+ *           type: string
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required: [status]
+ *             required:
+ *               - status
  *             properties:
- *               status: { type: string, enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'] }
+ *               status:
+ *                 type: string
+ *                 enum: [pending, processing, shipped, delivered, cancelled]
  *     responses:
- *       200: { description: Order status updated }
- *       401: { description: Unauthorized }
- *       404: { description: Order not found }
+ *       200:
+ *         description: Order status updated
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Order not found
  */
-router.put('/:id/status', authenticate, orderController.updateOrderStatus);
+router.put(
+  '/:id/status',
+  authenticate,
+  orderController.updateOrderStatus
+);
 
 /**
  * @swagger
@@ -117,12 +196,61 @@ router.put('/:id/status', authenticate, orderController.updateOrderStatus);
  *       - in: path
  *         name: id
  *         required: true
- *         schema: { type: string }
+ *         schema:
+ *           type: string
  *     responses:
- *       200: { description: Order cancelled successfully }
- *       401: { description: Unauthorized }
- *       404: { description: Order not found }
+ *       200:
+ *         description: Order cancelled successfully
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Order not found
  */
-router.post('/:id/cancel', authenticate, orderController.cancelOrder);
+router.post(
+  '/:id/cancel',
+  authenticate,
+  orderController.cancelOrder
+);
 
-module.exports = router; 
+/**
+ * @swagger
+ * /orders/checkout:
+ *   post:
+ *     summary: Initiate Stripe checkout
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - totalAmount
+ *             properties:
+ *               totalAmount:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Stripe client secret
+ *       401:
+ *         description: Unauthorized
+ */
+router.post(
+  '/checkout',
+  authenticate,
+  orderController.checkout
+);
+
+// ------------------
+// Admin: Update order status
+// ------------------
+router.put(
+  '/admin/:id/status',
+  authenticate,        // verify JWT & populate req.user
+  authorizeAdmin,      // ensure req.user.role === 'admin'
+  orderController.updateOrderStatusAdmin
+);
+
+module.exports = router;

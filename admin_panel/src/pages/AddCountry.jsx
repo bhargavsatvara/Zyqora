@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { countriesAPI } from '../services/api';
 import { Plus, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
+import Toast from '../components/Toast';
 
 export default function AddCountry() {
   const [form, setForm] = useState({ name: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -15,21 +17,28 @@ export default function AddCountry() {
     if (error) setError('');
   };
 
+  React.useEffect(() => {
+    if (toast.show) {
+      const timer = setTimeout(() => setToast({ ...toast, show: false }), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
     if (!form.name.trim()) {
-      setError('Country name is required.');
+      setToast({ show: true, message: 'Country name is required.', type: 'error' });
       return;
     }
     setLoading(true);
     try {
       await countriesAPI.createCountry(form);
-      setSuccess('Country added successfully!');
+      setToast({ show: true, message: 'Country added successfully!', type: 'success' });
       setTimeout(() => navigate('/countries'), 1200);
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
+      setToast({ show: true, message: err.response?.data?.message || err.message, type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -58,15 +67,12 @@ export default function AddCountry() {
             </div>
           </div>
           {/* Feedback */}
-          {error && (
-            <div className="flex items-center gap-2 text-red-600 font-medium bg-red-50 border border-red-200 rounded-lg px-4 py-2">
-              <AlertCircle className="h-5 w-5" /> {error}
-            </div>
-          )}
-          {success && (
-            <div className="flex items-center gap-2 text-green-600 font-medium bg-green-50 border border-green-200 rounded-lg px-4 py-2">
-              <CheckCircle className="h-5 w-5" /> {success}
-            </div>
+          {toast.show && (
+            <Toast
+              message={toast.message}
+              type={toast.type}
+              onClose={() => setToast({ ...toast, show: false })}
+            />
           )}
           {/* Actions */}
           <div className="flex gap-3 mt-4">

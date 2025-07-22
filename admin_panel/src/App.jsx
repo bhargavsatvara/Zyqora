@@ -47,15 +47,9 @@ import EditSize from './pages/EditSize.jsx';
 import Materials from './pages/Materials';
 import AddMaterial from './pages/AddMaterial';
 import EditMaterial from './pages/EditMaterial';
-import ProductMaterials from './pages/ProductMaterials';
-import AddProductMaterial from './pages/AddProductMaterial';
-import EditProductMaterial from './pages/EditProductMaterial';
-import ProductSizes from './pages/ProductSizes';
-import AddProductSize from './pages/AddProductSize';
-import EditProductSize from './pages/EditProductSize';
-import ProductColors from './pages/ProductColors';
-import AddProductColor from './pages/AddProductColor';
-import EditProductColor from './pages/EditProductColor';
+import SizeCharts from './pages/SizeCharts';
+import AddSizeChart from './pages/AddSizeChart';
+import EditSizeChart from './pages/EditSizeChart';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 
@@ -132,15 +126,9 @@ function AppContent() {
             <Route path="/materials" element={<Materials />} />
             <Route path="/materials/add" element={<AddMaterial />} />
             <Route path="/materials/edit/:id" element={<EditMaterial />} />
-            <Route path="/product-materials" element={<ProductMaterials />} />
-            <Route path="/product-materials/add" element={<AddProductMaterial />} />
-            <Route path="/product-materials/edit/:id" element={<EditProductMaterial />} />
-            <Route path="/product-sizes" element={<ProductSizes />} />
-            <Route path="/product-sizes/add" element={<AddProductSize />} />
-            <Route path="/product-sizes/edit/:id" element={<EditProductSize />} />
-            <Route path="/product-colors" element={<ProductColors />} />
-            <Route path="/product-colors/add" element={<AddProductColor />} />
-            <Route path="/product-colors/edit/:id" element={<EditProductColor />} />
+            <Route path="/size-charts" element={<SizeCharts />} />
+            <Route path="/add-size-chart" element={<AddSizeChart />} />
+            <Route path="/edit-size-chart/:id" element={<EditSizeChart />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

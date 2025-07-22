@@ -91,6 +91,11 @@ exports.login = async (req, res) => {
 
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
+    // Only allow users with role 'user' to login here
+    if (user.role !== 'user') {
+      return res.status(403).json({ message: "You are not authorized to login here." });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
@@ -100,9 +105,38 @@ exports.login = async (req, res) => {
       expiresIn
     });
 
+    // --- Merge guest cart into user cart on login ---
+    const { Cart } = require('../models');
+    const guestCart = await Cart.findOne({ user_id: 'guest' });
+    if (guestCart && guestCart.items.length > 0) {
+      let userCart = await Cart.findOne({ user_id: user._id });
+      if (!userCart) {
+        // If user has no cart, assign guest cart to user
+        guestCart.user_id = user._id;
+        await guestCart.save();
+      } else {
+        // Merge guest cart items into user cart
+        guestCart.items.forEach(guestItem => {
+          const existing = userCart.items.find(
+            item => item.product_id.toString() === guestItem.product_id.toString() &&
+                    item.size === guestItem.size &&
+                    item.color === guestItem.color
+          );
+          if (existing) {
+            existing.quantity += guestItem.quantity;
+          } else {
+            userCart.items.push(guestItem);
+          }
+        });
+        await userCart.save();
+        await guestCart.deleteOne();
+      }
+    }
+    // --- End cart merge logic ---
+
     res.json({
       token,
-      user: { id: user._id, name: user.name, email: user.email }
+      user: { id: user._id, name: user.name, email: user.email, role: user.role }
     });
   } catch (err) {
     console.error(err);
@@ -270,5 +304,31 @@ exports.logout = async (req, res) => {
   } catch (error) {
     console.error('Logout error:', error);
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.adminLogin = async (req, res) => {
+  try {
+    const { email, password, rememberMe } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) return res.status(400).json({ message: "Invalid credentials" });
+    if (user.role !== 'admin') {
+      return res.status(403).json({ message: "You are not authorized to login here." });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
+
+    const expiresIn = rememberMe ? "30d" : "7d";
+    // Include role in the JWT payload
+    const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET || "secret", { expiresIn });
+
+    res.json({
+      token,
+      user: { id: user._id, name: user.name, email: user.email, role: user.role }
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
   }
 };

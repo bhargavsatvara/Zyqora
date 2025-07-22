@@ -3,6 +3,7 @@ import { ArrowLeft, Save } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { categoriesAPI } from '../services/api';
 import { departmentsAPI } from '../services/api';
+import Toast from '../components/Toast';
 
 export default function AddCategory() {
   const navigate = useNavigate();
@@ -10,14 +11,24 @@ export default function AddCategory() {
   const [departments, setDepartments] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
-    description: '',
-    department_id: ''
+    image: '',
+    department_ids: []
   });
   const [errors, setErrors] = useState({});
+  const [success, setSuccess] = useState('');
+  const [submitError, setSubmitError] = useState('');
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   useEffect(() => {
     fetchDepartments();
   }, []);
+
+  useEffect(() => {
+    if (toast.show) {
+      const timer = setTimeout(() => setToast({ ...toast, show: false }), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const fetchDepartments = async () => {
     try {
@@ -44,11 +55,26 @@ export default function AddCategory() {
     }
   };
 
+  const handleDepartmentChange = (e) => {
+    const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+    setFormData(prev => ({ ...prev, department_ids: selectedOptions }));
+    if (errors.department_ids) {
+      setErrors(prev => ({ ...prev, department_ids: '' }));
+    }
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // For now, just use a local URL preview (in real use, upload to server or cloud)
+      setFormData(prev => ({ ...prev, image: URL.createObjectURL(file) }));
+    }
+  };
+
   const validateForm = () => {
     const newErrors = {};
     if (!formData.name.trim()) newErrors.name = 'Category name is required';
-    if (!formData.description.trim()) newErrors.description = 'Description is required';
-    if (!formData.department_id) newErrors.department_id = 'Department is required';
+    if (!formData.department_ids.length) newErrors.department_ids = 'At least one department is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -57,13 +83,13 @@ export default function AddCategory() {
     e.preventDefault();
     if (!validateForm()) return;
     setLoading(true);
+    setSubmitError('');
     try {
       await categoriesAPI.createCategory(formData);
-      alert('Category created successfully!');
-      navigate('/categories');
+      setToast({ show: true, message: 'Category created successfully!', type: 'success' });
+      setTimeout(() => navigate('/categories'), 1500);
     } catch (error) {
-      console.error('Error creating category:', error);
-      alert('Error creating category: ' + (error.response?.data?.message || error.message));
+      setToast({ show: true, message: error.response?.data?.message || error.message, type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -81,6 +107,13 @@ export default function AddCategory() {
         <h1 className="text-2xl font-bold text-slate-900">Add New Category</h1>
       </div>
       <form onSubmit={handleSubmit} className="space-y-6">
+        {toast.show && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast({ ...toast, show: false })}
+          />
+        )}
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-2">Category Name *</label>
           <input
@@ -94,31 +127,32 @@ export default function AddCategory() {
           {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">Description *</label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleInputChange}
-            rows={4}
-            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${errors.description ? 'border-red-300' : 'border-slate-200'}`}
-            placeholder="Enter category description..."
+          <label className="block text-sm font-medium text-slate-700 mb-2">Category Image</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           />
-          {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
+          {formData.image && (
+            <img src={formData.image} alt="Preview" className="mt-2 w-32 h-32 object-cover rounded-lg border" />
+          )}
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">Department *</label>
+          <label className="block text-sm font-medium text-slate-700 mb-2">Departments * (Hold Ctrl/Cmd to select multiple)</label>
           <select
-            name="department_id"
-            value={formData.department_id}
-            onChange={handleInputChange}
-            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${errors.department_id ? 'border-red-300' : 'border-slate-200'}`}
+            name="department_ids"
+            multiple
+            value={formData.department_ids}
+            onChange={handleDepartmentChange}
+            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all min-h-[120px] ${errors.department_ids ? 'border-red-300' : 'border-slate-200'}`}
           >
-            <option value="">Select Department</option>
             {Array.isArray(departments) && departments.map(dept => (
               <option key={dept._id} value={dept._id}>{dept.name}</option>
             ))}
           </select>
-          {errors.department_id && <p className="text-red-500 text-sm mt-1">{errors.department_id}</p>}
+          {errors.department_ids && <p className="text-red-500 text-sm mt-1">{errors.department_ids}</p>}
+          <p className="text-xs text-slate-500 mt-1">Selected: {formData.department_ids.length} department(s)</p>
         </div>
         <div className="flex items-center justify-end gap-4 pt-6 border-t border-slate-200">
           <button

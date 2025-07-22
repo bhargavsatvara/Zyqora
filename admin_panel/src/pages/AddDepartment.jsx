@@ -2,12 +2,21 @@ import React, { useState } from 'react';
 import { ArrowLeft, Save } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { departmentsAPI } from '../services/api';
+import Toast from '../components/Toast';
 
 export default function AddDepartment() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: '', description: '' });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+
+  React.useEffect(() => {
+    if (toast.show) {
+      const timer = setTimeout(() => setToast({ ...toast, show: false }), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -28,10 +37,10 @@ export default function AddDepartment() {
     setLoading(true);
     try {
       await departmentsAPI.createDepartment(form);
-      alert('Department created successfully!');
-      navigate('/departments');
+      setToast({ show: true, message: 'Department created successfully!', type: 'success' });
+      setTimeout(() => navigate('/departments'), 1500);
     } catch (err) {
-      setErrors({ name: err.response?.data?.message || err.message });
+      setToast({ show: true, message: err.response?.data?.message || err.message, type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -49,6 +58,13 @@ export default function AddDepartment() {
         <h1 className="text-2xl font-bold text-slate-900">Add Department</h1>
       </div>
       <form onSubmit={handleSubmit} className="space-y-6">
+        {toast.show && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast({ ...toast, show: false })}
+          />
+        )}
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-2">Department Name *</label>
           <input

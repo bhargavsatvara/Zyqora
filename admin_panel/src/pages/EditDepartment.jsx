@@ -2,18 +2,28 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Save } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { departmentsAPI } from '../services/api';
+import Toast from '../components/Toast';
 
 export default function EditDepartment() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [form, setForm] = useState({ name: '', description: '' });
+  const [createdAt, setCreatedAt] = useState('');
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   useEffect(() => {
     if (id) fetchDepartment();
   }, [id]);
+
+  useEffect(() => {
+    if (toast.show) {
+      const timer = setTimeout(() => setToast({ ...toast, show: false }), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const fetchDepartment = async () => {
     try {
@@ -21,9 +31,10 @@ export default function EditDepartment() {
       const res = await departmentsAPI.getDepartment(id);
       const dept = res.data.data || res.data;
       setForm({ name: dept.name || '', description: dept.description || '' });
+      setCreatedAt(dept.createdAt || '');
     } catch (err) {
-      alert('Error loading department: ' + (err.response?.data?.message || err.message));
-      navigate('/departments');
+      setToast({ show: true, message: 'Error loading department: ' + (err.response?.data?.message || err.message), type: 'error' });
+      setTimeout(() => navigate('/departments'), 1500);
     } finally {
       setInitialLoading(false);
     }
@@ -48,10 +59,10 @@ export default function EditDepartment() {
     setLoading(true);
     try {
       await departmentsAPI.updateDepartment(id, form);
-      alert('Department updated successfully!');
-      navigate('/departments');
+      setToast({ show: true, message: 'Department updated successfully!', type: 'success' });
+      setTimeout(() => navigate('/departments'), 1500);
     } catch (err) {
-      setErrors({ name: err.response?.data?.message || err.message });
+      setToast({ show: true, message: err.response?.data?.message || err.message, type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -77,6 +88,17 @@ export default function EditDepartment() {
         <h1 className="text-2xl font-bold text-slate-900">Edit Department</h1>
       </div>
       <form onSubmit={handleSubmit} className="space-y-6">
+        {createdAt && (
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Created At</label>
+            <input
+              type="text"
+              value={new Date(createdAt).toLocaleString()}
+              readOnly
+              className="w-full px-4 py-3 border rounded-xl bg-slate-100 text-slate-700 cursor-not-allowed"
+            />
+          </div>
+        )}
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-2">Department Name *</label>
           <input
@@ -127,6 +149,13 @@ export default function EditDepartment() {
           </button>
         </div>
       </form>
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
+      )}
     </div>
   );
 } 

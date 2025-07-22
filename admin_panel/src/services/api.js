@@ -81,10 +81,10 @@ export const productsAPI = {
 
 // Orders API
 export const ordersAPI = {
-  getOrders: (params) => api.get('/orders', { params }),
+  getOrders: (params) => api.get('/orders/admin', { params }),
   getOrder: (id) => api.get(`/orders/${id}`),
   updateOrderStatus: (id, status) =>
-    api.put(`/orders/${id}/status`, { status }),
+    api.put(`/orders/admin/${id}/status`, { status }),
   deleteOrder: (id) => api.delete(`/orders/${id}`),
 };
 
@@ -162,11 +162,19 @@ export const citiesAPI = {
 // Colors API
 export const colorsAPI = {
   getColors: (params) => api.get('/colors', { params }),
+  getColor: (id) => api.get(`/colors/${id}`),
+  createColor: (data) => api.post('/colors', data),
+  updateColor: (id, data) => api.put(`/colors/${id}`, data),
+  deleteColor: (id) => api.delete(`/colors/${id}`),
 };
 
 // Sizes API
 export const sizesAPI = {
   getSizes: (params) => api.get('/sizes', { params }),
+  getSize: (id) => api.get(`/sizes/${id}`),
+  createSize: (data) => api.post('/sizes', data),
+  updateSize: (id, data) => api.put(`/sizes/${id}`, data),
+  deleteSize: (id) => api.delete(`/sizes/${id}`),
 };
 
 // Materials API

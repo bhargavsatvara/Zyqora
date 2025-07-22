@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Save, Upload, X, Plus, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { productsAPI, categoriesAPI, brandsAPI } from '../services/api';
+import { productsAPI, categoriesAPI, brandsAPI, departmentsAPI } from '../services/api';
 import { useToast } from '../contexts/ToastContext';
+import ProductAttributes from '../components/ProductAttributes';
 
 export default function AddProduct() {
   const navigate = useNavigate();
@@ -10,27 +11,28 @@ export default function AddProduct() {
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [sizeCharts, setSizeCharts] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
     sku: '',
     category_id: '',
+    department_id: '',
     brand_id: '',
+    size_chart_id: '',
     price: '',
     description: '',
     stock_qty: '',
+    attributes: [],
     image: null, // single file
     imagePreview: null // preview URL
   });
   const [errors, setErrors] = useState({});
 
-  useEffect(() => {
-    fetchCategories();
-    fetchBrands();
-  }, []);
-
-  const fetchCategories = async () => {
+  const fetchCategories = async (departmentId) => {
     try {
-      const response = await categoriesAPI.getCategories();
+      const params = departmentId ? { department_id: departmentId, limit: 1000 } : { limit: 1000 };
+      const response = await categoriesAPI.getCategories(params);
       const categoriesData = response.data.data?.categories || response.data.data || response.data || [];
       setCategories(categoriesData);
     } catch (error) {
@@ -38,9 +40,16 @@ export default function AddProduct() {
     }
   };
 
+  useEffect(() => {
+    fetchCategories(); // fetch all categories on mount (or you can skip this)
+    fetchBrands();
+    fetchDepartments();
+    fetchSizeCharts();
+  }, []);
+
   const fetchBrands = async () => {
     try {
-      const response = await brandsAPI.getBrands();
+      const response = await brandsAPI.getBrands({ limit: 1000 });
       const brandsData = response.data.data?.brands || response.data.data || response.data || [];
       setBrands(brandsData);
     } catch (error) {
@@ -48,12 +57,43 @@ export default function AddProduct() {
     }
   };
 
+  const fetchDepartments = async () => {
+    try {
+      const response = await departmentsAPI.getDepartments();
+      const departmentsData = response.data.data?.departments || response.data.data || response.data || [];
+      setDepartments(departmentsData);
+    } catch (error) {
+      console.error('Error fetching departments:', error);
+    }
+  };
+
+  const fetchSizeCharts = async () => {
+    try {
+      const response = await fetch('http://localhost:4000/api/size-charts', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const sizeChartsData = data.data?.sizeCharts || data.data || data || [];
+        setSizeCharts(sizeChartsData);
+      }
+    } catch (error) {
+      console.error('Error fetching size charts:', error);
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === 'checkbox' ? checked : value,
+      ...(name === 'department_id' ? { category_id: '' } : {})
     }));
+    if (name === 'department_id') {
+      fetchCategories(value);
+    }
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -79,6 +119,7 @@ export default function AddProduct() {
     if (!formData.name.trim()) newErrors.name = 'Product name is required';
     if (!formData.sku.trim()) newErrors.sku = 'SKU is required';
     if (!formData.category_id) newErrors.category_id = 'Category is required';
+    if (!formData.department_id) newErrors.department_id = 'Department is required';
     if (!formData.price || parseFloat(formData.price) <= 0) newErrors.price = 'Valid price is required';
     if (!formData.stock_qty || parseInt(formData.stock_qty) < 0) newErrors.stock_qty = 'Valid stock quantity is required';
     setErrors(newErrors);
@@ -94,10 +135,13 @@ export default function AddProduct() {
       data.append('name', formData.name);
       data.append('sku', formData.sku);
       data.append('category_id', formData.category_id);
+      data.append('department_id', formData.department_id);
       data.append('brand_id', formData.brand_id);
+      data.append('size_chart_id', formData.size_chart_id);
       data.append('price', formData.price);
       data.append('description', formData.description);
       data.append('stock_qty', formData.stock_qty);
+      data.append('attributes', JSON.stringify(formData.attributes));
       if (formData.image) {
         data.append('image', formData.image);
       }
@@ -111,6 +155,16 @@ export default function AddProduct() {
       setLoading(false);
     }
   };
+
+  // Filter categories based on selected department
+  const filteredCategories = formData.department_id
+    ? categories.filter(category =>
+        Array.isArray(category.department_ids) &&
+        category.department_ids.some(
+          deptId => (deptId && ((typeof deptId === 'object' ? deptId._id : deptId) === formData.department_id))
+        )
+      )
+    : categories;
 
   return (
     <div className="space-y-8">
@@ -171,6 +225,28 @@ export default function AddProduct() {
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Department *
+                  </label>
+                  <select
+                    name="department_id"
+                    value={formData.department_id}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      errors.department_id ? 'border-red-300' : 'border-slate-200'
+                    }`}
+                  >
+                    <option value="">Select Department</option>
+                    {Array.isArray(departments) && departments.map(department => (
+                      <option key={department._id} value={department._id}>
+                        {department.name}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.department_id && <p className="text-red-500 text-sm mt-1">{errors.department_id}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
                     Category *
                   </label>
                   <select
@@ -180,13 +256,18 @@ export default function AddProduct() {
                     className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                       errors.category_id ? 'border-red-300' : 'border-slate-200'
                     }`}
+                    disabled={!formData.department_id}
                   >
                     <option value="">Select Category</option>
-                    {Array.isArray(categories) && categories.map(category => (
-                      <option key={category._id} value={category._id}>
-                        {category.name}
-                      </option>
-                    ))}
+                    {formData.department_id ? (
+                      filteredCategories.map(category => (
+                        <option key={category._id} value={category._id}>
+                          {category.name}
+                        </option>
+                      ))
+                    ) : (
+                      <option value="" disabled>Select Department First</option>
+                    )}
                   </select>
                   {errors.category_id && <p className="text-red-500 text-sm mt-1">{errors.category_id}</p>}
                 </div>
@@ -205,6 +286,25 @@ export default function AddProduct() {
                     {Array.isArray(brands) && brands.map(brand => (
                       <option key={brand._id} value={brand._id}>
                         {brand.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Size Chart
+                  </label>
+                  <select
+                    name="size_chart_id"
+                    value={formData.size_chart_id}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select Size Chart</option>
+                    {Array.isArray(sizeCharts) && sizeCharts.map(sizeChart => (
+                      <option key={sizeChart._id} value={sizeChart._id}>
+                        {sizeChart.title}
                       </option>
                     ))}
                   </select>
@@ -262,6 +362,13 @@ export default function AddProduct() {
                 />
               </div>
             </div>
+            {/* Product Attributes */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+              <ProductAttributes
+                attributes={formData.attributes}
+                onAttributesChange={(attributes) => setFormData(prev => ({ ...prev, attributes }))}
+              />
+            </div>
             {/* Image Upload */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
               <h2 className="text-xl font-bold text-slate-900 mb-6">Product Image</h2>
@@ -318,6 +425,12 @@ export default function AddProduct() {
                   <span className="text-sm font-medium text-slate-900">{formData.sku || '—'}</span>
                 </div>
                 <div className="flex justify-between">
+                  <span className="text-sm text-slate-600">Department:</span>
+                  <span className="text-sm font-medium text-slate-900">
+                    {Array.isArray(departments) && departments.find(d => d._id === formData.department_id)?.name || '—'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
                   <span className="text-sm text-slate-600">Category:</span>
                   <span className="text-sm font-medium text-slate-900">
                     {Array.isArray(categories) && categories.find(c => c._id === formData.category_id)?.name || '—'}
@@ -327,6 +440,12 @@ export default function AddProduct() {
                   <span className="text-sm text-slate-600">Brand:</span>
                   <span className="text-sm font-medium text-slate-900">
                     {Array.isArray(brands) && brands.find(b => b._id === formData.brand_id)?.name || '—'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-600">Size Chart:</span>
+                  <span className="text-sm font-medium text-slate-900">
+                    {Array.isArray(sizeCharts) && sizeCharts.find(sc => sc._id === formData.size_chart_id)?.title || '—'}
                   </span>
                 </div>
                 <div className="flex justify-between">

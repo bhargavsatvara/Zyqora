@@ -3,6 +3,7 @@ import { Plus, Edit, Trash2, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { categoriesAPI } from '../services/api';
 import { departmentsAPI } from '../services/api';
+import Toast from '../components/Toast';
 
 export default function Categories() {
   const navigate = useNavigate();
@@ -14,11 +15,22 @@ export default function Categories() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCategories, setTotalCategories] = useState(0);
+  const [deleteId, setDeleteId] = useState(null);
+  const [deleteError, setDeleteError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   useEffect(() => {
     fetchCategories();
     fetchDepartments();
   }, [currentPage, activeSearchTerm]);
+
+  useEffect(() => {
+    if (toast.show) {
+      const timer = setTimeout(() => setToast({ ...toast, show: false }), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const fetchCategories = async () => {
     try {
@@ -32,7 +44,7 @@ export default function Categories() {
       console.log('Categories API response:', response);
       // Try to handle different possible response structures
       let categoriesData = [];
-      let pagination = { total: 1, totalRecords: 0 };
+      let pagination = { totalPages: 1, totalRecords: 0 };
       if (response.data && response.data.data) {
         categoriesData = response.data.data.categories || [];
         pagination = response.data.data.pagination || pagination;
@@ -43,7 +55,7 @@ export default function Categories() {
         categoriesData = response.data;
       }
       setCategories(categoriesData);
-      setTotalPages(pagination.total);
+      setTotalPages(pagination.totalPages);
       setTotalCategories(pagination.totalRecords);
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -68,22 +80,43 @@ export default function Categories() {
     }
   };
 
-  const deleteCategory = async (categoryId) => {
-    if (window.confirm('Are you sure you want to delete this category?')) {
-      try {
-        await categoriesAPI.deleteCategory(categoryId);
-        setCategories(prev => prev.filter(category => category._id !== categoryId));
-        alert('Category deleted successfully!');
-      } catch (error) {
-        alert('Error deleting category: ' + (error.response?.data?.message || error.message));
-      }
+  const deleteCategory = async () => {
+    if (!deleteId) return;
+    setDeleteError('');
+    try {
+      await categoriesAPI.deleteCategory(deleteId);
+      setCategories(prev => prev.filter(category => category._id !== deleteId));
+      setToast({ show: true, message: 'Category deleted successfully!', type: 'success' });
+      setDeleteId(null);
+      setTimeout(() => setSuccess(''), 1500);
+    } catch (error) {
+      setToast({ show: true, message: error.response?.data?.message || error.message, type: 'error' });
     }
   };
 
-  const getDepartmentName = (departmentId) => {
-    if (!departmentId) return 'None';
-    const dept = departments.find(d => d._id === departmentId);
-    return dept ? dept.name : 'Unknown';
+  const getDepartmentNames = (category) => {
+    // Handle both old and new schema during migration
+    if (category.department_ids && Array.isArray(category.department_ids)) {
+      // New schema: department_ids array
+      if (category.department_ids.length === 0) return 'None';
+      
+      const departmentNames = category.department_ids.map(dept => {
+        if (typeof dept === 'object' && dept.name) {
+          return dept.name; // Already populated
+        } else {
+          // Find department by ID
+          const foundDept = departments.find(d => d._id === dept);
+          return foundDept ? foundDept.name : 'Unknown';
+        }
+      });
+      return departmentNames.join(', ');
+    } else if (category.department_id) {
+      // Old schema: single department_id
+      const dept = departments.find(d => d._id === category.department_id);
+      return dept ? dept.name : 'Unknown';
+    } else {
+      return 'None';
+    }
   };
 
   const formatDate = (dateString) => {
@@ -176,10 +209,10 @@ export default function Categories() {
                   Name
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  Description
+                  Departments
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  Department
+                  Image
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                   Created
@@ -196,10 +229,14 @@ export default function Categories() {
                     <div className="text-sm font-medium text-slate-900">{category.name}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-slate-500">{category.description}</div>
+                    <div className="text-sm text-slate-900">{getDepartmentNames(category)}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-slate-900">{getDepartmentName(category.department_id)}</div>
+                    {category.image ? (
+                      <img src={category.image} alt={category.name} className="w-12 h-12 object-cover rounded-lg border" />
+                    ) : (
+                      <span className="text-slate-400">No Image</span>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-slate-900">{formatDate(category.createdAt)}</div>
@@ -220,7 +257,7 @@ export default function Categories() {
                         <Edit className="h-4 w-4" />
                       </button>
                       <button 
-                        onClick={() => deleteCategory(category._id)}
+                        onClick={() => setDeleteId(category._id)}
                         className="text-red-600 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors"
                         title="Delete Category"
                       >
@@ -258,27 +295,52 @@ export default function Categories() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-slate-700">
-              Showing page {currentPage} of {totalPages} ({totalCategories} total categories)
+        <div className="flex items-center justify-between bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+          <div className="text-sm text-slate-600">
+            Showing {((currentPage - 1) * 10) + 1} to {Math.min(currentPage * 10, totalCategories)} of {totalCategories} categories
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <span className="px-3 py-2 text-sm text-slate-600">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Success Message */}
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteId && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md p-8 relative">
+            <h2 className="text-xl font-bold text-slate-900 mb-2">Delete Category</h2>
+            <p className="mb-4 text-slate-700">Are you sure you want to delete this category? This action cannot be undone.</p>
+            <div className="flex gap-3 mt-4">
+              <button type="button" onClick={() => setDeleteId(null)} className="flex-1 px-4 py-2 border border-slate-200 rounded-lg bg-slate-50 hover:bg-slate-100 font-medium text-slate-700">Cancel</button>
+              <button type="button" onClick={deleteCategory} className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 font-medium flex items-center justify-center gap-2">Delete</button>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="p-2 text-slate-400 hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg hover:bg-slate-100 transition-colors"
-              >
-                {'<'}
-              </button>
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-                className="p-2 text-slate-400 hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg hover:bg-slate-100 transition-colors"
-              >
-                {'>'}
-              </button>
-            </div>
+            {deleteError && <div className="text-red-600 text-sm font-medium mt-4">{deleteError}</div>}
           </div>
         </div>
       )}

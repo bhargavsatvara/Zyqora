@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Save, Upload, X, Plus, Trash2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { productsAPI, categoriesAPI, brandsAPI } from '../services/api';
+import { productsAPI, categoriesAPI, brandsAPI, departmentsAPI } from '../services/api';
 import { useToast } from '../contexts/ToastContext';
+import ProductAttributes from '../components/ProductAttributes';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 const FILE_BASE_URL = API_BASE_URL.replace(/\/api$/, '');
@@ -15,23 +16,31 @@ export default function EditProduct() {
   const [fetching, setFetching] = useState(true);
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
     sku: '',
     category_id: '',
+    department_id: '',
     brand_id: '',
     price: '',
     description: '',
     stock_qty: '',
+    attributes: [],
     image: null, // file or string (URL)
     imagePreview: null // preview URL
   });
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    fetchProduct();
-    fetchCategories();
     fetchBrands();
+    fetchDepartments();
+  }, []);
+
+  useEffect(() => {
+    if (id) {
+      fetchProduct();
+    }
   }, [id]);
 
   const fetchProduct = async () => {
@@ -48,13 +57,19 @@ export default function EditProduct() {
         name: product.name || '',
         sku: product.sku || '',
         category_id: product.category_id?._id || '',
+        department_id: product.department_id?._id || '',
         brand_id: product.brand_id?._id || '',
         price: product.price || '',
         description: product.description || '',
         stock_qty: product.stock_qty || '',
+        attributes: product.attributes || [],
         image: product.image || null, // keep the URL for now
         imagePreview: imageUrl
       });
+      // Fetch categories for the product's department
+      if (product.department_id?._id || product.department_id) {
+        fetchCategories(product.department_id._id || product.department_id);
+      }
     } catch (error) {
       console.error('Error fetching product:', error);
       showError('Error fetching product: ' + (error.response?.data?.message || error.message));
@@ -64,9 +79,10 @@ export default function EditProduct() {
     }
   };
 
-  const fetchCategories = async () => {
+  const fetchCategories = async (departmentId) => {
     try {
-      const response = await categoriesAPI.getCategories();
+      const params = departmentId ? { department_id: departmentId } : {};
+      const response = await categoriesAPI.getCategories(params);
       const categoriesData = response.data.data?.categories || response.data.data || response.data || [];
       setCategories(categoriesData);
     } catch (error) {
@@ -84,12 +100,26 @@ export default function EditProduct() {
     }
   };
 
+  const fetchDepartments = async () => {
+    try {
+      const response = await departmentsAPI.getDepartments();
+      const departmentsData = response.data.data?.departments || response.data.data || response.data || [];
+      setDepartments(departmentsData);
+    } catch (error) {
+      console.error('Error fetching departments:', error);
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === 'checkbox' ? checked : value,
+      ...(name === 'department_id' ? { category_id: '' } : {})
     }));
+    if (name === 'department_id') {
+      fetchCategories(value);
+    }
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -115,6 +145,7 @@ export default function EditProduct() {
     if (!formData.name.trim()) newErrors.name = 'Product name is required';
     if (!formData.sku.trim()) newErrors.sku = 'SKU is required';
     if (!formData.category_id) newErrors.category_id = 'Category is required';
+    if (!formData.department_id) newErrors.department_id = 'Department is required';
     if (!formData.price || parseFloat(formData.price) <= 0) newErrors.price = 'Valid price is required';
     if (!formData.stock_qty || parseInt(formData.stock_qty) < 0) newErrors.stock_qty = 'Valid stock quantity is required';
     setErrors(newErrors);
@@ -130,10 +161,12 @@ export default function EditProduct() {
       data.append('name', formData.name);
       data.append('sku', formData.sku);
       data.append('category_id', formData.category_id);
+      data.append('department_id', formData.department_id);
       data.append('brand_id', formData.brand_id);
       data.append('price', formData.price);
       data.append('description', formData.description);
       data.append('stock_qty', formData.stock_qty);
+      data.append('attributes', JSON.stringify(formData.attributes));
       if (formData.image && typeof formData.image !== 'string') {
         data.append('image', formData.image);
       } else if (formData.image && typeof formData.image === 'string') {
@@ -149,6 +182,14 @@ export default function EditProduct() {
       setLoading(false);
     }
   };
+
+  // Filter categories based on selected department
+  const filteredCategories = formData.department_id 
+    ? categories.filter(category => 
+        category.department_ids && 
+        category.department_ids.some(deptId => deptId._id === formData.department_id || deptId === formData.department_id)
+      )
+    : categories;
 
   if (fetching) {
     return (
@@ -217,6 +258,28 @@ export default function EditProduct() {
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Department *
+                  </label>
+                  <select
+                    name="department_id"
+                    value={formData.department_id}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      errors.department_id ? 'border-red-300' : 'border-slate-200'
+                    }`}
+                  >
+                    <option value="">Select Department</option>
+                    {Array.isArray(departments) && departments.map(department => (
+                      <option key={department._id} value={department._id}>
+                        {department.name}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.department_id && <p className="text-red-500 text-sm mt-1">{errors.department_id}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
                     Category *
                   </label>
                   <select
@@ -226,13 +289,18 @@ export default function EditProduct() {
                     className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                       errors.category_id ? 'border-red-300' : 'border-slate-200'
                     }`}
+                    disabled={!formData.department_id}
                   >
                     <option value="">Select Category</option>
-                    {Array.isArray(categories) && categories.map(category => (
-                      <option key={category._id} value={category._id}>
-                        {category.name}
-                      </option>
-                    ))}
+                    {formData.department_id ? (
+                      filteredCategories.map(category => (
+                        <option key={category._id} value={category._id}>
+                          {category.name}
+                        </option>
+                      ))
+                    ) : (
+                      <option value="" disabled>Select Department First</option>
+                    )}
                   </select>
                   {errors.category_id && <p className="text-red-500 text-sm mt-1">{errors.category_id}</p>}
                 </div>
@@ -308,6 +376,13 @@ export default function EditProduct() {
                 />
               </div>
             </div>
+            {/* Product Attributes */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+              <ProductAttributes
+                attributes={formData.attributes}
+                onAttributesChange={(attributes) => setFormData(prev => ({ ...prev, attributes }))}
+              />
+            </div>
             {/* Image Upload */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
               <h2 className="text-xl font-bold text-slate-900 mb-6">Product Image</h2>
@@ -362,6 +437,12 @@ export default function EditProduct() {
                 <div className="flex justify-between">
                   <span className="text-sm text-slate-600">SKU:</span>
                   <span className="text-sm font-medium text-slate-900">{formData.sku || '—'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-slate-600">Department:</span>
+                  <span className="text-sm font-medium text-slate-900">
+                    {Array.isArray(departments) && departments.find(d => d._id === formData.department_id)?.name || '—'}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-slate-600">Category:</span>

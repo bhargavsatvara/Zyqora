@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Edit, Trash2, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
 import { colorsAPI } from '../services/api';
 import { useNavigate } from 'react-router-dom';
+import Toast from '../components/Toast';
 
 export default function Colors() {
   const [colors, setColors] = useState([]);
@@ -18,6 +19,7 @@ export default function Colors() {
   const [totalColors, setTotalColors] = useState(0);
   const [deleteColorId, setDeleteColorId] = useState(null);
   const [deleteError, setDeleteError] = useState('');
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -25,21 +27,22 @@ export default function Colors() {
     // eslint-disable-next-line
   }, [currentPage, activeSearchTerm]);
 
+  useEffect(() => {
+    if (toast.show) {
+      const timer = setTimeout(() => setToast({ ...toast, show: false }), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
   const fetchColors = async () => {
     setLoading(true);
     try {
       const params = { page: currentPage, limit: 10, search: activeSearchTerm || undefined };
-      console.log('Fetching colors with params:', params);
       const response = await colorsAPI.getColors(params);
-      console.log('API response:', response);
       let data = response.data;
-      if (Array.isArray(data)) {
-        setColors(data);
-        setTotalPages(1);
-        setTotalColors(data.length);
-      } else if (data.data && data.data.colors) {
+      if (data.data && data.data.colors) {
         setColors(data.data.colors);
-        setTotalPages(data.data.pagination?.total || 1);
+        setTotalPages(data.data.pagination?.totalPages || 1);
         setTotalColors(data.data.pagination?.totalRecords || data.data.colors.length);
       } else {
         setColors([]);
@@ -47,7 +50,6 @@ export default function Colors() {
         setTotalColors(0);
       }
     } catch (err) {
-      console.error('Error fetching colors:', err);
       setColors([]);
       setTotalPages(1);
       setTotalColors(0);
@@ -67,17 +69,17 @@ export default function Colors() {
     setError('');
     setSuccess('');
     if (!form.name.trim()) {
-      setError('Color name is required');
+      setToast({ show: true, message: 'Color name is required', type: 'error' });
       return;
     }
     try {
       await colorsAPI.createColor(form);
-      setSuccess('Color added successfully!');
+      setToast({ show: true, message: 'Color added successfully!', type: 'success' });
       setShowAdd(false);
       setForm({ name: '', hex_code: '' });
       fetchColors();
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
+      setToast({ show: true, message: err.response?.data?.message || err.message, type: 'error' });
     }
   };
 
@@ -90,17 +92,17 @@ export default function Colors() {
     setError('');
     setSuccess('');
     if (!form.name.trim()) {
-      setError('Color name is required');
+      setToast({ show: true, message: 'Color name is required', type: 'error' });
       return;
     }
     try {
       await colorsAPI.updateColor(showEdit._id, form);
-      setSuccess('Color updated successfully!');
+      setToast({ show: true, message: 'Color updated successfully!', type: 'success' });
       setShowEdit(null);
       setForm({ name: '', hex_code: '' });
       fetchColors();
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
+      setToast({ show: true, message: err.response?.data?.message || err.message, type: 'error' });
     }
   };
 
@@ -109,10 +111,11 @@ export default function Colors() {
     setDeleteError('');
     try {
       await colorsAPI.deleteColor(deleteColorId);
+      setToast({ show: true, message: 'Color deleted successfully!', type: 'success' });
       setDeleteColorId(null);
       fetchColors();
     } catch (err) {
-      setDeleteError(err.response?.data?.message || err.message);
+      setToast({ show: true, message: err.response?.data?.message || err.message, type: 'error' });
     }
   };
 
@@ -334,6 +337,15 @@ export default function Colors() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Toast Message */}
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
       )}
     </div>
   );

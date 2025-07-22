@@ -1,5 +1,5 @@
-import React,{useState} from "react";
-import { Link } from "react-router-dom";
+import React,{useState, useEffect} from "react";
+import { Link, useParams, useNavigate } from "react-router-dom";
 
 import Tagline from "../../../components/tagline";
 import Navbar from "../../../components/navbar";
@@ -10,29 +10,161 @@ import Footer from "../../../components/footer";
 import Switcher from "../../../components/switcher";
 import ScrollToTop from "../../../components/scroll-to-top";
 
-import image1 from '../../../assets/images/shop/mens-jecket.jpg'
-import image2 from '../../../assets/images/shop/mens-jecket-3.jpg'
-import image3 from '../../../assets/images/shop/mens-jecket-left.jpg'
-import image4 from '../../../assets/images/shop/mens-jecket-back.jpg'
-import image5 from '../../../assets/images/shop/mens-jecket-4.jpg'
-
 import Lightbox from 'react-18-image-lightbox';
 import 'react-18-image-lightbox/style.css';
 
 export default function ProductDetailOne(){
+    const { id } = useParams();
+    const [product, setProduct] = useState(null);
+    const [loading, setLoading] = useState(true);
     const [photoIndex, setActiveIndex] = useState(0);
     const [isOpen, setOpen] = useState(false);
-    const images = [
-        image1,
-        image2,
-        image3,
-        image4,
-        image5
-    ];
+    const [images, setImages] = useState([]);
+    const navigate = useNavigate();
+    const [selectedSize, setSelectedSize] = useState('');
+    const [selectedColor, setSelectedColor] = useState('');
+    const [addToCartMessage, setAddToCartMessage] = useState('');
+
+    useEffect(() => {
+        async function fetchProduct() {
+            try {
+                setLoading(true);
+                const response = await fetch(`http://localhost:4000/api/products/${id}`);
+                const data = await response.json();
+                
+                if (data) {
+                    setProduct(data);
+                    // Set images for lightbox - use product image if available
+                    const productImages = data.image ? [data.image] : [];
+                    setImages(productImages);
+                }
+            } catch (error) {
+                console.error('Error fetching product:', error);
+            } finally {
+                setLoading(false);
+            }
+        }
+        if (id) {
+            fetchProduct();
+        }
+    }, [id]);
+
+    const getImageUrl = (imagePath) => {
+        if (!imagePath) {
+            return '/assets/images/shop/default-product.jpg';
+        }
+        
+        // If image starts with http, it's an external URL
+        if (imagePath.startsWith('http')) {
+            return imagePath;
+        }
+        
+        // If image starts with /uploads, it's a local file
+        if (imagePath.startsWith('/uploads')) {
+            return `http://localhost:4000${imagePath}`;
+        }
+        
+        // Default fallback
+        return '/assets/images/shop/default-product.jpg';
+    };
+
     const handleCLick = (index) => {
         setActiveIndex(index)
         setOpen(true);
     }
+
+    const handleShopNow = () => {
+        console.log("Shop Now clicked");
+        const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+        if (token) {
+            navigate("/shop-checkout");
+        } else {
+            navigate("/login");
+        }
+    };
+
+    const handleAddToCart = async () => {
+        if (sizeOptions.length > 0 && !selectedSize) {
+            alert('Please select a size');
+            return;
+        }
+        if (colorOptions.length > 0 && !selectedColor) {
+            alert('Please select a color');
+            return;
+        }
+        const cartItem = {
+            product_id: product._id,
+            name: product.name,
+            price: product.price,
+            image: product.image,
+            quantity: 1,
+            size: selectedSize,
+            color: selectedColor,
+            stock_qty: product.stock_qty
+        };
+        try {
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            const res = await fetch('http://localhost:4000/api/cart/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token && { 'Authorization': `Bearer ${token}` })
+                },
+                body: JSON.stringify(cartItem)
+            });
+            if (res.ok) {
+                setAddToCartMessage('Added to cart!');
+                setTimeout(() => setAddToCartMessage(''), 2000);
+            } else {
+                setAddToCartMessage('Failed to add to cart');
+                setTimeout(() => setAddToCartMessage(''), 2000);
+            }
+        } catch (err) {
+            setAddToCartMessage('Error adding to cart');
+            setTimeout(() => setAddToCartMessage(''), 2000);
+        }
+    };
+
+    // Extract available sizes/colors from product.attributes
+    const sizeOptions = product?.attributes?.find(attr => attr.attribute_name.toLowerCase() === 'size')?.attribute_values || [];
+    const colorOptions = product?.attributes?.find(attr => attr.attribute_name.toLowerCase() === 'color')?.attribute_values || [];
+
+    if (loading) {
+        return (
+            <>
+                <Tagline/>
+                <Navbar navClass="defaultscroll is-sticky tagline-height"/>
+                <section className="relative table w-full py-20 lg:py-24 md:pt-28 bg-gray-50 dark:bg-slate-800">
+                    <div className="container relative">
+                        <div className="flex items-center justify-center py-20">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+                        </div>
+                    </div>
+                </section>
+            </>
+        );
+    }
+
+    if (!product) {
+        return (
+            <>
+                <Tagline/>
+                <Navbar navClass="defaultscroll is-sticky tagline-height"/>
+                <section className="relative table w-full py-20 lg:py-24 md:pt-28 bg-gray-50 dark:bg-slate-800">
+                    <div className="container relative">
+                        <div className="text-center py-20">
+                            <h3 className="text-xl font-semibold mb-2 text-gray-700 dark:text-gray-300">Product Not Found</h3>
+                            <p className="text-gray-500 dark:text-gray-400">The product you're looking for doesn't exist.</p>
+                            <Link to="/products" className="mt-4 inline-block px-6 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors">
+                                Back to Products
+                            </Link>
+                        </div>
+                    </div>
+                </section>
+            </>
+        );
+    }
+
     return(
         <>
         <Tagline/>
@@ -40,16 +172,16 @@ export default function ProductDetailOne(){
         <section className="relative table w-full py-20 lg:py-24 md:pt-28 bg-gray-50 dark:bg-slate-800">
             <div className="container relative">
                 <div className="grid grid-cols-1 mt-14">
-                    <h3 className="text-3xl leading-normal font-semibold">Mens Brown Jecket</h3>
+                    <h3 className="text-3xl leading-normal font-semibold">{product.name}</h3>
                 </div>
 
                 <div className="relative mt-3">
                     <ul className="tracking-[0.5px] mb-0 inline-block">
                         <li className="inline-block uppercase text-[13px] font-bold duration-500 ease-in-out hover:text-orange-500"><Link to="/">Zyqora</Link></li>
                         <li className="inline-block text-base text-slate-950 dark:text-white mx-0.5 ltr:rotate-0 rtl:rotate-180"><i className="mdi mdi-chevron-right"></i></li>
-                        <li className="inline-block uppercase text-[13px] font-bold duration-500 ease-in-out hover:text-orange-500"><Link to="/shop-grid">Store</Link></li>
+                        <li className="inline-block uppercase text-[13px] font-bold duration-500 ease-in-out hover:text-orange-500"><Link to="/products">Products</Link></li>
                         <li className="inline-block text-base text-slate-950 dark:text-white mx-0.5 ltr:rotate-0 rtl:rotate-180"><i className="mdi mdi-chevron-right"></i></li>
-                        <li className="inline-block uppercase text-[13px] font-bold text-orange-500" aria-current="page">Mens Brown Jecket</li>
+                        <li className="inline-block uppercase text-[13px] font-bold text-orange-500" aria-current="page">{product.name}</li>
                     </ul>
                 </div>
             </div>
@@ -62,49 +194,30 @@ export default function ProductDetailOne(){
                         <div className="grid md:grid-cols-12 gap-3">
                             <div className="md:col-span-12">
                                 <Link to="#" onClick={() => handleCLick(0)} className="lightbox duration-500 group-hover:scale-105" title="">
-                                    <img src={image1} className="shadow dark:shadow-gray-700" alt=""/>
+                                    <img src={getImageUrl(product.image)} className="shadow dark:shadow-gray-700" alt={product.name}/>
                                 </Link>
                             </div>
-                            <div className="md:col-span-6">
-                                <Link to="#" onClick={() => handleCLick(1)} className="lightbox duration-500 group-hover:scale-105" title="">
-                                    <img src={image2} className="shadow dark:shadow-gray-700" alt=""/>
-                                </Link>
-                            </div>
-                            <div className="md:col-span-6">
-                                <Link to="#" onClick={() => handleCLick(2)} className="lightbox duration-500 group-hover:scale-105" title="">
-                                    <img src={image3} className="shadow dark:shadow-gray-700" alt=""/>
-                                </Link>
-                            </div>
-                            <div className="md:col-span-12">
-                                <Link to="#" onClick={() => handleCLick(3)} className="lightbox duration-500 group-hover:scale-105" title="">
-                                    <img src={image4} className="shadow dark:shadow-gray-700" alt=""/>
-                                </Link>
-                            </div>
-                            <div className="md:col-span-12">
-                                <Link to="#" onClick={() => handleCLick(4)} className="lightbox duration-500 group-hover:scale-105" title="">
-                                    <img src={image5} className="shadow dark:shadow-gray-700" alt=""/>
-                                </Link>
-                            </div>
+                            {/* Additional product images can be added here if available */}
                         </div>
                     </div>
 
                     <div className="lg:col-span-7">
-                        <ProductDetail/>
+                        <ProductDetail product={product}/>
                     </div>
                 </div>
 
-                <ProductAboutTab/>
+                <ProductAboutTab product={product}/>
             </div>
 
             <ArrivalItem/>
         </section>
         <Footer/>
         <Switcher/>
-        {isOpen && (
+        {isOpen && images.length > 0 && (
                 <Lightbox
-                    mainSrc={images[photoIndex]}
-                    nextSrc={images[(photoIndex + 1) % images.length]}
-                    prevSrc={images[(photoIndex + images.length - 1) % images.length]}
+                    mainSrc={getImageUrl(images[photoIndex])}
+                    nextSrc={images.length > 1 ? getImageUrl(images[(photoIndex + 1) % images.length]) : undefined}
+                    prevSrc={images.length > 1 ? getImageUrl(images[(photoIndex + images.length - 1) % images.length]) : undefined}
                     onCloseRequest={() => setOpen( false )}
                     onMovePrevRequest={() =>
                         setActiveIndex((photoIndex + images.length - 1) % images.length,

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
 import { countriesAPI } from '../services/api';
 import { useNavigate } from 'react-router-dom';
+import Toast from '../components/Toast';
 
 export default function Countries() {
   const [countries, setCountries] = useState([]);
@@ -18,12 +19,20 @@ export default function Countries() {
   const [totalCountries, setTotalCountries] = useState(0);
   const [deleteCountryId, setDeleteCountryId] = useState(null);
   const [deleteError, setDeleteError] = useState('');
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchCountries();
     // eslint-disable-next-line
   }, [currentPage, activeSearchTerm]);
+
+  useEffect(() => {
+    if (toast.show) {
+      const timer = setTimeout(() => setToast({ ...toast, show: false }), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const fetchCountries = async () => {
     setLoading(true);
@@ -64,17 +73,17 @@ export default function Countries() {
     setError('');
     setSuccess('');
     if (!form.name.trim()) {
-      setError('Country name is required');
+      setToast({ show: true, message: 'Country name is required', type: 'error' });
       return;
     }
     try {
       await countriesAPI.createCountry(form);
-      setSuccess('Country added successfully!');
+      setToast({ show: true, message: 'Country added successfully!', type: 'success' });
       setShowAdd(false);
       setForm({ name: '' });
       fetchCountries();
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
+      setToast({ show: true, message: err.response?.data?.message || err.message, type: 'error' });
     }
   };
 
@@ -87,17 +96,17 @@ export default function Countries() {
     setError('');
     setSuccess('');
     if (!form.name.trim()) {
-      setError('Country name is required');
+      setToast({ show: true, message: 'Country name is required', type: 'error' });
       return;
     }
     try {
       await countriesAPI.updateCountry(showEdit._id, form);
-      setSuccess('Country updated successfully!');
+      setToast({ show: true, message: 'Country updated successfully!', type: 'success' });
       setShowEdit(null);
       setForm({ name: '' });
       fetchCountries();
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
+      setToast({ show: true, message: err.response?.data?.message || err.message, type: 'error' });
     }
   };
 
@@ -106,10 +115,11 @@ export default function Countries() {
     setDeleteError('');
     try {
       await countriesAPI.deleteCountry(deleteCountryId);
+      setToast({ show: true, message: 'Country deleted successfully!', type: 'success' });
       setDeleteCountryId(null);
       fetchCountries();
     } catch (err) {
-      setDeleteError(err.response?.data?.message || err.message);
+      setToast({ show: true, message: err.response?.data?.message || err.message, type: 'error' });
     }
   };
 
@@ -310,6 +320,14 @@ export default function Countries() {
             </div>
           </div>
         </div>
+      )}
+      {/* Toast Message */}
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
       )}
     </div>
   );

@@ -23,7 +23,8 @@ import {
   Building2,
   FolderOpen,
   Palette,
-  Ruler
+  Ruler,
+  BarChart
 } from 'lucide-react';
 
 const navigation = [
@@ -41,10 +42,8 @@ const navigation = [
           { name: 'Colors', href: '/colors', icon: Palette },
           { name: 'Sizes', href: '/sizes', icon: Ruler },
           { name: 'Materials', href: '/materials', icon: FlaskConical },
+          { name: 'Size Charts', href: '/size-charts', icon: BarChart },
           { name: 'Inventory', href: '/inventory', icon: Warehouse },
-          { name: 'Product Materials', href: '/product-materials', icon: FlaskConical },
-          { name: 'Product Sizes', href: '/product-sizes', icon: Ruler },
-          { name: 'Product Colors', href: '/product-colors', icon: Palette },
         ]
       },
   { 

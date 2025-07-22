@@ -357,6 +357,11 @@ export default function Products() {
                       <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-800">
                         {product.category_id?.name || 'Uncategorized'}
                       </span>
+                      {product.attributes && product.attributes.length > 0 && (
+                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                          {product.attributes.length} {product.attributes.length === 1 ? 'Attribute' : 'Attributes'}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>

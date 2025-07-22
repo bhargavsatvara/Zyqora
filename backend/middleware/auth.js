@@ -27,4 +27,19 @@ const authorizeAdmin = async (req, res, next) => {
   }
 };
 
-module.exports = { authenticate, authorizeAdmin }; 
+const optionalAuthenticate = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  if (authHeader) {
+    const token = authHeader.split(' ')[1];
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'someSuperSecretKey');
+      req.user = decoded.userId;
+    } catch (err) {
+      // Invalid token, treat as guest
+      req.user = undefined;
+    }
+  }
+  next();
+};
+
+module.exports = { authenticate, authorizeAdmin, optionalAuthenticate }; 
