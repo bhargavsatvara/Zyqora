@@ -175,7 +175,7 @@ export default function EditCategory() {
             className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           />
           {formData.image && (
-            <img src={formData.image.startsWith('/uploads') ? `http://localhost:4000${formData.image}` : formData.image} alt="Preview" className="mt-2 w-32 h-32 object-cover rounded-lg border" />
+            <img src={formData.image} alt="Preview" className="mt-2 w-32 h-32 object-cover rounded-lg border" />
           )}
         </div>
         <div>
