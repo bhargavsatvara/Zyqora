@@ -67,7 +67,7 @@ export default function Filter({ onFilterChange, filters }){
             if (filters.max_price) params.append('max_price', filters.max_price);
             
             console.log('Fetching available sizes with params:', params.toString());
-            const res = await fetch(`http://localhost:4000/api/products?${params.toString()}&limit=1000`);
+            const res = await fetch(`https://zyqora.onrender.com/api/products?${params.toString()}&limit=1000`);
             const data = await res.json();
             
             if (data.data && data.data.products) {
@@ -106,10 +106,10 @@ export default function Filter({ onFilterChange, filters }){
         try {
             // Fetch colors, brands, categories, and departments in parallel
             const [colorsRes, brandsRes, categoriesRes, departmentsRes] = await Promise.all([
-                fetch('http://localhost:4000/api/colors'),
-                fetch('http://localhost:4000/api/brands'),
-                fetch('http://localhost:4000/api/categories'),
-                fetch('http://localhost:4000/api/departments')
+                fetch('https://zyqora.onrender.com/api/colors'),
+                fetch('https://zyqora.onrender.com/api/brands'),
+                fetch('https://zyqora.onrender.com/api/categories'),
+                fetch('https://zyqora.onrender.com/api/departments')
             ]);
 
             const colorsData = await colorsRes.json();
@@ -135,7 +135,7 @@ export default function Filter({ onFilterChange, filters }){
     const fetchCategoriesForDepartment = async (departmentId) => {
         try {
             console.log(`Fetching categories for department: ${departmentId}`);
-            const res = await fetch(`http://localhost:4000/api/categories?department_id=${departmentId}`);
+            const res = await fetch(`https://zyqora.onrender.com/api/categories?department_id=${departmentId}`);
             const data = await res.json();
             
             let categoriesData = [];

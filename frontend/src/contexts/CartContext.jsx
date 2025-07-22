@@ -25,7 +25,7 @@ export function CartProvider({ children }) {
   const fetchCart = async () => {
     try {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-      const response = await fetch("http://localhost:4000/api/cart", {
+      const response = await fetch("https://zyqora.onrender.com/api/cart", {
         headers: {
           ...(token && { 'Authorization': `Bearer ${token}` })
         }
