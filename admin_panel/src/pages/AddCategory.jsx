@@ -96,6 +96,7 @@ export default function AddCategory() {
     setLoading(true);
     setSubmitError('');
     try {
+      console.log('Submitting category with image:', formData.image);
       await categoriesAPI.createCategory(formData);
       setToast({ show: true, message: 'Category created successfully!', type: 'success' });
       setTimeout(() => navigate('/categories'), 1500);
