@@ -265,17 +265,6 @@ export default function ProductDetail({ product }) {
         }
     };
 
-    // Utility to get correct image URL
-    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
-    const API_ORIGIN = API_BASE_URL.replace(/\/api$/, '');
-
-    function getImageUrl(imagePath) {
-      if (!imagePath) return '/assets/images/shop/default-product.jpg';
-      if (imagePath.startsWith('http')) return imagePath;
-      if (imagePath.startsWith('/uploads')) return `${API_ORIGIN}${imagePath}`;
-      return '/assets/images/shop/default-product.jpg';
-    }
-
     if (!product) {
         return (
             <div className="sticky top-20">
