@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
+const fs = require('fs');
 const path = require('path');
 
 // Import all route modules
@@ -24,6 +25,7 @@ const materialRoutes = require('./materials');
 const couponRoutes = require('./coupons');
 const adminRoutes = require('./admin');
 const sizeChartRoutes = require('./sizeCharts');
+const uploadCategoryImage = require('../utils/cloudinaryCategoryUpload');
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -36,11 +38,17 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // Image upload endpoint
-router.post('/upload/category-image', upload.single('image'), (req, res) => {
+router.post('/upload/category-image', upload.single('image'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: 'No file uploaded' });
   }
-  res.json({ path: `/uploads/categories/${req.file.filename}` });
+  try {
+    const result = await uploadCategoryImage(req.file.path);
+    fs.unlinkSync(req.file.path);
+    res.json({ path: result.secure_url });
+  } catch (err) {
+    res.status(500).json({ message: 'Image upload failed', error: err.message });
+  }
 });
 
 // Mount routes
