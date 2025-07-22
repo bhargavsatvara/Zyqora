@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const productController = require('../controllers/productController');
 const { authenticate } = require('../middleware/auth');
-const upload = require('../utils/multer');
+const { uploadProduct } = require('../utils/multer');
 const path = require('path');
 
 /**
@@ -125,7 +125,7 @@ router.get('/:id', productController.getProductById);
  *       201: { description: Product created successfully }
  *       401: { description: Unauthorized }
  */
-router.post('/', authenticate, upload.single('image'), productController.createProduct);
+router.post('/', authenticate, uploadProduct.single('image'), productController.createProduct);
 
 /**
  * @swagger
@@ -159,7 +159,7 @@ router.post('/', authenticate, upload.single('image'), productController.createP
  *       401: { description: Unauthorized }
  *       404: { description: Product not found }
  */
-router.put('/:id', authenticate, upload.single('image'), productController.updateProduct);
+router.put('/:id', authenticate, uploadProduct.single('image'), productController.updateProduct);
 
 /**
  * @swagger
