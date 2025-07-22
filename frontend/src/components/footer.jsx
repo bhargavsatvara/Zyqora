@@ -154,12 +154,7 @@ export default function Footer() {
           <div className="grid md:grid-cols-2 items-center">
             <div className="md:text-start text-center">
               <p className="mb-0">
-                © {new Date().getFullYear()} Zyqora. Design & Develop with{" "}
-                <i className="mdi mdi-heart text-red-600"></i> by{" "}
-                <Link to="#" target="_blank" className="text-reset">
-                  Group 7
-                </Link>
-                .
+                © {new Date().getFullYear()} Zyqora. All rights reserved.
               </p>
             </div>
             <ul className="list-none md:text-end text-center mt-6 md:mt-0">
