@@ -35,7 +35,7 @@ export default function Shopcart(props){
         try {
             setLoading(true);
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-            const response = await fetch('http://localhost:4000/api/cart', {
+            const response = await fetch('https://zyqora.onrender.com/api/cart', {
                 headers: {
                     ...(token && { 'Authorization': `Bearer ${token}` })
                 }
@@ -83,7 +83,7 @@ export default function Shopcart(props){
 
         try {
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-            const response = await fetch('http://localhost:4000/api/cart/update', {
+            const response = await fetch('https://zyqora.onrender.com/api/cart/update', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -106,7 +106,7 @@ export default function Shopcart(props){
     const removeFromCart = async (item) => {
         try {
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-            const response = await fetch('http://localhost:4000/api/cart/remove', {
+            const response = await fetch('https://zyqora.onrender.com/api/cart/remove', {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -141,7 +141,7 @@ export default function Shopcart(props){
     const clearCart = async () => {
         try {
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-            const response = await fetch('http://localhost:4000/api/cart/clear', {
+            const response = await fetch('https://zyqora.onrender.com/api/cart/clear', {
                 method: 'DELETE',
                 headers: {
                     ...(token && { 'Authorization': `Bearer ${token}` })

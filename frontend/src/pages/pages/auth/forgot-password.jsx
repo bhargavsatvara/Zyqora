@@ -16,7 +16,7 @@ export default function ForgotPassword() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const API_BASE = process.env.REACT_APP_BACKEND_URL || 'http://localhost:4000';
+  const API_BASE = 'https://zyqora.onrender.com/api';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
