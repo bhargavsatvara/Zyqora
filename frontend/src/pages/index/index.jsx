@@ -14,7 +14,6 @@ import { FiHeart, FiEye, FiBookmark } from '../../assets/icons/vander';
 import { collections, newProduct } from "../../data/data";
 
 export default function Index() {
-  const [products, setProducts] = useState([]);
   const [days, setDays] = useState(0);
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
@@ -33,20 +32,6 @@ export default function Index() {
   useEffect(() => {
     const interval = setInterval(() => getTime(), 1000);
     return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    // Fetch all products from backend
-    async function fetchProducts() {
-      try {
-        const res = await fetch('https://zyqora.onrender.com/api/products?limit=1000');
-        const data = await res.json();
-        setProducts(data.data?.products || []);
-      } catch (err) {
-        setProducts([]);
-      }
-    }
-    fetchProducts();
   }, []);
 
   return (
@@ -139,15 +124,17 @@ export default function Index() {
               Shop the latest products from the most popular collections
             </p>
           </div>
+
           <div className="grid gap-6 pt-6 lg:grid-cols-4 md:grid-cols-3 sm:grid-cols-2 grid-cols-1">
-            {products.slice(0, 8).map((item, index) => (
-              <div className="group" key={item._id || index}>
+            {newProduct.slice(0, 12).map((item, index) => (
+              <div className="group" key={index}>
                 <div className="relative overflow-hidden rounded-md shadow dark:shadow-gray-800 duration-500 group-hover:shadow-lg group-hover:dark:shadow-gray-800">
                   <img
                     src={item.image}
                     className="w-full duration-500 group-hover:scale-110"
                     alt={item.name}
                   />
+
                   <div className="absolute bottom-[-5rem] start-3 end-3 duration-500 group-hover:bottom-3">
                     <Link
                       to="/shop-cart"
@@ -156,6 +143,7 @@ export default function Index() {
                       Add to Cart
                     </Link>
                   </div>
+
                   <ul className="absolute top-[10px] end-4 space-y-1 opacity-0 duration-500 group-hover:opacity-100 list-none">
                     <li>
                       <Link
@@ -182,17 +170,52 @@ export default function Index() {
                       </Link>
                     </li>
                   </ul>
+
+                  <ul className="absolute top-[10px] start-4 list-none">
+                    {item.offer === true && (
+                      <li>
+                        <Link
+                          to="#"
+                          className="px-2.5 py-0.5 text-[10px] font-bold text-white bg-orange-600 rounded h-5"
+                        >
+                          {item.tag}
+                        </Link>
+                      </li>
+                    )}
+                    {item.tag === "New" && (
+                      <li>
+                        <Link
+                          to="#"
+                          className="px-2.5 py-0.5 text-[10px] font-bold text-white bg-red-600 rounded h-5"
+                        >
+                          {item.tag}
+                        </Link>
+                      </li>
+                    )}
+                    {item.tag === "Featured" && (
+                      <li>
+                        <Link
+                          to="#"
+                          className="px-2.5 py-0.5 text-[10px] font-bold text-white bg-emerald-600 rounded h-5"
+                        >
+                          {item.tag}
+                        </Link>
+                      </li>
+                    )}
+                  </ul>
                 </div>
+
                 <div className="mt-4">
                   <Link
-                    to={`/product-detail-one/${item._id}`}
+                    to={`/product-detail-one/${item.id}`}
                     className="block text-lg font-medium hover:text-orange-500"
                   >
                     {item.name}
                   </Link>
                   <div className="flex items-center justify-between mt-1">
                     <p>
-                      ${item.price || 0}
+                      {item.desRate}{" "}
+                      <del className="text-slate-400">{item.amount}</del>
                     </p>
                     <ul className="font-medium text-amber-400 list-none">
                       <li className="inline">
@@ -218,8 +241,6 @@ export default function Index() {
           </div>
         </div>
       </section>
-
-      {/* Removed End of Season Clearance and Popular Items sections */}
 
       <Footer />
       <Switcher/>
