@@ -48,34 +48,6 @@ export default function Usertab(){
                                 </Link>
                             </li>
 
-                            <li className={`navbar-item account-menu ms-0 ${current === '/user-payment' ? 'active' : '' }`}>
-                                <Link to="/user-payment" className="navbar-link text-slate-400 flex items-center py-2 rounded">
-                                    <span className="me-2 mb-0"><FiCreditCard className="size-4"></FiCreditCard></span>
-                                    <h6 className="mb-0 font-medium">Payment</h6>
-                                </Link>
-                            </li>
-
-                            <li className={`navbar-item account-menu ms-0 ${current === '/user-invoice' ? 'active' : '' }`}>
-                                <Link to="/user-invoice" className="navbar-link text-slate-400 flex items-center py-2 rounded">
-                                    <span className="me-2 mb-0"><FiFileText className="size-4"></FiFileText></span>
-                                    <h6 className="mb-0 font-medium">Invoice</h6>
-                                </Link>
-                            </li>
-
-                            <li className={`navbar-item account-menu ms-0 ${current === '/user-social' ? 'active' : '' }`}>
-                                <Link to="/user-social" className="navbar-link text-slate-400 flex items-center py-2 rounded">
-                                    <span className="me-2 mb-0"><FiShare2 className="size-4"></FiShare2></span>
-                                    <h6 className="mb-0 font-medium">Social Profile</h6>
-                                </Link>
-                            </li>
-
-                            <li className={`navbar-item account-menu ms-0 ${current === '/user-notification' ? 'active' : '' }`}>
-                                <Link to="/user-notification" className="navbar-link text-slate-400 flex items-center py-2 rounded">
-                                    <span className="me-2 mb-0"><FiBell className="size-4"></FiBell></span>
-                                    <h6 className="mb-0 font-medium">Notifications</h6>
-                                </Link>
-                            </li>
-
                             <li className={`navbar-item account-menu ms-0 ${current === '/user-setting' ? 'active' : '' }`}>
                                 <Link to="/user-setting" className="navbar-link text-slate-400 flex items-center py-2 rounded">
                                     <span className="me-2 mb-0"><FiSettings className="size-4"></FiSettings></span>
