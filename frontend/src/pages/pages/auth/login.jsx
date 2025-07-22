@@ -21,14 +21,8 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // const API_BASE = process.env.REACT_APP_BACKEND_URL || "http://localhost:4000/api/auth";
+  const API_BASE = 'https://zyqora.onrender.com/api/auth';
 
-  console.log('Login :: import.meta.env ::', import.meta.env);
-  console.log('Login :: API_BASE ::', import.meta.env.VITE_API_URL);
-  const API_BASE = `${import.meta.env.VITE_API_URL || 'https://zyqora.onrender.com/api'}`;
-  console.log('Login :: API_BASE ::', API_BASE);
-  // Debug: Log the login URL
-  // console.log('Login URL:', loginUrl);
   const handleChange = e => {
     const { name, type, checked, value } = e.target;
     setFormData(prev => ({
@@ -54,7 +48,7 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const res = await axios.post(`${API_BASE}/auth/login`, {
+      const res = await axios.post(`https://zyqora.onrender.com/api/auth/login`, {
         email,
         password,
         rememberMe

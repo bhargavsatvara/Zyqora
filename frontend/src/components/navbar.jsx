@@ -42,7 +42,7 @@ export default function Navbar({ navClass, navlight }) {
     async function fetchDepartments() {
       try {
         console.log("Fetching departments...");
-        const res = await fetch("http://localhost:4000/api/departments");
+        const res = await fetch("https://zyqora.onrender.com/api/departments");
         const data = await res.json();
         console.log("Departments fetched:", data);
         setDepartments(data || []);
@@ -80,7 +80,7 @@ export default function Navbar({ navClass, navlight }) {
     try {
       setLoadingCategories(true);
       console.log(`Fetching categories for department: ${departmentId}`);
-      const res = await fetch(`http://localhost:4000/api/categories?department_id=${departmentId}&limit=1000`);
+      const res = await fetch(`https://zyqora.onrender.com/api/categories?department_id=${departmentId}&limit=1000`);
       const data = await res.json();
       console.log("Categories API response:", data);
       

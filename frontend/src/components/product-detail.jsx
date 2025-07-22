@@ -222,7 +222,7 @@ export default function ProductDetail({ product }) {
 
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
             // Add to cart API call
-            const response = await fetch('http://localhost:4000/api/cart/add', {
+            const response = await fetch('https://zyqora.onrender.com/api/cart/add', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -83,7 +83,7 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
         let clientSecret;
         try {
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-            const res = await fetch('http://localhost:4000/api/orders/checkout', {
+            const res = await fetch('https://zyqora.onrender.com/api/orders/checkout', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -141,7 +141,7 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
         // 4. After payment, send order creation request to backend
         try {
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-            const res = await fetch('http://localhost:4000/api/orders/create', {
+            const res = await fetch('https://zyqora.onrender.com/api/orders/create', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -263,7 +263,7 @@ export default function ShopCheckOut(){
     useEffect(() => {
         async function fetchCountries() {
             try {
-                const res = await fetch('http://localhost:4000/api/countries');
+                const res = await fetch('https://zyqora.onrender.com/api/countries');
                 const data = await res.json();
                 setCountries((data.data && data.data.countries) ? data.data.countries : []);
             } catch (e) {
@@ -284,7 +284,7 @@ export default function ShopCheckOut(){
         }
         async function fetchStates() {
             try {
-                const res = await fetch(`http://localhost:4000/api/states?country_id=${selectedCountry}`);
+                const res = await fetch(`https://zyqora.onrender.com/api/states?country_id=${selectedCountry}`);
                 const data = await res.json();
                 setStates((data.data && data.data.states) ? data.data.states : []);
             } catch (e) {
@@ -303,7 +303,7 @@ export default function ShopCheckOut(){
         }
         async function fetchCities() {
             try {
-                const res = await fetch(`http://localhost:4000/api/cities?state_id=${selectedState}`);
+                const res = await fetch(`https://zyqora.onrender.com/api/cities?state_id=${selectedState}`);
                 const data = await res.json();
                 setCities((data.data && data.data.cities) ? data.data.cities : []);
             } catch (e) {

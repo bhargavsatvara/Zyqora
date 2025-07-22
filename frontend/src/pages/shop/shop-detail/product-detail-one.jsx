@@ -26,7 +26,7 @@ export default function ProductDetailOne(){
         async function fetchProduct() {
             try {
                 setLoading(true);
-                const response = await fetch(`http://localhost:4000/api/products/${id}`);
+                const response = await fetch(`https://zyqora.onrender.com/api/products/${id}`);
                 const data = await response.json();
                 
                 if (data) {

@@ -26,7 +26,7 @@ export default function Signup() {
   const [loading, setLoading]           = useState(false);
 
   const { name, email, password, confirmPassword, acceptTnc } = formData;
-  const API_BASE = process.env.REACT_APP_BACKEND_URL || "http://localhost:4000/api/auth";
+  const API_BASE = 'https://zyqora.onrender.com/api/auth';
 
   const handleChange = e => {
     const { name, value, type, checked } = e.target;

@@ -35,7 +35,7 @@ export default function Products(){
                 ...filters
             });
             
-            const response = await fetch(`http://localhost:4000/api/products?${params}`);
+            const response = await fetch(`https://zyqora.onrender.com/api/products?${params}`);
             const data = await response.json();
             
             if (data.data && data.data.products) {
