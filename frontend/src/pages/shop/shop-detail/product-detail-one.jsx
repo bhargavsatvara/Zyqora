@@ -21,9 +21,6 @@ export default function ProductDetailOne(){
     const [isOpen, setOpen] = useState(false);
     const [images, setImages] = useState([]);
     const navigate = useNavigate();
-    const [selectedSize, setSelectedSize] = useState('');
-    const [selectedColor, setSelectedColor] = useState('');
-    const [addToCartMessage, setAddToCartMessage] = useState('');
 
     useEffect(() => {
         async function fetchProduct() {
@@ -72,58 +69,6 @@ export default function ProductDetailOne(){
         setActiveIndex(index)
         setOpen(true);
     }
-
-    const handleShopNow = () => {
-        console.log("Shop Now clicked");
-        const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-        if (token) {
-            navigate("/shop-checkout");
-        } else {
-            navigate("/login");
-        }
-    };
-
-    const handleAddToCart = async () => {
-        if (sizeOptions.length > 0 && !selectedSize) {
-            alert('Please select a size');
-            return;
-        }
-        if (colorOptions.length > 0 && !selectedColor) {
-            alert('Please select a color');
-            return;
-        }
-        const cartItem = {
-            product_id: product._id,
-            name: product.name,
-            price: product.price,
-            image: product.image,
-            quantity: 1,
-            size: selectedSize,
-            color: selectedColor,
-            stock_qty: product.stock_qty
-        };
-        try {
-            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-            const res = await fetch('http://localhost:4000/api/cart/add', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(token && { 'Authorization': `Bearer ${token}` })
-                },
-                body: JSON.stringify(cartItem)
-            });
-            if (res.ok) {
-                setAddToCartMessage('Added to cart!');
-                setTimeout(() => setAddToCartMessage(''), 2000);
-            } else {
-                setAddToCartMessage('Failed to add to cart');
-                setTimeout(() => setAddToCartMessage(''), 2000);
-            }
-        } catch (err) {
-            setAddToCartMessage('Error adding to cart');
-            setTimeout(() => setAddToCartMessage(''), 2000);
-        }
-    };
 
     // Extract available sizes/colors from product.attributes
     const sizeOptions = product?.attributes?.find(attr => attr.attribute_name.toLowerCase() === 'size')?.attribute_values || [];

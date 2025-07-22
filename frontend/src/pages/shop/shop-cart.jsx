@@ -18,7 +18,6 @@ export default function Shopcart(props){
         total: 0
     });
     const [message, setMessage] = useState('');
-    const [deletingItem, setDeletingItem] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -261,18 +260,10 @@ export default function Shopcart(props){
                                             <td className="p-4">
                                                 <button 
                                                     onClick={() => removeFromCart(item)}
-                                                    className={`transition-colors ${
-                                                        deletingItem === item.product_id
-                                                            ? 'text-red-800 bg-red-100 p-1 rounded'
-                                                            : 'text-red-600 hover:text-red-800'
-                                                    }`}
-                                                    title={deletingItem === item.product_id ? 'Click again to confirm' : 'Remove item'}
+                                                    className="transition-colors text-red-600 hover:text-red-800"
+                                                    title="Remove item"
                                                 >
-                                                    {deletingItem === item.product_id ? (
-                                                        <i className="mdi mdi-delete text-lg"></i>
-                                                    ) : (
-                                                        <i className="mdi mdi-window-close"></i>
-                                                    )}
+                                                    <i className="mdi mdi-window-close"></i>
                                                 </button>
                                             </td>
                                             <td className="p-4">

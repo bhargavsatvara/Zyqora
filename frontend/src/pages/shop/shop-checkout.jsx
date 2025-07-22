@@ -4,7 +4,6 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 
 import Navbar from "../../components/navbar";
-import MobileApp from "../../components/mobile-app";
 import Footer from "../../components/footer";
 import Switcher from "../../components/switcher";
 import ScrollToTop from "../../components/scroll-to-top";
