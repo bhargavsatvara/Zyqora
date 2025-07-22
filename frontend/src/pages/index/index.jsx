@@ -14,6 +14,7 @@ import { FiHeart, FiEye, FiBookmark } from '../../assets/icons/vander';
 import { collections, newProduct } from "../../data/data";
 
 export default function Index() {
+  const [products, setProducts] = useState([]);
   const [days, setDays] = useState(0);
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
@@ -32,6 +33,20 @@ export default function Index() {
   useEffect(() => {
     const interval = setInterval(() => getTime(), 1000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    // Fetch all products from backend
+    async function fetchProducts() {
+      try {
+        const res = await fetch('https://zyqora.onrender.com/api/products?limit=1000');
+        const data = await res.json();
+        setProducts(data.data?.products || []);
+      } catch (err) {
+        setProducts([]);
+      }
+    }
+    fetchProducts();
   }, []);
 
   return (
@@ -124,17 +139,15 @@ export default function Index() {
               Shop the latest products from the most popular collections
             </p>
           </div>
-
           <div className="grid gap-6 pt-6 lg:grid-cols-4 md:grid-cols-3 sm:grid-cols-2 grid-cols-1">
-            {newProduct.slice(0, 12).map((item, index) => (
-              <div className="group" key={index}>
+            {products.slice(0, 8).map((item, index) => (
+              <div className="group" key={item._id || index}>
                 <div className="relative overflow-hidden rounded-md shadow dark:shadow-gray-800 duration-500 group-hover:shadow-lg group-hover:dark:shadow-gray-800">
                   <img
                     src={item.image}
                     className="w-full duration-500 group-hover:scale-110"
                     alt={item.name}
                   />
-
                   <div className="absolute bottom-[-5rem] start-3 end-3 duration-500 group-hover:bottom-3">
                     <Link
                       to="/shop-cart"
@@ -143,7 +156,6 @@ export default function Index() {
                       Add to Cart
                     </Link>
                   </div>
-
                   <ul className="absolute top-[10px] end-4 space-y-1 opacity-0 duration-500 group-hover:opacity-100 list-none">
                     <li>
                       <Link
@@ -170,52 +182,17 @@ export default function Index() {
                       </Link>
                     </li>
                   </ul>
-
-                  <ul className="absolute top-[10px] start-4 list-none">
-                    {item.offer === true && (
-                      <li>
-                        <Link
-                          to="#"
-                          className="px-2.5 py-0.5 text-[10px] font-bold text-white bg-orange-600 rounded h-5"
-                        >
-                          {item.tag}
-                        </Link>
-                      </li>
-                    )}
-                    {item.tag === "New" && (
-                      <li>
-                        <Link
-                          to="#"
-                          className="px-2.5 py-0.5 text-[10px] font-bold text-white bg-red-600 rounded h-5"
-                        >
-                          {item.tag}
-                        </Link>
-                      </li>
-                    )}
-                    {item.tag === "Featured" && (
-                      <li>
-                        <Link
-                          to="#"
-                          className="px-2.5 py-0.5 text-[10px] font-bold text-white bg-emerald-600 rounded h-5"
-                        >
-                          {item.tag}
-                        </Link>
-                      </li>
-                    )}
-                  </ul>
                 </div>
-
                 <div className="mt-4">
                   <Link
-                    to={`/product-detail-one/${item.id}`}
+                    to={`/product-detail-one/${item._id}`}
                     className="block text-lg font-medium hover:text-orange-500"
                   >
                     {item.name}
                   </Link>
                   <div className="flex items-center justify-between mt-1">
                     <p>
-                      {item.desRate}{" "}
-                      <del className="text-slate-400">{item.amount}</del>
+                      ${item.price || 0}
                     </p>
                     <ul className="font-medium text-amber-400 list-none">
                       <li className="inline">
@@ -238,167 +215,11 @@ export default function Index() {
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-
-        {/* CTA Section with countdown */}
-        <div className="container-fluid relative mt-16 md:mt-24">
-          <div className="relative overflow-hidden py-24 px-4 md:px-10 text-center bg-orange-600 bg-cover bg-no-repeat" style={{ backgroundImage: `url(${ctaImg})` }}>
-            <h3 className="mb-6 text-4xl font-bold leading-normal tracking-wide text-white">
-              End of Season Clearance <br /> Sale up to 30%
-            </h3>
-            <div id="countdown" className="mt-6">
-              <ul className="inline-block space-x-1 text-center list-none">
-                <li className="inline-block w-20 h-20 mx-1 text-2xl font-medium text-white leading-[72px] rounded-md shadow shadow-gray-100">
-                  {days}
-                  <p className="mt-1 text-sm">Days</p>
-                </li>
-                <li className="inline-block w-20 h-20 mx-1 text-2xl font-medium text-white leading-[72px] rounded-md shadow shadow-gray-100">
-                  {hours}
-                  <p className="mt-1 text-sm">Hours</p>
-                </li>
-                <li className="inline-block w-20 h-20 mx-1 text-2xl font-medium text-white leading-[72px] rounded-md shadow shadow-gray-100">
-                  {minutes}
-                  <p className="mt-1 text-sm">Mins</p>
-                </li>
-                <li className="inline-block w-20 h-20 mx-1 text-2xl font-medium text-white leading-[72px] rounded-md shadow shadow-gray-100">
-                  {seconds}
-                  <p className="mt-1 text-sm">Secs</p>
-                </li>
-              </ul>
-            </div>
-            <div className="mt-4">
-              <Link
-                to="/sale"
-                className="inline-block px-5 py-2 font-semibold text-orange-500 bg-white rounded-md tracking-wide align-middle"
-              >
-                <i className="mdi mdi-cart-outline"></i> Shop Now
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* Popular Items Section */}
-        <div className="container relative mt-16 md:mt-24">
-          <div className="grid items-end mb-6 md:grid-cols-2">
-            <div className="text-center md:text-start">
-              <h5 className="mb-4 text-3xl font-semibold leading-normal">
-                Popular Items
-              </h5>
-              <p className="max-w-xl text-slate-500 text-xl">
-                Popular items this week
-              </p>
-            </div>
-            <div className="hidden text-end md:block">
-              <Link to="/shop-grid" className="text-slate-400 hover:text-orange-500">
-                See More Items <i className="mdi mdi-arrow-right"></i>
-              </Link>
-            </div>
-          </div>
-
-          <div className="grid gap-6 pt-6 lg:grid-cols-4 md:grid-cols-3 sm:grid-cols-2 grid-cols-1">
-            {newProduct.slice(12, 16).map((item, index) => (
-              <div className="group" key={index}>
-                <div className="relative overflow-hidden rounded-md shadow dark:shadow-gray-800 duration-500 group-hover:shadow-lg group-hover:dark:shadow-gray-800">
-                  <img
-                    src={item.image}
-                    className="w-full duration-500 group-hover:scale-110"
-                    alt={item.name}
-                  />
-
-                  <div className="absolute bottom-[-5rem] start-3 end-3 duration-500 group-hover:bottom-3">
-                    <Link
-                      to="/shop-cart"
-                      className="inline-block w-full px-5 py-2 text-base font-semibold text-white bg-slate-900 rounded-md tracking-wide align-middle duration-500 text-center"
-                    >
-                      Add to Cart
-                    </Link>
-                  </div>
-
-                  <ul className="absolute top-[10px] end-4 space-y-1 opacity-0 duration-500 group-hover:opacity-100 list-none">
-                    <li>
-                      <Link
-                        to="#"
-                        className="inline-flex items-center justify-center w-10 h-10 text-slate-900 bg-white rounded-full shadow duration-500 hover:bg-slate-900 hover:text-white"
-                      >
-                        <FiHeart className="w-4 h-4" />
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        to="/shop-item-detail"
-                        className="inline-flex items-center justify-center w-10 h-10 text-slate-900 bg-white rounded-full shadow duration-500 hover:bg-slate-900 hover:text-white"
-                      >
-                        <FiEye className="w-4 h-4" />
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        to="#"
-                        className="inline-flex items-center justify-center w-10 h-10 text-slate-900 bg-white rounded-full shadow duration-500 hover:bg-slate-900 hover:text-white"
-                      >
-                        <FiBookmark className="w-4 h-4" />
-                      </Link>
-                    </li>
-                  </ul>
-
-                  <ul className="absolute top-[10px] start-4 list-none">
-                    {item.tag !== "" && (
-                      <li>
-                        <Link
-                          to="#"
-                          className="px-2.5 py-0.5 text-[10px] font-bold text-white bg-red-600 rounded h-5"
-                        >
-                          New
-                        </Link>
-                      </li>
-                    )}
-                  </ul>
-                </div>
-
-                <div className="mt-4">
-                  <Link
-                    to={`/product-detail-one/${item.id}`}
-                    className="block text-lg font-medium hover:text-orange-500"
-                  >
-                    {item.name}
-                  </Link>
-                  <div className="flex items-center justify-between mt-1">
-                    <p>
-                      {item.desRate} <del className="text-slate-400">{item.rate}</del>
-                    </p>
-                    <ul className="font-medium text-amber-400 list-none">
-                      <li className="inline">
-                        <i className="mdi mdi-star"></i>
-                      </li>
-                      <li className="inline">
-                        <i className="mdi mdi-star"></i>
-                      </li>
-                      <li className="inline">
-                        <i className="mdi mdi-star"></i>
-                      </li>
-                      <li className="inline">
-                        <i className="mdi mdi-star"></i>
-                      </li>
-                      <li className="inline">
-                        <i className="mdi mdi-star"></i>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-1 mt-6">
-            <div className="block text-center md:hidden">
-              <Link to="/shop-grid" className="text-slate-400 hover:text-orange-500">
-                See More Items <i className="mdi mdi-arrow-right"></i>
-              </Link>
-            </div>
           </div>
         </div>
       </section>
+
+      {/* Removed End of Season Clearance and Popular Items sections */}
 
       <Footer />
       <Switcher/>
