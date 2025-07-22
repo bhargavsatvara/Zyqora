@@ -59,28 +59,33 @@ export default function Footer() {
 
                 {/* shopping links */}
                 <div className="lg:col-span-6 md:col-span-12">
-                  <h5 className="tracking-[1px] text-gray-100 font-semibold">
-                    Shopping & Clothes
-                  </h5>
-                  <div className="grid md:grid-cols-12 grid-cols-1">
-                    {[footerShopping1, footerShopping2, footerShopping3].map(
-                      (list, col) => (
-                        <div className="md:col-span-4" key={col}>
-                          <ul className="list-none footer-list mt-6">
-                            {list.map((item, i) => (
-                              <li className="ms-0 mt-[10px]" key={i}>
-                                <Link
-                                  to=""
-                                  className="text-gray-300 hover:text-gray-400 duration-500 ease-in-out"
-                                >
-                                  <i className="mdi mdi-chevron-right" /> {item}
-                                </Link>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )
-                    )}
+                  <div className="grid md:grid-cols-3 grid-cols-1 gap-6">
+                    {/* About Us */}
+                    <div>
+                      <h5 className="tracking-[1px] text-gray-100 font-semibold">About Us</h5>
+                      <ul className="list-none footer-list mt-6">
+                        <li className="ms-0 mt-[10px]"><Link to="/aboutus" className="text-gray-300 hover:text-gray-400 duration-500 ease-in-out"><i className="mdi mdi-chevron-right" /> About Us</Link></li>
+                      </ul>
+                    </div>
+                    {/* Help Center */}
+                    <div>
+                      <h5 className="tracking-[1px] text-gray-100 font-semibold">Help Center</h5>
+                      <ul className="list-none footer-list mt-6">
+                        <li className="ms-0 mt-[10px]"><Link to="/helpcenter" className="text-gray-300 hover:text-gray-400 duration-500 ease-in-out"><i className="mdi mdi-chevron-right" /> Overview</Link></li>
+                        <li className="ms-0 mt-[10px]"><Link to="/helpcenter-faqs" className="text-gray-300 hover:text-gray-400 duration-500 ease-in-out"><i className="mdi mdi-chevron-right" /> FAQ</Link></li>
+                        <li className="ms-0 mt-[10px]"><Link to="/helpcenter-guides" className="text-gray-300 hover:text-gray-400 duration-500 ease-in-out"><i className="mdi mdi-chevron-right" /> Guides</Link></li>
+                        <li className="ms-0 mt-[10px]"><Link to="/helpcenter-support" className="text-gray-300 hover:text-gray-400 duration-500 ease-in-out"><i className="mdi mdi-chevron-right" /> Support</Link></li>
+                      </ul>
+                    </div>
+                    {/* Utilities */}
+                    <div>
+                      <h5 className="tracking-[1px] text-gray-100 font-semibold">Utilities</h5>
+                      <ul className="list-none footer-list mt-6">
+                        <li className="ms-0 mt-[10px]"><Link to="/terms" className="text-gray-300 hover:text-gray-400 duration-500 ease-in-out"><i className="mdi mdi-chevron-right" /> Terms of Service</Link></li>
+                        <li className="ms-0 mt-[10px]"><Link to="/privacy" className="text-gray-300 hover:text-gray-400 duration-500 ease-in-out"><i className="mdi mdi-chevron-right" /> Privacy Policy</Link></li>
+                        <li className="ms-0 mt-[10px]"><Link to="/contact" className="text-gray-300 hover:text-gray-400 duration-500 ease-in-out"><i className="mdi mdi-chevron-right" /> Contact Us</Link></li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
 
