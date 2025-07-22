@@ -9,6 +9,9 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Debug: Log environment variables
+    console.log('import.meta.env:', import.meta.env);
+    console.log('VITE_API_URL:', import.meta.env.VITE_API_URL);
     // Check if user is already logged in
     const token = localStorage.getItem('adminToken');
     
@@ -36,8 +39,12 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     try {
+      const apiUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}`;
+      const loginUrl = `${apiUrl}/auth/admin-login`;
+      // Debug: Log the login URL
+      console.log('Login URL:', loginUrl);
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/auth/admin-login`,
+        loginUrl,
         { email, password }
       );
       const { token, user: userData } = response.data;
