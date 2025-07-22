@@ -331,7 +331,6 @@ export default function Shopcart(props){
                 )}
             </div>
 
-            <MobileApp/>
         </section>
         <Footer/>
         <Switcher/>
