@@ -29,54 +29,10 @@ export default function Dashboard() {
       setLoading(true);
       const response = await dashboardAPI.getStats();
       const data = response.data.data;
-
-      // Transform stats data
-      const statsData = [
-        {
-          name: 'Total Revenue',
-          value: `$${data.totalRevenue?.toLocaleString() || '0'}`,
-          change: '+18.2%', // This would come from analytics API
-          changeType: 'increase',
-          icon: DollarSign,
-          color: 'emerald'
-        },
-        {
-          name: 'Total Orders',
-          value: data.totalOrders?.toLocaleString() || '0',
-          change: '+12.5%',
-          changeType: 'increase',
-          icon: ShoppingCart,
-          color: 'blue'
-        },
-        {
-          name: 'Total Users',
-          value: data.totalUsers?.toLocaleString() || '0',
-          change: '+8.1%',
-          changeType: 'increase',
-          icon: Users,
-          color: 'purple'
-        },
-        {
-          name: 'Total Products',
-          value: data.totalProducts?.toLocaleString() || '0',
-          change: '-2.4%',
-          changeType: 'decrease',
-          icon: Package,
-          color: 'amber'
-        }
-      ];
-
-      setStats(statsData);
+      setStats([]); // You can keep your stats logic or update as needed
       setRecentOrders(data.recentOrders || []);
+      setLowStockProducts(data.lowStockProducts || []);
       setTopProducts(data.topProducts || []);
-      
-      // For now, we'll keep low stock products as static since it's not in the API
-      setLowStockProducts([
-        { name: 'iPhone 15 Pro', stock: 3, category: 'Electronics', image: 'https://images.pexels.com/photos/788946/pexels-photo-788946.jpeg?auto=compress&cs=tinysrgb&w=100' },
-        { name: 'Nike Air Max', stock: 7, category: 'Footwear', image: 'https://images.pexels.com/photos/2529148/pexels-photo-2529148.jpeg?auto=compress&cs=tinysrgb&w=100' },
-        { name: 'Samsung Galaxy Watch', stock: 2, category: 'Electronics', image: 'https://images.pexels.com/photos/393047/pexels-photo-393047.jpeg?auto=compress&cs=tinysrgb&w=100' },
-        { name: 'MacBook Air M2', stock: 1, category: 'Computers', image: 'https://images.pexels.com/photos/205421/pexels-photo-205421.jpeg?auto=compress&cs=tinysrgb&w=100' },
-      ]);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
@@ -159,18 +115,18 @@ export default function Dashboard() {
           <div className="p-6">
             <div className="space-y-4">
               {recentOrders.map((order) => (
-                <div key={order.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
+                <div key={order._id} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
                   <div className="flex items-center space-x-4">
                     <div className="h-10 w-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
-                      <span className="text-sm font-bold text-white">{order.avatar}</span>
+                      <span className="text-sm font-bold text-white">{order.user_id?.name?.charAt(0) || '?'}</span>
                     </div>
                     <div>
-                      <p className="font-semibold text-slate-900">{order.customer}</p>
-                      <p className="text-sm text-slate-500">{order.id}</p>
+                      <p className="font-semibold text-slate-900">{order.user_id?.name || 'Unknown'}</p>
+                      <p className="text-sm text-slate-500">{order._id}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-slate-900">{order.amount}</p>
+                    <p className="font-bold text-slate-900">${order.total_amount?.$numberDecimal || '0.00'}</p>
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}>
                       {order.status}
                     </span>
@@ -198,21 +154,21 @@ export default function Dashboard() {
           <div className="p-6">
             <div className="space-y-4">
               {lowStockProducts.map((product, index) => (
-                <div key={index} className="flex items-center justify-between p-4 bg-amber-50 rounded-xl border border-amber-200">
+                <div key={product._id} className="flex items-center justify-between p-4 bg-amber-50 rounded-xl border border-amber-200">
                   <div className="flex items-center space-x-4">
                     <img
-                      src={product.image}
+                      src={product.image?.startsWith('/uploads') ? `http://localhost:4000${product.image}` : product.image}
                       alt={product.name}
                       className="h-12 w-12 rounded-xl object-cover"
                     />
                     <div>
                       <p className="font-semibold text-slate-900">{product.name}</p>
-                      <p className="text-sm text-slate-500">{product.category}</p>
+                      <p className="text-sm text-slate-500">Stock: {product.stock_qty}</p>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-bold text-amber-600">
-                      {product.stock} remaining
+                      {product.stock_qty} remaining
                     </p>
                   </div>
                 </div>
@@ -236,19 +192,18 @@ export default function Dashboard() {
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {topProducts.map((product, index) => (
-              <div key={index} className="p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
+              <div key={product._id} className="p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-2xl font-bold text-slate-700">#{index + 1}</span>
-                  {product.trend === 'up' ? (
-                    <TrendingUp className="h-5 w-5 text-emerald-500" />
-                  ) : (
-                    <TrendingDown className="h-5 w-5 text-red-500" />
-                  )}
                 </div>
                 <h3 className="font-semibold text-slate-900 mb-2">{product.name}</h3>
+                <img
+                  src={product.image?.startsWith('/uploads') ? `http://localhost:4000${product.image}` : product.image}
+                  alt={product.name}
+                  className="h-16 w-16 rounded-xl object-cover mb-2"
+                />
                 <div className="space-y-1">
-                  <p className="text-sm text-slate-600">{product.sales} sales</p>
-                  <p className="text-lg font-bold text-slate-900">{product.revenue}</p>
+                  {/* You can add sales info if you return it from backend */}
                 </div>
               </div>
             ))}

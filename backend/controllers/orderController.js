@@ -89,7 +89,7 @@ exports.createOrder = async (req, res) => {
         )
       );
       console.log('Cart after:', cart.items);
-      await cart.save();
+    await cart.save();
     }
 
     res.status(201).json({ success: true, order });
