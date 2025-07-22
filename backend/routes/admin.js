@@ -8,72 +8,13 @@ const Review = require('../models/review');
 const Category = require('../models/category');
 const Brand = require('../models/brand');
 const Coupon = require('../models/Coupon');
+const { getDashboardStats } = require('../controllers/adminController');
 
 // Apply admin middleware to all routes
 router.use(authenticate, authorizeAdmin);
 
 // Dashboard Analytics
-router.get('/dashboard', async (req, res) => {
-  try {
-    const [
-      totalUsers,
-      totalProducts,
-      totalOrders,
-      totalRevenue,
-      recentOrders,
-      topProducts,
-      userGrowth,
-      orderStats
-    ] = await Promise.all([
-      User.countDocuments(),
-      Product.countDocuments(),
-      Order.countDocuments(),
-      Order.aggregate([
-        { $match: { status: { $in: ['completed', 'delivered'] } } },
-        { $group: { _id: null, total: { $sum: '$totalAmount' } } }
-      ]),
-      Order.find().sort({ createdAt: -1 }).limit(5).populate('user', 'name email'),
-      Product.find().sort({ salesCount: -1 }).limit(5).select('name price salesCount'),
-      User.aggregate([
-        {
-          $group: {
-            _id: {
-              year: { $year: '$createdAt' },
-              month: { $month: '$createdAt' }
-            },
-            count: { $sum: 1 }
-          }
-        },
-        { $sort: { '_id.year': -1, '_id.month': -1 } },
-        { $limit: 6 }
-      ]),
-      Order.aggregate([
-        {
-          $group: {
-            _id: '$status',
-            count: { $sum: 1 }
-          }
-        }
-      ])
-    ]);
-
-    res.json({
-      success: true,
-      data: {
-        totalUsers,
-        totalProducts,
-        totalOrders,
-        totalRevenue: totalRevenue[0]?.total || 0,
-        recentOrders,
-        topProducts,
-        userGrowth,
-        orderStats
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
+router.get('/dashboard', getDashboardStats);
 
 // User Management
 router.get('/users', async (req, res) => {

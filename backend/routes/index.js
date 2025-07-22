@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const path = require('path');
 
 // Import all route modules
 const authRoutes = require('./auth');
@@ -22,6 +24,24 @@ const materialRoutes = require('./materials');
 const couponRoutes = require('./coupons');
 const adminRoutes = require('./admin');
 const sizeChartRoutes = require('./sizeCharts');
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, '../uploads/categories'));
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+const upload = multer({ storage: storage });
+
+// Image upload endpoint
+router.post('/upload/category-image', upload.single('image'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ message: 'No file uploaded' });
+  }
+  res.json({ path: `/uploads/categories/${req.file.filename}` });
+});
 
 // Mount routes
 router.use('/auth', authRoutes);

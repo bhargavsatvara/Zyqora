@@ -233,7 +233,7 @@ export default function Categories() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {category.image ? (
-                      <img src={category.image} alt={category.name} className="w-12 h-12 object-cover rounded-lg border" />
+                      <img src={category.image.startsWith('/uploads') ? `http://localhost:4000${category.image}` : category.image} alt={category.name} className="w-12 h-12 object-cover rounded-lg border" />
                     ) : (
                       <span className="text-slate-400">No Image</span>
                     )}

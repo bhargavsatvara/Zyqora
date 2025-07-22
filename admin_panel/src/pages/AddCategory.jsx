@@ -63,11 +63,22 @@ export default function AddCategory() {
     }
   };
 
-  const handleImageChange = (e) => {
+  const uploadImage = async (file) => {
+    const data = new FormData();
+    data.append('image', file);
+    const response = await fetch('http://localhost:4000/api/upload/category-image', {
+      method: 'POST',
+      body: data,
+    });
+    const result = await response.json();
+    return result.path;
+  };
+
+  const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      // For now, just use a local URL preview (in real use, upload to server or cloud)
-      setFormData(prev => ({ ...prev, image: URL.createObjectURL(file) }));
+      const imagePath = await uploadImage(file);
+      setFormData(prev => ({ ...prev, image: imagePath }));
     }
   };
 
@@ -135,7 +146,7 @@ export default function AddCategory() {
             className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           />
           {formData.image && (
-            <img src={formData.image} alt="Preview" className="mt-2 w-32 h-32 object-cover rounded-lg border" />
+            <img src={formData.image.startsWith('/uploads') ? `http://localhost:4000${formData.image}` : formData.image} alt="Preview" className="mt-2 w-32 h-32 object-cover rounded-lg border" />
           )}
         </div>
         <div>

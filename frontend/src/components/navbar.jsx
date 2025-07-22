@@ -391,9 +391,9 @@ export default function Navbar({ navClass, navlight }) {
                           className="flex flex-col items-center group cursor-pointer"
                           onClick={() => handleCategoryClick(cat)}
                         >
-                          <div className="w-14 h-14 rounded-full mb-2 object-cover border group-hover:scale-110 transition-transform bg-gray-100 flex items-center justify-center">
+                          <div className="w-14 h-14 rounded-full mb-2 border group-hover:scale-110 transition-transform bg-gray-100 flex items-center justify-center overflow-hidden">
                             {cat.image ? (
-                              <img src={cat.image} alt={cat.name} className="w-full h-full rounded-full object-cover" />
+                              <img src={cat.image.startsWith('/uploads') ? `http://localhost:4000${cat.image}` : cat.image} alt={cat.name} className="w-12 h-12 rounded-full object-cover" />
                             ) : (
                               <span className="text-gray-500 text-xs text-center">{cat.name.charAt(0)}</span>
                             )}
@@ -454,6 +454,11 @@ export default function Navbar({ navClass, navlight }) {
                                   setMobileOpenDept(null);
                                 }}
                               >
+                                {cat.image ? (
+                                  <img src={cat.image ? (cat.image.startsWith('/uploads') ? `http://localhost:4000${cat.image}` : cat.image) : '/default-category.png'} alt={cat.name} className="w-8 h-8 rounded-full object-cover inline-block mr-2 align-middle" />
+                                ) : (
+                                  <span className="text-gray-500 text-xs text-center">{cat.name.charAt(0)}</span>
+                                )}
                                 {cat.name}
                               </button>
                             </li>
