@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
 import Navbar from "../../../components/navbar";
@@ -25,29 +25,8 @@ export default function Products(){
         max_price: ''
     });
 
-    // Handle URL parameters on component mount
-    useEffect(() => {
-        const categoryId = searchParams.get('category_id');
-        const departmentId = searchParams.get('department_id');
-        const brandId = searchParams.get('brand_id');
-        const search = searchParams.get('search');
-        
-        if (categoryId || departmentId || brandId || search) {
-            setFilters(prev => ({
-                ...prev,
-                category_id: categoryId || '',
-                department_id: departmentId || '',
-                brand_id: brandId || '',
-                search: search || ''
-            }));
-        }
-    }, [searchParams]);
-
-    useEffect(() => {
-        fetchProducts();
-    }, [currentPage, filters]);
-
-    const fetchProducts = async () => {
+    // Wrap fetchProducts in useCallback
+    const fetchProducts = useCallback(async () => {
         setLoading(true);
         try {
             const params = new URLSearchParams({
@@ -70,7 +49,29 @@ export default function Products(){
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentPage, filters]);
+
+    // Handle URL parameters on component mount
+    useEffect(() => {
+        const categoryId = searchParams.get('category_id');
+        const departmentId = searchParams.get('department_id');
+        const brandId = searchParams.get('brand_id');
+        const search = searchParams.get('search');
+        
+        if (categoryId || departmentId || brandId || search) {
+            setFilters(prev => ({
+                ...prev,
+                category_id: categoryId || '',
+                department_id: departmentId || '',
+                brand_id: brandId || '',
+                search: search || ''
+            }));
+        }
+    }, [searchParams]);
+
+    useEffect(() => {
+        fetchProducts();
+    }, [fetchProducts]);
 
     const handleFilterChange = (newFilters) => {
         setFilters(prev => ({ ...prev, ...newFilters }));

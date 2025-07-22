@@ -4,11 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import logoDark from "../assets/images/logo.png";
 import logoWhite from "../assets/images/logo.png";
 import logoLight from "../assets/images/logo.png";
-import product1 from "../assets/images/shop/trendy-shirt.jpg";
-import product2 from "../assets/images/shop/luxurious-bag2.jpg";
-import product3 from "../assets/images/shop/apple-smart-watch.jpg";
 import client from "../assets/images/client/16.jpg";
-import ctaImg from "../assets/images/cta.png";
 
 import {
   FiSearch,
@@ -27,8 +23,6 @@ import { useCart } from "../contexts/CartContext";
 export default function Navbar({ navClass, navlight }) {
   const [scrolling, setScrolling] = useState(false);
   const [isToggle, setToggle] = useState(false);
-  const [manu, setManu] = useState("");
-  const [subManu, setSubManu] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [cartManu, setCartManu] = useState(false);
   const [userManu, setUserManu] = useState(false);
@@ -71,7 +65,6 @@ export default function Navbar({ navClass, navlight }) {
   }, []);
 
   // --- CATEGORY DROPDOWN STATE ---
-  const [categories, setCategories] = useState([]);
   const [hoveredDept, setHoveredDept] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [departmentCategories, setDepartmentCategories] = useState({});
@@ -87,7 +80,7 @@ export default function Navbar({ navClass, navlight }) {
     try {
       setLoadingCategories(true);
       console.log(`Fetching categories for department: ${departmentId}`);
-      const res = await fetch(`http://localhost:4000/api/categories?department_id=${departmentId}`);
+      const res = await fetch(`http://localhost:4000/api/categories?department_id=${departmentId}&limit=1000`);
       const data = await res.json();
       console.log("Categories API response:", data);
       
@@ -216,8 +209,6 @@ export default function Navbar({ navClass, navlight }) {
 
     // initialize menu based on current path
     const current = window.location.pathname;
-    setManu(current);
-    setSubManu(current);
     window.scrollTo(0, 0);
 
     return () => {
@@ -257,6 +248,11 @@ export default function Navbar({ navClass, navlight }) {
   const { cartData, totals } = useCart();
   const cartCount = cartData.reduce((sum, item) => sum + item.quantity, 0);
   const cartTotal = totals.total;
+
+  // Add state for mobile menu
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  // Add state for open department in mobile menu
+  const [mobileOpenDept, setMobileOpenDept] = useState(null);
 
   return (
     <nav id="topnav" className={`${navClass} ${scrolling ? "nav-sticky" : ""}`}>
@@ -298,8 +294,8 @@ export default function Navbar({ navClass, navlight }) {
           </Link>
         )}
 
-        {/* Horizontal Category Navigation Bar (centered, reduced width) */}
-        <div className="flex-1 flex items-center justify-center mx-4 relative">
+        {/* Horizontal menu for desktop */}
+        <div className="flex-1 items-center justify-center mx-4 relative hidden md:flex">
           <div className="relative w-[700px] max-w-full flex items-center justify-center">
             <button
               className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full shadow p-2"
@@ -413,21 +409,78 @@ export default function Navbar({ navClass, navlight }) {
           </div>
         </div>
 
+        {/* Mobile side drawer menu */}
+        {mobileMenuOpen && (
+          <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex">
+            <div className="w-72 bg-white dark:bg-slate-900 h-full shadow-lg p-6 overflow-y-auto relative">
+              <button
+                aria-label="Close menu"
+                className="absolute top-4 right-4 p-2 rounded focus:outline-none focus:ring-2 focus:ring-orange-500"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <span className="sr-only">Close menu</span>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+              <h3 className="text-lg font-semibold mb-4">Departments</h3>
+              <ul>
+                {departments.map(dep => (
+                  <li key={dep._id || dep.name} className="mb-2">
+                    <button
+                      className="w-full text-left font-medium text-gray-800 hover:text-orange-600 flex items-center justify-between"
+                      onClick={async () => {
+                        if (mobileOpenDept !== dep._id && !departmentCategories[dep._id]) {
+                          setLoadingCategories(true);
+                          await fetchCategoriesForDepartment(dep._id);
+                          setLoadingCategories(false);
+                        }
+                        setMobileOpenDept(mobileOpenDept === dep._id ? null : dep._id);
+                      }}
+                    >
+                      {dep.name}
+                      <svg className={`w-4 h-4 ml-2 transition-transform ${mobileOpenDept === dep._id ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                    </button>
+                    {mobileOpenDept === dep._id && (
+                      loadingCategories ? (
+                        <div className="ml-4 mt-2 text-gray-400 text-sm">Loading...</div>
+                      ) : (
+                        <ul className="ml-4 mt-2">
+                          {(departmentCategories[dep._id] || []).map(cat => (
+                            <li key={cat._id} className="mb-1">
+                              <button
+                                className="text-sm text-gray-700 hover:text-orange-500"
+                                onClick={() => {
+                                  handleCategoryClick(cat);
+                                  setMobileMenuOpen(false);
+                                  setMobileOpenDept(null);
+                                }}
+                              >
+                                {cat.name}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="flex-1" onClick={() => setMobileMenuOpen(false)}></div>
+          </div>
+        )}
+
         {/* Menu Extras (search, cart, wishlist, user) - now inline to the right of the scrollbar */}
         <div className="menu-extras flex items-center">
-          <div className="menu-item">
-            <Link
-              className={`navbar-toggle ${isToggle ? "open" : ""}`}
-              onClick={toggleMenu}
+          {!mobileMenuOpen && (
+            <button
+              aria-label="Open menu"
+              className="p-2 rounded focus:outline-none focus:ring-2 focus:ring-orange-500 md:hidden"
+              onClick={() => setMobileMenuOpen(true)}
             >
-              <div className="lines">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-            </Link>
-          </div>
-
+              <span className="sr-only">Open menu</span>
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+            </button>
+          )}
           {/* Search */}
           <li className="dropdown inline-block relative pe-1" ref={dropdownRef}>
             <button

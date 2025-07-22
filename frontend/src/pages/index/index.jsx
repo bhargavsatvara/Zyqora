@@ -83,7 +83,7 @@ export default function Index() {
       </section>
 
       {/* Collections Section */}
-      <section className="relative py-16 md:py-24">
+      <section className="relative py-16 md:py-24 hidden md:block">
         <div className="container relative">
           <div className="grid grid-cols-1 justify-center mb-6 text-center">
             <h5 className="mb-4 text-3xl font-semibold leading-normal">
