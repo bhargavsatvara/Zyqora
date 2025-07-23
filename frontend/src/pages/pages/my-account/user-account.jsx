@@ -17,7 +17,7 @@ export default function UserAccount() {
 		if (!token) return;
 		setLoading(true);
 		// Fetch orders
-		fetch('http://localhost:4000/api/orders', {
+		fetch('https://zyqora.onrender.com/api/orders', {
 			headers: {
 				'Authorization': `Bearer ${token}`
 			}
@@ -31,7 +31,7 @@ export default function UserAccount() {
 				}
 			});
 		// Fetch wishlist
-		fetch('http://localhost:4000/api/wishlist', {
+		fetch('https://zyqora.onrender.com/api/wishlist', {
 			headers: {
 				'Authorization': `Bearer ${token}`
 			}
@@ -49,7 +49,7 @@ export default function UserAccount() {
 		const token = localStorage.getItem('token') || sessionStorage.getItem('token');
 		if (token) {
 			// Remove from backend
-			await fetch(`http://localhost:4000/api/wishlist/remove/${item._id || item.productId?._id || item.productId}`, {
+			await fetch(`https://zyqora.onrender.com/api/wishlist/remove/${item._id || item.productId?._id || item.productId}`, {
 				method: 'DELETE',
 				headers: {
 					'Authorization': `Bearer ${token}`

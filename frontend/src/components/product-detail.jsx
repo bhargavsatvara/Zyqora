@@ -162,7 +162,7 @@ export default function ProductDetail({ product }) {
 
     useEffect(() => {
       if (product && product._id) {
-        fetch(`http://localhost:4000/api/reviews/${product._id}`)
+        fetch(`https://zyqora.onrender.com/api/reviews/${product._id}`)
           .then(res => res.json())
           .then(data => {
             if (Array.isArray(data)) {

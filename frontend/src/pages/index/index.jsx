@@ -37,7 +37,7 @@ export default function Index() {
   useEffect(() => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (token) {
-      fetch('http://localhost:4000/api/wishlist', {
+      fetch('https://zyqora.onrender.com/api/wishlist', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -57,7 +57,7 @@ export default function Index() {
   const handleAddToWishlist = async (item) => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (token) {
-      await fetch('http://localhost:4000/api/wishlist/add', {
+      await fetch('https://zyqora.onrender.com/api/wishlist/add', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -84,7 +84,7 @@ export default function Index() {
       const ratings = {};
       await Promise.all(newProduct.map(async (item) => {
         if (item._id) {
-          const res = await fetch(`http://localhost:4000/api/reviews/${item._id}`);
+          const res = await fetch(`https://zyqora.onrender.com/api/reviews/${item._id}`);
           const data = await res.json();
           if (Array.isArray(data) && data.length > 0) {
             const avg = data.reduce((sum, r) => sum + (Number(r.rating) || 0), 0) / data.length;

@@ -31,7 +31,7 @@ export default function UserSetting() {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (!token) return;
     setLoading(true);
-    fetch('http://localhost:4000/api/user/profile', {
+    fetch('https://zyqora.onrender.com/api/user/profile', {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -75,7 +75,7 @@ export default function UserSetting() {
     setSuccess('');
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     try {
-      const res = await fetch('http://localhost:4000/api/user/profile', {
+      const res = await fetch('https://zyqora.onrender.com/api/user/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -113,7 +113,7 @@ export default function UserSetting() {
     setSubmittingPassword(true);
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     try {
-      const res = await fetch('http://localhost:4000/api/user/password', {
+      const res = await fetch('https://zyqora.onrender.com/api/user/password', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

@@ -193,7 +193,7 @@ export default function Shopcart(props){
         
         // If image starts with /uploads, it's a local file
         if (imagePath.startsWith('/uploads')) {
-            return `http://localhost:4000${imagePath}`;
+            return `https://zyqora.onrender.com${imagePath}`;
         }
         
         // Default fallback

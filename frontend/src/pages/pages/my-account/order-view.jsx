@@ -24,7 +24,7 @@ export default function OrderView() {
       setError("");
       const token = localStorage.getItem("token") || sessionStorage.getItem("token");
       try {
-        const res = await fetch(`http://localhost:4000/api/orders/${id}`, {
+        const res = await fetch(`https://zyqora.onrender.com/api/orders/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         const data = await res.json();
@@ -46,7 +46,7 @@ export default function OrderView() {
   useEffect(() => {
     if (order && order.order_items) {
       order.order_items.forEach(item => {
-        fetch(`http://localhost:4000/api/reviews/${item.product_id}`)
+        fetch(`https://zyqora.onrender.com/api/reviews/${item.product_id}`)
           .then(res => res.json())
           .then(data => {
             setProductReviews(prev => ({ ...prev, [item.product_id]: data }));
@@ -78,7 +78,7 @@ export default function OrderView() {
     setReviewSuccess("");
     const token = localStorage.getItem("token") || sessionStorage.getItem("token");
     try {
-      const res = await fetch(`http://localhost:4000/api/reviews/add`, {
+      const res = await fetch(`https://zyqora.onrender.com/api/reviews/add`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -14,7 +14,7 @@ export default function Wishlist() {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       if (token) {
         try {
-          const res = await fetch('http://localhost:4000/api/wishlist', {
+          const res = await fetch('https://zyqora.onrender.com/api/wishlist', {
             headers: { 'Authorization': `Bearer ${token}` }
           });
           const data = await res.json();
@@ -96,7 +96,7 @@ export default function Wishlist() {
                               // Remove from backend or localStorage
                               const token = localStorage.getItem('token') || sessionStorage.getItem('token');
                               if (token) {
-                                await fetch(`http://localhost:4000/api/wishlist/remove/${item._id || item}`, {
+                                await fetch(`https://zyqora.onrender.com/api/wishlist/remove/${item._id || item}`, {
                                   method: 'DELETE',
                                   headers: { 'Authorization': `Bearer ${token}` }
                                 });

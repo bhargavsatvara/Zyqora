@@ -31,7 +31,7 @@ export default function UserBilling() {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (!token) return;
     setLoading(true);
-    fetch('http://localhost:4000/api/addresses', {
+    fetch('https://zyqora.onrender.com/api/addresses', {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -88,7 +88,7 @@ export default function UserBilling() {
     setError('');
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     try {
-      const res = await fetch('http://localhost:4000/api/addresses', {
+      const res = await fetch('https://zyqora.onrender.com/api/addresses', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

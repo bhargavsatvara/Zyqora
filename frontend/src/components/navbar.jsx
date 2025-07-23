@@ -251,11 +251,13 @@ export default function Navbar({ navClass, navlight }) {
   const cartTotal = totals.total;
 
   const [wishlist, setWishlist] = useState([]);
+  // Add state for search input
+  const [searchTerm, setSearchTerm] = useState("");
   // Load wishlist on mount
   useEffect(() => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (token) {
-      fetch('http://localhost:4000/api/wishlist', {
+      fetch('https://zyqora.onrender.com/api/wishlist', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -417,7 +419,7 @@ export default function Navbar({ navClass, navlight }) {
                         >
                           <div className="w-14 h-14 rounded-full mb-2 border group-hover:scale-110 transition-transform bg-gray-100 flex items-center justify-center overflow-hidden">
                             {cat.image ? (
-                              <img src={cat.image.startsWith('/uploads') ? `http://localhost:4000${cat.image}` : cat.image} alt={cat.name} className="w-12 h-12 rounded-full object-cover" />
+                              <img src={cat.image.startsWith('/uploads') ? `https://zyqora.onrender.com${cat.image}` : cat.image} alt={cat.name} className="w-12 h-12 rounded-full object-cover" />
                             ) : (
                               <span className="text-gray-500 text-xs text-center">{cat.name.charAt(0)}</span>
                             )}
@@ -479,7 +481,7 @@ export default function Navbar({ navClass, navlight }) {
                                 }}
                               >
                                 {cat.image ? (
-                                  <img src={cat.image ? (cat.image.startsWith('/uploads') ? `http://localhost:4000${cat.image}` : cat.image) : '/default-category.png'} alt={cat.name} className="w-8 h-8 rounded-full object-cover inline-block mr-2 align-middle" />
+                                  <img src={cat.image ? (cat.image.startsWith('/uploads') ? `https://zyqora.onrender.com${cat.image}` : cat.image) : '/default-category.png'} alt={cat.name} className="w-8 h-8 rounded-full object-cover inline-block mr-2 align-middle" />
                                 ) : (
                                   <span className="text-gray-500 text-xs text-center">{cat.name.charAt(0)}</span>
                                 )}
@@ -527,7 +529,29 @@ export default function Navbar({ navClass, navlight }) {
                     type="text"
                     className="h-9 px-3 pe-10 w-full border-0 focus:ring-0 outline-none bg-white dark:bg-slate-900"
                     placeholder="Search..."
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && searchTerm.trim()) {
+                        setIsOpen(false);
+                        navigate(`/products?search=${encodeURIComponent(searchTerm.trim())}`);
+                      }
+                    }}
                   />
+                  {/* Optional: Add a search button inside dropdown */}
+                  <button
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-orange-500"
+                    style={{top: '50%', transform: 'translateY(-50%)'}}
+                    onClick={() => {
+                      if (searchTerm.trim()) {
+                        setIsOpen(false);
+                        navigate(`/products?search=${encodeURIComponent(searchTerm.trim())}`);
+                      }
+                    }}
+                    tabIndex={-1}
+                  >
+                    <FiSearch className="size-4" />
+                  </button>
                 </div>
               </div>
             )}
@@ -554,7 +578,7 @@ export default function Navbar({ navClass, navlight }) {
                     <li key={index} className="flex items-center justify-between py-1.5 px-4 ms-0">
                       <span className="flex items-center">
                         <img
-                          src={item.image?.startsWith('/uploads') ? `http://localhost:4000${item.image}` : item.image}
+                          src={item.image?.startsWith('/uploads') ? `https://zyqora.onrender.com${item.image}` : item.image}
                           className="rounded shadow dark:shadow-gray-800 w-9"
                           alt={item.name}
                         />

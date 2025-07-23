@@ -55,7 +55,7 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
         // Fetch user info
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
         if (token) {
-            fetch('http://localhost:4000/api/user/profile', {
+            fetch('https://zyqora.onrender.com/api/user/profile', {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
                 .then(res => res.json())
@@ -72,7 +72,7 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
         if (!token) return;
         try {
-            const res = await fetch('http://localhost:4000/api/user/address', {
+            const res = await fetch('https://zyqora.onrender.com/api/user/address', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();
@@ -167,7 +167,7 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
         setError('');
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
         try {
-            const res = await fetch('http://localhost:4000/api/user/address', {
+            const res = await fetch('https://zyqora.onrender.com/api/user/address', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -571,7 +571,7 @@ export default function ShopCheckOut() {
                                         <div key={idx} className="p-3 flex justify-between items-center border-b border-gray-100 dark:border-gray-800">
                                             <div className="flex items-center">
                                                 <img
-                                                    src={item.image?.startsWith('/uploads') ? `http://localhost:4000${item.image}` : item.image}
+                                                    src={item.image?.startsWith('/uploads') ? `https://zyqora.onrender.com${item.image}` : item.image}
                                                     alt={item.name}
                                                     className="w-10 h-10 rounded object-cover mr-3"
                                                 />

@@ -12,7 +12,7 @@ export default function ProductAboutTab({ product }){
     useEffect(() => {
         if (product && product._id) {
             setLoading(true);
-            fetch(`http://localhost:4000/api/reviews/${product._id}`)
+            fetch(`https://zyqora.onrender.com/api/reviews/${product._id}`)
                 .then(res => res.json())
                 .then(data => {
                     setReviews(Array.isArray(data) ? data : []);
@@ -108,7 +108,7 @@ export default function ProductAboutTab({ product }){
 													<div className="mb-2">
 														<img
 															src={product.size_chart_id.image.startsWith('/uploads')
-																? `http://localhost:4000${product.size_chart_id.image}`
+																? `https://zyqora.onrender.com${product.size_chart_id.image}`
 																: product.size_chart_id.image}
 															alt={product.size_chart_id.title}
 															className="w-full max-w-xs rounded shadow"
