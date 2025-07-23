@@ -16,6 +16,7 @@ import {
   FiLogIn,
   FiLogOut,
 } from "../assets/icons/vander";
+import { AiFillHeart } from 'react-icons/ai';
 
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { useCart } from "../contexts/CartContext";
@@ -76,14 +77,14 @@ export default function Navbar({ navClass, navlight }) {
     if (departmentCategories[departmentId]) {
       return departmentCategories[departmentId]; // Return cached categories
     }
-    
+
     try {
       setLoadingCategories(true);
       console.log(`Fetching categories for department: ${departmentId}`);
       const res = await fetch(`https://zyqora.onrender.com/api/categories?department_id=${departmentId}&limit=1000`);
       const data = await res.json();
       console.log("Categories API response:", data);
-      
+
       // Handle different response structures
       let categoriesData = [];
       if (data.data && data.data.categories) {
@@ -93,15 +94,15 @@ export default function Navbar({ navClass, navlight }) {
       } else if (Array.isArray(data)) {
         categoriesData = data;
       }
-      
+
       console.log(`Found ${categoriesData.length} categories for department ${departmentId}`);
-      
+
       // Cache the categories for this department
       setDepartmentCategories(prev => ({
         ...prev,
         [departmentId]: categoriesData
       }));
-      
+
       return categoriesData;
     } catch (e) {
       console.error(`Error fetching categories for department ${departmentId}:`, e);
@@ -116,7 +117,7 @@ export default function Navbar({ navClass, navlight }) {
     console.log("Category clicked:", category);
     setDropdownOpen(false);
     setHoveredDept(null);
-    
+
     // Navigate to products page with category filter
     navigate(`/products?category_id=${category._id}`);
   };
@@ -126,7 +127,7 @@ export default function Navbar({ navClass, navlight }) {
     console.log("Department clicked:", department);
     setDropdownOpen(false);
     setHoveredDept(null);
-    
+
     // Navigate to products page with department filter
     navigate(`/products?department_id=${department._id}`);
   };
@@ -162,7 +163,7 @@ export default function Navbar({ navClass, navlight }) {
     setDropdownOpen(true);
     console.log("Hovered department:", deptName);
     console.log("Dropdown should be open:", true);
-    
+
     // Find the department to get its ID
     const department = departments.find(dept => dept.name === deptName);
     if (department) {
@@ -248,6 +249,29 @@ export default function Navbar({ navClass, navlight }) {
   const { cartData, totals } = useCart();
   const cartCount = cartData.reduce((sum, item) => sum + item.quantity, 0);
   const cartTotal = totals.total;
+
+  const [wishlist, setWishlist] = useState([]);
+  // Load wishlist on mount
+  useEffect(() => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    if (token) {
+      fetch('http://localhost:4000/api/wishlist', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data && Array.isArray(data.items)) {
+            setWishlist(data.items.map(w => w._id || w.productId));
+          }
+        });
+    } else {
+      const localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+      setWishlist(localWishlist.map(w => w._id));
+    }
+  }, []);
+  const wishlistCount = wishlist.length;
 
   // Add state for mobile menu
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -353,7 +377,7 @@ export default function Navbar({ navClass, navlight }) {
                     // Find the department by name to get its ID
                     const department = departments.find(dept => dept.name === hoveredDept);
                     console.log("Found department:", department);
-                    
+
                     if (!department) {
                       console.log("Department not found for:", hoveredDept);
                       return (
@@ -362,15 +386,15 @@ export default function Navbar({ navClass, navlight }) {
                         </div>
                       );
                     }
-                    
+
                     // Get cached categories for this department
                     const filteredCategories = departmentCategories[department._id] || [];
-                    
+
                     console.log("Hovered department:", hoveredDept);
                     console.log("Department ID:", department._id);
                     console.log("Cached categories for department:", filteredCategories);
                     console.log("Dropdown is open:", dropdownOpen);
-                    
+
                     if (loadingCategories) {
                       return (
                         <div className="col-span-full text-center">
@@ -379,15 +403,15 @@ export default function Navbar({ navClass, navlight }) {
                         </div>
                       );
                     }
-                    
+
                     return filteredCategories.length === 0 ? (
                       <div className="col-span-full text-center">
                         <span className="text-slate-400">No categories found for {hoveredDept}</span>
                       </div>
                     ) : (
                       filteredCategories.map(cat => (
-                        <div 
-                          key={cat._id} 
+                        <div
+                          key={cat._id}
                           className="flex flex-col items-center group cursor-pointer"
                           onClick={() => handleCategoryClick(cat)}
                         >
@@ -577,13 +601,21 @@ export default function Navbar({ navClass, navlight }) {
           </li>
 
           {/* Wishlist */}
-          <li className="inline-block ps-0.5">
-            <Link
-              to="#"
+          <li className="inline-block ps-0.5 relative">
+            <button
+              type="button"
               className="size-9 inline-flex items-center justify-center tracking-wide align-middle duration-500 text-base text-center rounded-full bg-orange-500 text-white"
+              onClick={async () => {
+                navigate('/wishlist');
+              }}
             >
-              <FiHeart className="h-4 w-4"></FiHeart>
-            </Link>
+              <FiHeart className="h-4 w-4" />
+              {wishlistCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full px-1.5">
+                  {wishlistCount}
+                </span>
+              )}
+            </button>
           </li>
 
           {/* User Dropdown */}
@@ -623,7 +655,7 @@ export default function Navbar({ navClass, navlight }) {
                           to="/helpcenter"
                           className="flex items-center font-medium py-2 px-4 hover:text-orange-500"
                         >
-                          <FiHelpCircle className="h-4 w-4 me-2" /> Helpcenter
+                          <FiHelpCircle className="h-4 w-4 me-2" /> Help center
                         </Link>
                       </li>
                       <li>

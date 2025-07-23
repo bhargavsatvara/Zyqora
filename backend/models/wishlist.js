@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 
 const WishlistSchema = new Schema({
   user_id: { type: Schema.Types.ObjectId, ref: 'User' },
-  items: String, // Consider using an array of ObjectIds for real use
+  items: [{ type: Schema.Types.ObjectId, ref: 'Product' }], // Now an array of product ObjectIds
   created_at: { type: Date, default: Date.now }
 });
 

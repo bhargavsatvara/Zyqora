@@ -1,38 +1,103 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-
+import axios from "axios";
 import Navbar from "../../components/navbar";
 import Footer from "../../components/footer";
 import Switcher from "../../components/switcher";
 import Tagline from "../../components/tagline";
 import ScrollToTop from "../../components/scroll-to-top";
-
-import heroVideo from '../../assets/videos/heroVideo6.mp4'; 
-import ctaImg from '../../assets/images/hero/bg-shape.png';
-
+import heroVideo from '../../assets/videos/heroVideo6.mp4';
 import { FiHeart, FiEye, FiBookmark } from '../../assets/icons/vander';
-import { collections, newProduct } from "../../data/data";
+import { AiFillHeart } from 'react-icons/ai';
 
 export default function Index() {
-  const [days, setDays] = useState(0);
-  const [hours, setHours] = useState(0);
-  const [minutes, setMinutes] = useState(0);
-  const [seconds, setSeconds] = useState(0);
+  const [collections, setCollections] = useState([]);
+  const [newProduct, setNewProduct] = useState([]);
+  const [wishlist, setWishlist] = useState([]);
+  const [productRatings, setProductRatings] = useState({});
 
-  const deadline = "December, 31, 2025";
+  const fetchCollections = async () => {
+    const response = await axios.get('https://zyqora.onrender.com/api/categories?page=1&limit=5');
+    console.log("fetchCollections :: ", response.data.data.categories);
+    setCollections(response.data.data.categories);
+  };
 
-  const getTime = () => {
-    const time = Date.parse(deadline) - Date.now();
-    setDays(Math.floor(time / (1000 * 60 * 60 * 24)));
-    setHours(Math.floor((time / (1000 * 60 * 60)) % 24));
-    setMinutes(Math.floor((time / 1000 / 60) % 60));
-    setSeconds(Math.floor((time / 1000) % 60));
+  const fetchNewProduct = async () => {
+    const response = await axios.get('https://zyqora.onrender.com/api/products');
+    console.log("fetchNewProduct :: ", response.data.data.products);
+    setNewProduct(response.data.data.products);
   };
 
   useEffect(() => {
-    const interval = setInterval(() => getTime(), 1000);
-    return () => clearInterval(interval);
+    fetchCollections();
+    fetchNewProduct();
   }, []);
+
+  // Load wishlist on mount
+  useEffect(() => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    if (token) {
+      fetch('http://localhost:4000/api/wishlist', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data && Array.isArray(data.items)) {
+            setWishlist(data.items.map(w => w._id || w.productId));
+          }
+        });
+    } else {
+      const localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+      setWishlist(localWishlist.map(w => w._id));
+    }
+  }, []);
+
+  const handleAddToWishlist = async (item) => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    if (token) {
+      await fetch('http://localhost:4000/api/wishlist/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ productId: item._id })
+      });
+      setWishlist(prev => prev.includes(item._id) ? prev : [...prev, item._id]);
+      alert('Added to wishlist!');
+    } else {
+      let localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+      if (!localWishlist.find(p => p._id === item._id)) {
+        localWishlist.push(item);
+        localStorage.setItem('wishlist', JSON.stringify(localWishlist));
+        setWishlist(prev => prev.includes(item._id) ? prev : [...prev, item._id]);
+      }
+      alert('Added to wishlist (local)!');
+    }
+  };
+
+  // Fetch ratings for visible products
+  useEffect(() => {
+    async function fetchRatings() {
+      const ratings = {};
+      await Promise.all(newProduct.map(async (item) => {
+        if (item._id) {
+          const res = await fetch(`http://localhost:4000/api/reviews/${item._id}`);
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            const avg = data.reduce((sum, r) => sum + (Number(r.rating) || 0), 0) / data.length;
+            ratings[item._id] = { avg, count: data.length };
+          } else {
+            ratings[item._id] = { avg: 0, count: 0 };
+          }
+        }
+      }));
+      setProductRatings(ratings);
+    }
+    if (newProduct.length > 0) fetchRatings();
+  }, [newProduct]);
 
   return (
     <>
@@ -103,7 +168,7 @@ export default function Index() {
               >
                 <img
                   src={item.image}
-                  className="rounded-full shadow dark:shadow-gray-800"
+                  className="w-40 h-40 rounded-full shadow dark:shadow-gray-800"
                   alt={item.name}
                 />
                 <span className="block mt-3 text-xl font-medium">
@@ -131,44 +196,74 @@ export default function Index() {
                 <div className="relative overflow-hidden rounded-md shadow dark:shadow-gray-800 duration-500 group-hover:shadow-lg group-hover:dark:shadow-gray-800">
                   <img
                     src={item.image}
-                    className="w-full duration-500 group-hover:scale-110"
+                    className="w-full h-64 object-cover duration-500 group-hover:scale-110"
                     alt={item.name}
                   />
 
                   <div className="absolute bottom-[-5rem] start-3 end-3 duration-500 group-hover:bottom-3">
-                    <Link
-                      to="/shop-cart"
+                    <button
+                      onClick={async () => {
+                        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+                        if (!token) {
+                          window.location.href = '/login';
+                          return;
+                        }
+                        // Call add to cart API
+                        await fetch('https://zyqora.onrender.com/api/cart/add', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                          },
+                          body: JSON.stringify({
+                            product_id: item._id,
+                            name: item.name,
+                            price: item.price,
+                            image: item.image,
+                            quantity: 1
+                          })
+                        });
+                        window.location.href = '/shop-cart';
+                      }}
                       className="inline-block w-full px-5 py-2 text-base font-semibold text-white bg-slate-900 rounded-md tracking-wide align-middle duration-500 text-center"
                     >
                       Add to Cart
-                    </Link>
+                    </button>
                   </div>
 
                   <ul className="absolute top-[10px] end-4 space-y-1 opacity-0 duration-500 group-hover:opacity-100 list-none">
                     <li>
-                      <Link
-                        to="#"
-                        className="inline-flex items-center justify-center w-10 h-10 text-slate-900 bg-white rounded-full shadow duration-500 hover:bg-slate-900 hover:text-white"
+                      <button
+                        type="button"
+                        className={`inline-flex items-center justify-center w-10 h-10 rounded-full shadow duration-500 border-none focus:outline-none ${wishlist.includes(item._id) ? 'bg-red-100 text-red-500' : 'bg-white text-slate-900 hover:bg-slate-900 hover:text-white'}`}
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          handleAddToWishlist(item);
+                        }}
                       >
-                        <FiHeart className="w-4 h-4" />
-                      </Link>
+                        {wishlist.includes(item._id) ? (
+                          <AiFillHeart className="w-4 h-4" color="#ef4444" />
+                        ) : (
+                          <FiHeart className="w-4 h-4" />
+                        )}
+                      </button>
                     </li>
                     <li>
                       <Link
-                        to="/shop-item-detail"
+                        to={`/product-detail-one/${item._id}`}
                         className="inline-flex items-center justify-center w-10 h-10 text-slate-900 bg-white rounded-full shadow duration-500 hover:bg-slate-900 hover:text-white"
                       >
                         <FiEye className="w-4 h-4" />
                       </Link>
                     </li>
-                    <li>
+                    {/* <li>
                       <Link
                         to="#"
                         className="inline-flex items-center justify-center w-10 h-10 text-slate-900 bg-white rounded-full shadow duration-500 hover:bg-slate-900 hover:text-white"
                       >
                         <FiBookmark className="w-4 h-4" />
                       </Link>
-                    </li>
+                    </li> */}
                   </ul>
 
                   <ul className="absolute top-[10px] start-4 list-none">
@@ -214,25 +309,16 @@ export default function Index() {
                   </Link>
                   <div className="flex items-center justify-between mt-1">
                     <p>
-                      {item.desRate}{" "}
-                      <del className="text-slate-400">{item.amount}</del>
+                      ${item.price}{" "}
+                      {/* <del className="text-slate-400">{item.price}</del> */}
                     </p>
                     <ul className="font-medium text-amber-400 list-none">
-                      <li className="inline">
-                        <i className="mdi mdi-star"></i>
-                      </li>
-                      <li className="inline">
-                        <i className="mdi mdi-star"></i>
-                      </li>
-                      <li className="inline">
-                        <i className="mdi mdi-star"></i>
-                      </li>
-                      <li className="inline">
-                        <i className="mdi mdi-star"></i>
-                      </li>
-                      <li className="inline">
-                        <i className="mdi mdi-star"></i>
-                      </li>
+                      {[1,2,3,4,5].map(n => (
+                        <li className="inline" key={n}>
+                          <i className={`mdi mdi-star${(productRatings[item._id]?.avg || 0) >= n ? '' : '-outline'}`}></i>
+                        </li>
+                      ))}
+                      <span className="text-slate-400 ms-2 text-sm align-middle">{productRatings[item._id]?.avg ? productRatings[item._id].avg.toFixed(1) : '0.0'} ({productRatings[item._id]?.count || 0})</span>
                     </ul>
                   </div>
                 </div>
@@ -243,7 +329,7 @@ export default function Index() {
       </section>
 
       <Footer />
-      <Switcher/>
+      <Switcher />
       <ScrollToTop />
     </>
   );

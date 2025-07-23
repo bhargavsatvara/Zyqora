@@ -50,6 +50,8 @@ import ProductDetailOne from './pages/shop/shop-detail/product-detail-one';
 import SignSuccess from './pages/pages/auth/signup-success';
 import ResetPassword from './pages/pages/auth/reset-password';
 import { CartProvider } from "./contexts/CartContext";
+import Wishlist from './pages/wishlist';
+import OrderView from './pages/pages/my-account/order-view';
 
 
 function App() {
@@ -71,6 +73,7 @@ function App() {
         <Route path="/recently-viewed-product" element={<RecentlyViewed />}></Route>
         <Route path="/aboutus" element={<AboutUS />}></Route>
         <Route path="/user-account" element={<UserAccount />}></Route>
+        <Route path="/order-view/:id" element={<OrderView />}></Route>
         <Route path="/user-billing" element={<UserBilling />}></Route>
         <Route path="/user-payment" element={<UserPayment />}></Route>
         <Route path="/user-invoice" element={<Invoice />}></Route>
@@ -108,6 +111,7 @@ function App() {
         <Route path="/product-detail-one/:id" element={<ProductDetailOne />}></Route>
         <Route path='/signup-success' element={<SignSuccess />}></Route>
         <Route path='/reset-password/:token' element={<ResetPassword />}></Route>
+        <Route path="/wishlist" element={<Wishlist />} />
       </Routes>
     </CartProvider>
   );

@@ -21,6 +21,7 @@ exports.getAddressById = async (req, res) => {
 
 exports.createAddress = async (req, res) => {
   try {
+    console.log("createAddress :: req.body :: ", req.body);
     const address = new Address({
       ...req.body,
       user: req.user
@@ -28,6 +29,7 @@ exports.createAddress = async (req, res) => {
     await address.save();
     res.status(201).json(address);
   } catch (err) {
+    console.log("createAddress :: err :: ", err);
     res.status(500).json({ message: 'Server error' });
   }
 };

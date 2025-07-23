@@ -112,10 +112,20 @@ exports.getAllOrders = async (req, res) => {
 
 exports.getOrderById = async (req, res) => {
   try {
-    const order = await Order.findOne({ _id: req.params.id, user_id: req.user })
+    // also add billing address in order
+    let order = await Order.findOne({ _id: req.params.id, user_id: req.user })
       .populate('order_items') // Populate order_items to include size and color
+      .populate('billing_address')
       .exec();
     if (!order) return res.status(404).json({ message: 'Order not found' });
+
+    // Fallback: if billing_address is just an ID, fetch the address
+    if (order.billing_address && typeof order.billing_address === 'string') {
+      const address = await Address.findById(order.billing_address);
+      if (address) order = order.toObject();
+      if (address) order.billing_address = address;
+    }
+
     res.json(order);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });

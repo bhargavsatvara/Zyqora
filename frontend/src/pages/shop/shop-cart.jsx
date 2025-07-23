@@ -73,6 +73,11 @@ export default function Shopcart(props){
     };
 
     const handleQuantityChange = async (itemId, newQuantity) => {
+        const item = cartData.find(i => i.product_id === itemId);
+        if (newQuantity === 0 && item) {
+            await removeFromCart(item);
+            return;
+        }
         setCartData(prevCartData => {
             const updatedCart = prevCartData.map(item =>
                 item.product_id === itemId
