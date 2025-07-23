@@ -8,6 +8,7 @@ import Switcher from "../../components/switcher";
 import Counter from "../../components/counter";
 
 import ScrollToTop from "../../components/scroll-to-top";
+import { useCart } from "../../contexts/CartContext";
 
 export default function Shopcart(props){
     const [cartData, setCartData] = useState([]);
@@ -19,6 +20,7 @@ export default function Shopcart(props){
     });
     const [message, setMessage] = useState('');
     const navigate = useNavigate();
+    const { fetchCart } = useCart();
 
     useEffect(() => {
         fetchCartData();
@@ -128,6 +130,7 @@ export default function Shopcart(props){
                     recalculateTotals(updatedCart);
                     return updatedCart;
                 });
+                await fetchCart(); // Update cart context after removing
             } else {
                 setMessage('Error removing item from cart');
                 setTimeout(() => setMessage(''), 3000);
@@ -152,6 +155,7 @@ export default function Shopcart(props){
                 setMessage('Cart cleared successfully');
                 setTimeout(() => setMessage(''), 3000);
                 fetchCartData();
+                await fetchCart(); // Update cart context after clearing
             } else {
                 setMessage('Error clearing cart');
                 setTimeout(() => setMessage(''), 3000);
