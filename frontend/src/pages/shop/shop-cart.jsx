@@ -230,11 +230,11 @@ export default function Shopcart(props){
                 )}
 
                 {loading ? (
-                    <div className="flex items-center justify-center py-20">
+                    <div className="flex items-center justify-center py-20" role="status">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
                     </div>
                 ) : cartData.length === 0 ? (
-                    <div className="text-center py-20">
+                    <div className="text-center py-20" role="status">
                         <h3 className="text-2xl font-semibold mb-4 text-gray-700 dark:text-gray-300">Your cart is empty</h3>
                         <p className="text-gray-500 dark:text-gray-400 mb-6">Add some products to your cart to get started.</p>
                         <Link to="/products" className="inline-block px-6 py-3 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors">
@@ -243,7 +243,7 @@ export default function Shopcart(props){
                     </div>
                 ) : (
                     <div className="grid lg:grid-cols-1">
-                        <div className="relative overflow-x-auto shadow dark:shadow-gray-800 rounded-md">
+                        <div className="relative overflow-x-auto shadow dark:shadow-gray-800 rounded-md" role="region" aria-label="Cart Table">
                             <table className="w-full text-start" role="table">
                                 <thead className="text-sm uppercase bg-slate-50 dark:bg-slate-800">
                                     <tr>

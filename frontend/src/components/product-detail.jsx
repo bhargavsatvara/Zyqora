@@ -280,7 +280,7 @@ export default function ProductDetail({ product }) {
     }
 
     return(
-        <div className="sticky top-20">
+        <div className="sticky top-20" role="region" aria-label="Product Detail">
             <h5 className="mb-4 text-2xl font-bold">{product.name}</h5>
             {product.stock_qty !== undefined && (
                 <div className="mb-4">
@@ -429,7 +429,7 @@ export default function ProductDetail({ product }) {
                         cartMessage.includes('successfully') 
                             ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                             : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                    }`}>
+                    }`} role="status">
                         {cartMessage}
                     </div>
                 )}

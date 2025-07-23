@@ -17,7 +17,7 @@ export default function AboutUS(){
     return(
         <>
         <Navbar navClass="defaultscroll is-sticky" navlight={true}/>
-        <section className="relative table w-full items-center py-36 bg-[url('../../assets/images/hero/pages.jpg')] bg-top bg-no-repeat bg-cover">
+        <section className="relative table w-full items-center py-36 bg-[url('../../assets/images/hero/pages.jpg')] bg-top bg-no-repeat bg-cover" role="banner">
             <div className="absolute inset-0 bg-gradient-to-b from-slate-900/60 via-slate-900/80 to-slate-900"></div>
             <div className="container relative">
                 <div className="grid grid-cols-1 pb-8 text-center mt-10">
@@ -36,8 +36,8 @@ export default function AboutUS(){
             </div>
         </section>
 
-        <section className="relative md:py-24 py-16">
-            <div className="container relative">
+        <section className="relative md:py-24 py-16" role="main">
+            <div className="container relative" role="region" aria-label="Our Shop">
                 <div className="grid md:grid-cols-12 grid-cols-1 items-center gap-6">
                     <div className="lg:col-span-5 md:col-span-6">
                         <img src={aboutImg} className="rounded-t-full shadow-md dark:shadow-gray-800" alt=""/>
@@ -69,7 +69,7 @@ export default function AboutUS(){
                 </div>
             </div>
 
-            <div className="container relative md:mt-24 mt-16">
+            <div className="container relative md:mt-24 mt-16" role="region" aria-label="Founder">
                 <div className="grid md:grid-cols-12 grid-cols-1 items-center gap-6">
                     <div className="lg:col-span-5 md:col-span-6 md:order-2 order-1">
                         <img src={aboutImg2} className="rounded-b-full shadow-md dark:shadow-gray-800" alt=""/>
@@ -91,7 +91,7 @@ export default function AboutUS(){
                 </div>
             </div>
 
-            <div className="container relative md:mt-24 mt-16">
+            <div className="container relative md:mt-24 mt-16" role="region" aria-label="Our Promise">
                 <div className="grid grid-cols-1 justify-center text-center mb-4">
                     <h6 className="text-orange-500 font-semibold uppercase text-lg">Our Promise</h6>
                     <h5 className="font-semibold text-3xl leading-normal my-4">We Designed and <br/> Developed Products</h5>
@@ -117,7 +117,7 @@ export default function AboutUS(){
                 </div>
             </div>
 
-            <div className="container relative md:mt-24 mt-16">
+            <div className="container relative md:mt-24 mt-16" role="region" aria-label="Our Minds">
                 <div className="grid grid-cols-1 justify-center text-center mb-4">
                     <h6 className="text-orange-500 font-semibold uppercase text-lg">Our Minds</h6>
                     <h5 className="font-semibold text-3xl leading-normal my-4">Meet Our Team Members</h5>
@@ -153,7 +153,7 @@ export default function AboutUS(){
         <Footer/>
         <Switcher/>
         {modal && (
-            <div className="w-full h-screen bg-slate-900/80 fixed top-0 left-0 bottom-0 right-0 z-999 flex items-center justify-center">
+            <div className="w-full h-screen bg-slate-900/80 fixed top-0 left-0 bottom-0 right-0 z-999 flex items-center justify-center" role="status" aria-modal="true">
                 <div className="w-full h-full px-5 md:px-40 md-py-20 py-5">
                     <iframe src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d55431.05581015953!2d-95.461302!3d29.735948000000004!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8640c36647a52ab1%3A0x70a301678672cb!2sBriargrove%20Park%2C%20Houston%2C%20TX%2C%20USA!5e0!3m2!1sen!2sin!4v1710322657489!5m2!1sen!2sin" width="100%" height="100%" title="myfram"  loading="lazy"></iframe>
                 </div>

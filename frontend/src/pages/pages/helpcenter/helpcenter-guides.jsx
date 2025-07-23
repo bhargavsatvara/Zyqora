@@ -13,7 +13,7 @@ export default function HelpcenterGuides(){
     return(
         <>
         <Navbar navClass="defaultscroll is-sticky" navlight={true}/>
-        <section className="relative table w-full py-36 bg-[url('../../assets/images/hero/pages.jpg')] bg-center bg-no-repeat bg-cover">
+        <section className="relative table w-full py-36 bg-[url('../../assets/images/hero/pages.jpg')] bg-center bg-no-repeat bg-cover" role="banner">
             <div className="absolute inset-0 bg-black opacity-80"></div>
             <div className="container relative">
                 <div className="grid grid-cols-1 pb-8 text-center mt-10">
@@ -33,8 +33,8 @@ export default function HelpcenterGuides(){
             </div>
         </section>
 
-        <section className="relative md:py-24 py-16">
-            <div className="container relative">
+        <section className="relative md:py-24 py-16" role="main">
+            <div className="container relative" role="region" aria-label="Guides Grid">
                 <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
                     {guidenceData.map((item,index)=>{
                         return(

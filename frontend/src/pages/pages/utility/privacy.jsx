@@ -12,7 +12,7 @@ export default function Privacy(){
     return(
         <>
         <Navbar navClass="defaultscroll is-sticky"/>
-        <section className="relative table w-full py-32 lg:py-40 bg-gray-50 dark:bg-slate-800">
+        <section className="relative table w-full py-32 lg:py-40 bg-gray-50 dark:bg-slate-800" role="banner">
             <div className="container relative">
                 <div className="grid grid-cols-1 text-center mt-10">
                     <h3 className="text-3xl leading-normal font-semibold">Privacy Policy</h3>
@@ -30,8 +30,8 @@ export default function Privacy(){
             </div>
         </section>
 
-        <section className="relative md:py-24 py-16">
-            <div className="container relative">
+        <section className="relative md:py-24 py-16" role="main">
+            <div className="container relative" role="region" aria-label="Privacy Content">
                 <div className="md:flex justify-center">
                     <div className="md:w-3/4">
                         <div className="p-6 bg-white dark:bg-slate-900 shadow dark:shadow-gray-800 rounded-md">

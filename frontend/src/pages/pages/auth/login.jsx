@@ -74,7 +74,7 @@ export default function Login() {
   };
 
   return (
-    <section className="relative h-screen flex items-center justify-center bg-orange-50 dark:bg-orange-50/20 overflow-hidden">
+    <section className="relative h-screen flex items-center justify-center bg-orange-50 dark:bg-orange-50/20 overflow-hidden" role="main">
       <div className="absolute -top-12 -left-12 w-48 h-48 bg-orange-100 rounded-full" />
       <div className="absolute bottom-0 -right-12 w-64 h-64 bg-orange-100 rounded-full" />
 
@@ -94,7 +94,7 @@ export default function Login() {
 
             {error && (
               <div
-                role="alert"
+                role="status"
                 aria-live="assertive"
                 className="mb-4 flex items-start gap-2 p-4 bg-red-50 border border-red-200 rounded text-red-800"
               >
@@ -114,7 +114,7 @@ export default function Login() {
               </div>
             )}
 
-            <form className="space-y-4" onSubmit={handleSubmit}>
+            <form className="space-y-4" onSubmit={handleSubmit} role="form">
               <div>
                 <label htmlFor="loginEmail" className="block font-semibold text-gray-700">
                   Email Address

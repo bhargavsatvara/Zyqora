@@ -15,14 +15,14 @@ export default function Helpcenter(){
         <>
         <Navbar navClass="defaultscroll is-sticky" navlight={true}/>
 
-        <section className="relative table w-full py-36 bg-[url('../../assets/images/hero/pages.jpg')] bg-center bg-no-repeat bg-cover">
+        <section className="relative table w-full py-36 bg-[url('../../assets/images/hero/pages.jpg')] bg-center bg-no-repeat bg-cover" role="banner">
             <div className="absolute inset-0 bg-black opacity-80"></div>
             <div className="container relative">
                 <div className="grid grid-cols-1 pb-8 text-center mt-10">
                     <h3 className="mb-6 text-4xl leading-normal tracking-wider font-semibold text-white">Hello ! <br/> How can we help you?</h3>
 
                     <div className="text-center subcribe-form mt-4 pt-2">
-                        <form className="relative mx-auto max-w-xl">
+                        <form className="relative mx-auto max-w-xl" role="form">
                             <input type="text" id="help" name="name" className="py-4 pe-40 ps-6 w-full h-[50px] outline-none text-black dark:text-white rounded-full bg-white opacity-70 dark:bg-slate-900 border border-gray-100 dark:border-gray-700" placeholder="Search your questions or topic..."/>
                             <button type="submit" className="py-2 px-5 inline-block font-semibold tracking-wide align-middle duration-500 text-base text-center absolute top-[2px] end-[3px] h-[46px] bg-orange-500 text-white rounded-full">Search</button>
                         </form>
@@ -39,17 +39,17 @@ export default function Helpcenter(){
             </div>
         </section>
 
-        <section className="relative md:py-24 py-16">
+        <section className="relative md:py-24 py-16" role="main">
             <FaqAbout/>
 
-            <div className="container relative md:mt-24 mt-16">
+            <div className="container relative md:mt-24 mt-16" role="region" aria-label="Get Started">
                 <div className="grid grid-cols-1 pb-8 text-center">
                     <h3 className="mb-6 md:text-3xl text-2xl md:leading-normal leading-normal font-semibold">Get Started</h3>
 
                     <p className="text-slate-400 max-w-xl mx-auto">Upgrade your style with our curated sets. Choose confidence, embrace your unique look.</p>
                 </div>
 
-                <div className="grid md:grid-cols-2 grid-cols-1 mt-8 gap-6">
+                <div className="grid md:grid-cols-2 grid-cols-1 mt-8 gap-6" role="region" aria-label="FAQ Blocks">
                     <div className="flex">
                         <FiHelpCircle className="fea icon-ex-md text-orange-500 me-3 size-5 mt-1"></FiHelpCircle>
                         <div className="flex-1">
