@@ -19,7 +19,7 @@ export default function HelpcenterFaqs(){
     return(
         <>
         <Navbar navClass="defaultscroll is-sticky" navlight={true}/>
-        <section className="relative table w-full py-36 bg-[url('../../assets/images/hero/pages.jpg')] bg-center bg-no-repeat bg-cover">
+        <section className="relative table w-full py-36 bg-[url('../../assets/images/hero/pages.jpg')] bg-center bg-no-repeat bg-cover" role="banner">
             <div className="absolute inset-0 bg-black opacity-80"></div>
             <div className="container relative">
                 <div className="grid grid-cols-1 pb-8 text-center mt-10">
@@ -38,7 +38,7 @@ export default function HelpcenterFaqs(){
                 </ul>
             </div>
         </section>
-        <section className="relative md:py-24 py-16">
+        <section className="relative md:py-24 py-16" role="main">
             <div className="container relative">
                 <div className="grid md:grid-cols-12 grid-cols-1 gap-6">
                     <div className="lg:col-span-4 md:col-span-5">
@@ -54,7 +54,7 @@ export default function HelpcenterFaqs(){
                     </div>
 
                     <div className="lg:col-span-8 md:col-span-7">
-                        <div id="tech">
+                        <div id="tech" role="region" aria-label="Buying Product FAQs">
                             <h5 className="text-2xl font-semibold">Buying Product</h5>
 
                             <div className="mt-6">
@@ -78,7 +78,7 @@ export default function HelpcenterFaqs(){
                             </div>
                         </div>
 
-                        <div id="general" className="mt-8">
+                        <div id="general" className="mt-8" role="region" aria-label="General Questions FAQs">
                             <h5 className="text-2xl font-semibold">General Questions</h5>
 
                             <div className="mt-6">
@@ -102,7 +102,7 @@ export default function HelpcenterFaqs(){
                             </div>
                         </div>
 
-                        <div id="payment" className="mt-8">
+                        <div id="payment" className="mt-8" role="region" aria-label="Payments Questions FAQs">
                             <h5 className="text-2xl font-semibold">Payments Questions</h5>
 
                             <div className="mt-6">
@@ -126,7 +126,7 @@ export default function HelpcenterFaqs(){
                             </div>
                         </div>
 
-                        <div id="support" className="mt-8">
+                        <div id="support" className="mt-8" role="region" aria-label="Support Questions FAQs">
                             <h5 className="text-2xl font-semibold">Support Questions</h5>
 
                             <div className="mt-6">

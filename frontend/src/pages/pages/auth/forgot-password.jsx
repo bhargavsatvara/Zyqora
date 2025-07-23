@@ -38,7 +38,7 @@ export default function ForgotPassword() {
   };
 
   return (
-    <section className="relative h-screen flex items-center justify-center bg-orange-50 dark:bg-orange-50/20 overflow-hidden">
+    <section className="relative h-screen flex items-center justify-center bg-orange-50 dark:bg-orange-50/20 overflow-hidden" role="main">
       <div className="absolute -top-12 -left-12 w-48 h-48 bg-orange-100 rounded-full" />
       <div className="absolute bottom-0 -right-12 w-64 h-64 bg-orange-100 rounded-full" />
 
@@ -56,7 +56,7 @@ export default function ForgotPassword() {
               </Link>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4" role="form">
               <p className="text-gray-600">
                 Enter your email address and we'll send you a link to reset your password.
               </p>
@@ -83,8 +83,8 @@ export default function ForgotPassword() {
                 {loading ? 'Sending…' : 'Send Reset Link'}
               </button>
 
-              {message && <p className="text-green-600 text-center">{message}</p>}
-              {error && <p className="text-red-600 text-center">{error}</p>}
+              {message && <p className="text-green-600 text-center" role="status">{message}</p>}
+              {error && <p className="text-red-600 text-center" role="status">{error}</p>}
 
               <p className="text-center text-gray-500 text-sm">
                 Remembered your password?{' '}

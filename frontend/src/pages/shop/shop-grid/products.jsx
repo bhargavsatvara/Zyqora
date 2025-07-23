@@ -119,7 +119,7 @@ export default function Products(){
                 </div>
             </div>
         </section>
-        <section className="relative md:py-24 py-16">
+        <section className="relative md:py-24 py-16" role="main">
             <div className="container relative">
                 <div className="grid md:grid-cols-12 sm:grid-cols-2 grid-cols-1 gap-6">
                     <Filter onFilterChange={handleFilterChange} filters={filters}/>
@@ -127,7 +127,7 @@ export default function Products(){
                         <div className="md:flex justify-between items-center mb-6">
                             <span className="font-semibold">
                                 {products.length === 0 ? (
-                                    'No products found'
+                                    <span role="status">No products found</span>
                                 ) : (
                                     `Showing ${((currentPage - 1) * 12) + 1}-${Math.min(currentPage * 12, totalRecords)} of ${totalRecords} items`
                                 )}
@@ -147,11 +147,11 @@ export default function Products(){
                         </div>
                         
                         {loading ? (
-                            <div className="flex items-center justify-center py-20">
+                            <div className="flex items-center justify-center py-20" role="status">
                                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
                             </div>
                         ) : products.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-20">
+                            <div className="flex flex-col items-center justify-center py-20" role="status">
                                 <div className="text-6xl mb-4 text-gray-300">
                                     <i className="mdi mdi-package-variant"></i>
                                 </div>
@@ -177,7 +177,7 @@ export default function Products(){
                                 </button>
                             </div>
                         ) : (
-                        <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
+                        <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6" role="region" aria-label="Product Grid">
                                 {products.map((item, index) => (
                                     <div className="group" key={item._id || index}>
                                 <div className="relative overflow-hidden shadow dark:shadow-gray-800 group-hover:shadow-lg group-hover:dark:shadow-gray-800 rounded-md duration-500">

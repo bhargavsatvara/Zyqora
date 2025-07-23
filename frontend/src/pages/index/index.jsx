@@ -40,7 +40,7 @@ export default function Index() {
       <Navbar navClass="defaultscroll is-sticky tagline-height" />
 
       {/* Hero Section with video background */}
-      <section className="relative flex items-center w-full md:h-screen py-36 overflow-hidden">
+      <section className="relative flex items-center w-full md:h-screen py-36 overflow-hidden" role="banner">
         {/* Video as full-bleed background */}
         <video
           autoPlay
@@ -83,8 +83,8 @@ export default function Index() {
       </section>
 
       {/* Collections Section */}
-      <section className="relative py-16 md:py-24">
-        <div className="container relative">
+      <section className="relative py-16 md:py-24" role="main">
+        <div className="container relative" role="region" aria-label="Shop The Collections">
           <div className="grid grid-cols-1 justify-center mb-6 text-center">
             <h5 className="mb-4 text-3xl font-semibold leading-normal">
               Shop The Collections
@@ -115,7 +115,7 @@ export default function Index() {
         </div>
 
         {/* New Arrival Products */}
-        <div className="container relative mt-16 md:mt-24">
+        <div className="container relative mt-16 md:mt-24" role="region" aria-label="New Arrival Products">
           <div className="grid grid-cols-1 justify-center mb-6 text-center">
             <h5 className="mb-4 text-3xl font-semibold leading-normal">
               New Arrival Products

@@ -235,8 +235,8 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
           <div className="mb-4">
             <CardElement options={{ hidePostalCode: true }} className="p-3 border rounded-lg" />
           </div>
-          {error && <div className="text-red-600 mb-2">{error}</div>}
-          {success && <div className="text-green-600 mb-2">{success}</div>}
+          {error && <div className="text-red-600 mb-2" role="status">{error}</div>}
+          {success && <div className="text-green-600 mb-2" role="status">{success}</div>}
           <button type="submit" className="w-full py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition">
             {loading ? 'Processing...' : 'Continue to checkout'}
           </button>
@@ -332,7 +332,7 @@ export default function ShopCheckOut(){
             </div>
         </section>
 
-        <section className="relative md:py-24 py-16">
+        <section className="relative md:py-24 py-16" role="main">
             <div className="container relative">
                 <div className="grid lg:grid-cols-12 md:grid-cols-2 grid-cols-1 gap-6">
                     <div className="lg:col-span-8">
@@ -356,7 +356,7 @@ export default function ShopCheckOut(){
                     </div>
 
                     <div className="lg:col-span-4">
-                        <div className="p-6 rounded-md shadow dark:shadow-gray-800">
+                        <div className="p-6 rounded-md shadow dark:shadow-gray-800" role="region" aria-label="Cart Summary">
                             <div className="flex justify-between items-center">
                                 <h5 className="text-lg font-semibold">Your Cart</h5>
                                 <span className="bg-orange-500 flex justify-center items-center text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full h-5">

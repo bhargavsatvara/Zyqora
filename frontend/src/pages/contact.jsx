@@ -22,7 +22,7 @@ export default function Contact(){
                 </div>
             </div>
         </div>
-        <section className="relative lg:py-24 py-16">
+        <section className="relative lg:py-24 py-16" role="main">
             <div className="container">
                 <div className="grid md:grid-cols-12 grid-cols-1 items-center gap-6">
                     <div className="lg:col-span-7 md:col-span-6">
@@ -34,7 +34,7 @@ export default function Contact(){
                             <div className="bg-white dark:bg-slate-900 rounded-md shadow dark:shadow-gray-700 p-6">
                                 <h3 className="mb-6 text-2xl leading-normal font-semibold">Get in touch !</h3>
 
-                                <form>
+                                <form role="form">
                                     <div className="grid lg:grid-cols-12 grid-cols-1 gap-3">
                                         <div className="lg:col-span-6">
                                             <label htmlFor="name" className="font-semibold">Your Name:</label>
@@ -123,7 +123,7 @@ export default function Contact(){
         <Footer/>
         <Switcher/>
         {modal && (
-            <div className="w-full h-screen bg-slate-900/80 fixed top-0 left-0 bottom-0 right-0 z-999 flex items-center justify-center">
+            <div className="w-full h-screen bg-slate-900/80 fixed top-0 left-0 bottom-0 right-0 z-999 flex items-center justify-center" role="status" aria-modal="true">
                 <div className="w-full h-full px-5 md:px-40 md-py-20 py-5">
                     <iframe src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d55431.05581015953!2d-95.461302!3d29.735948000000004!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8640c36647a52ab1%3A0x70a301678672cb!2sBriargrove%20Park%2C%20Houston%2C%20TX%2C%20USA!5e0!3m2!1sen!2sin!4v1710322657489!5m2!1sen!2sin" width="100%" height="100%" title="myfram"  loading="lazy"></iframe>
                 </div>

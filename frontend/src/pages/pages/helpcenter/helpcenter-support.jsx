@@ -13,7 +13,7 @@ export default function HelpcenterSupport(){
     return(
         <>
         <Navbar navClass="defaultscroll is-sticky" navlight={true}/>
-        <section className="relative table w-full py-36 bg-[url('../../assets/images/hero/pages.jpg')] bg-center bg-no-repeat bg-cover">
+        <section className="relative table w-full py-36 bg-[url('../../assets/images/hero/pages.jpg')] bg-center bg-no-repeat bg-cover" role="banner">
             <div className="absolute inset-0 bg-black opacity-80"></div>
             <div className="container relative">
                 <div className="grid grid-cols-1 pb-8 text-center mt-10">
@@ -33,12 +33,12 @@ export default function HelpcenterSupport(){
             </div>
         </section>
 
-        <section className="relative md:py-24 py-16 bg-gray-50 dark:bg-slate-800">
+        <section className="relative md:py-24 py-16 bg-gray-50 dark:bg-slate-800" role="main">
             <div className="container relative md:pb-24 pb-16">
                 <div className="grid md:grid-cols-12 grid-cols-1 gap-6 mx-auto text-center">
                     <div className="lg:col-start-3 lg:col-span-8 md:col-start-2 md:col-span-10">
                         <div className="bg-white dark:bg-slate-900 rounded-md shadow dark:shadow-gray-800 p-6">
-                            <form>
+                            <form role="form">
                                 <div className="grid lg:grid-cols-12 lg:gap-6">
                                     <div className="lg:col-span-6 mb-5">
                                         <div className="text-start">
@@ -90,6 +90,8 @@ export default function HelpcenterSupport(){
             </div>
             
             <FaqAbout/>
+            {/* FAQ/About block region for accessibility */}
+            <div role="region" aria-label="FAQ/About Block" className="sr-only"></div>
         </section>
         <Footer/>
         <Switcher/>
