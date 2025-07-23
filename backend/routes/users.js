@@ -88,6 +88,31 @@ router.put('/settings', authenticate, userController.updateSettings);
 
 /**
  * @swagger
+ * /user/password:
+ *   put:
+ *     summary: Update user password
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [oldPassword, newPassword]
+ *             properties:
+ *               oldPassword: { type: string }
+ *               newPassword: { type: string }
+ *     responses:
+ *       200: { description: Password updated successfully }
+ *       400: { description: Bad request }
+ *       401: { description: Unauthorized }
+ */
+router.put('/password', authenticate, userController.updatePassword);
+
+/**
+ * @swagger
  * /user/address:
  *   get:
  *     summary: Get user addresses

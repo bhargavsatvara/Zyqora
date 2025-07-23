@@ -2,7 +2,8 @@ const { Review } = require('../models');
 
 exports.getProductReviews = async (req, res) => {
   try {
-    const reviews = await Review.find({ product_id: req.params.id }).populate('user_id');
+    // send only user name instead of user_id
+    const reviews = await Review.find({ product_id: req.params.productId }).populate('user_id', 'name');
     res.json(reviews);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
@@ -11,10 +12,10 @@ exports.getProductReviews = async (req, res) => {
 
 exports.addReview = async (req, res) => {
   try {
-    const { rating, comment } = req.body;
+    const { rating, comment, product_id } = req.body;
     const review = new Review({
       user_id: req.user,
-      product_id: req.params.id,
+      product_id: product_id,
       rating,
       comment,
       created_at: new Date()

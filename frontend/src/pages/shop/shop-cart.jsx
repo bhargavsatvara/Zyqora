@@ -73,6 +73,11 @@ export default function Shopcart(props){
     };
 
     const handleQuantityChange = async (itemId, newQuantity) => {
+        const item = cartData.find(i => i.product_id === itemId);
+        if (newQuantity === 0 && item) {
+            await removeFromCart(item);
+            return;
+        }
         setCartData(prevCartData => {
             const updatedCart = prevCartData.map(item =>
                 item.product_id === itemId
@@ -188,7 +193,7 @@ export default function Shopcart(props){
         
         // If image starts with /uploads, it's a local file
         if (imagePath.startsWith('/uploads')) {
-            return `http://localhost:4000${imagePath}`;
+            return `https://zyqora.onrender.com${imagePath}`;
         }
         
         // Default fallback

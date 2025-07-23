@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../contexts/CartContext";
 
@@ -10,6 +10,8 @@ export default function ProductDetail({ product }) {
     const [cartMessage, setCartMessage] = useState('');
     const navigate = useNavigate();
     const { fetchCart } = useCart();
+    const [reviews, setReviews] = useState([]);
+    const [avgRating, setAvgRating] = useState(0);
 
     // Extract attributes from product
     const getAttributeValues = (attributeName) => {
@@ -157,6 +159,27 @@ export default function ProductDetail({ product }) {
     const sizes = getAttributeValues('size');
     const colors = getAttributeValues('color');
     const materials = getAttributeValues('material');
+
+    useEffect(() => {
+      if (product && product._id) {
+        fetch(`https://zyqora.onrender.com/api/reviews/${product._id}`)
+          .then(res => res.json())
+          .then(data => {
+            if (Array.isArray(data)) {
+              setReviews(data);
+              if (data.length > 0) {
+                const avg = data.reduce((sum, r) => sum + (Number(r.rating) || 0), 0) / data.length;
+                setAvgRating(avg);
+              } else {
+                setAvgRating(0);
+              }
+            } else {
+              setReviews([]);
+              setAvgRating(0);
+            }
+          });
+      }
+    }, [product]);
 
     const handleSizeSelect = (size) => {
         setSelectedSize(size);
@@ -312,13 +335,11 @@ export default function ProductDetail({ product }) {
             )}
             <div className="flex items-center mb-4">
                 <div className="flex items-center">
-                    <i className="mdi mdi-star text-orange-500"></i>
-                    <i className="mdi mdi-star text-orange-500"></i>
-                    <i className="mdi mdi-star text-orange-500"></i>
-                    <i className="mdi mdi-star text-orange-500"></i>
-                    <i className="mdi mdi-star text-orange-500"></i>
+                    {[1,2,3,4,5].map(n => (
+                        <i key={n} className={`mdi mdi-star${avgRating >= n ? '' : '-outline'} text-orange-500`}></i>
+                    ))}
                 </div>
-                <span className="text-slate-400 ms-2">4.8 (45)</span>
+                <span className="text-slate-400 ms-2">{avgRating ? avgRating.toFixed(1) : '0.0'} ({reviews.length})</span>
             </div>
             <h4 className="text-3xl font-bold text-orange-500 mb-4">{formatPrice(product.price)}</h4>
             <p className="text-slate-400 mb-6">{product.description || 'No description available.'}</p>
