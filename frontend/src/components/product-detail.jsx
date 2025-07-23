@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useCart } from "../contexts/CartContext";
 
 export default function ProductDetail({ product }) {
     const [selectedSize, setSelectedSize] = useState('');
@@ -8,6 +9,7 @@ export default function ProductDetail({ product }) {
     const [isAddingToCart, setIsAddingToCart] = useState(false);
     const [cartMessage, setCartMessage] = useState('');
     const navigate = useNavigate();
+    const { fetchCart } = useCart();
 
     // Extract attributes from product
     const getAttributeValues = (attributeName) => {
@@ -239,6 +241,7 @@ export default function ProductDetail({ product }) {
                 setSelectedSize('');
                 setSelectedColor('');
                 setQuantity(1);
+                await fetchCart(); // Update cart context after adding
                 // Set flag in sessionStorage to show success message in cart
                 sessionStorage.setItem('addedToCart', 'true');
                 // Redirect to shop cart page immediately
