@@ -1,90 +1,94 @@
 # Zyqora Admin Panel
 
-## Project Title & Description
+This is the admin panel for the Zyqora e-commerce platform. It allows administrators to manage products, categories, brands, users, orders, and more.
 
-**Zyqora Admin Panel**
+## Features
+- Admin authentication (login/logout)
+- Product management (add, edit, delete, image upload to Cloudinary)
+- Category, brand, department, and attribute management
+- User management
+- Order and inventory management
+- Analytics and reports
+- Responsive design with modern UI
+- Toast notifications and modals
+- Role-based access (admin only)
 
-This is the admin dashboard for Zyqora, a modern e-commerce platform. The admin panel allows authorized users to manage products, categories, brands, orders, users, and more. It features secure admin authentication, a responsive UI, and real-time order/status management.
+## Tech Stack
+- **Frontend:** React, Tailwind CSS, React Router
+- **State Management:** React Context API
+- **API:** Connects to Zyqora backend (Node.js/Express)
+- **Image Uploads:** Cloudinary
 
----
+## Getting Started
 
-## Setup Instructions
+### Prerequisites
+- Node.js (v16+ recommended)
+- npm or yarn
 
-1. **Clone the repository:**
-   ```bash
+### Installation
+1. Clone the repository:
+   ```sh
    git clone <your-repo-url>
    cd admin_panel
    ```
-2. **Install dependencies:**
-   ```bash
+2. Install dependencies:
+   ```sh
    npm install
+   # or
+   yarn install
    ```
-3. **Set up environment variables:**
-   - Create a `.env` file in the `admin_panel` directory.
-   - Add your API base URL:
-     ```env
-     VITE_API_URL=http://localhost:4000/api
-     ```
-   - (Optional) Add other environment variables as needed.
-4. **Start the development server:**
-   ```bash
-   npm run dev
+3. Create a `.env` file in the `admin_panel` directory and set the API URL:
+   ```env
+   VITE_API_URL=http://localhost:4000/api
+   # Or your deployed backend URL
    ```
-5. **Visit the admin panel:**
-   - Open [http://localhost:5174](http://localhost:5174) in your browser (or the port shown in your terminal).
 
----
+### Running the Admin Panel
+```sh
+npm run dev
+# or
+yarn dev
+```
+- The app will be available at [http://localhost:5173](http://localhost:5173) by default.
 
-## Technology Stack
+### Building for Production
+```sh
+npm run build
+# or
+yarn build
+```
 
-- **React.js** (with functional components & hooks)
-- **Tailwind CSS** (utility-first styling)
-- **Vite** (fast dev server & build tool)
-- **Axios** (API requests)
-- **React Router** (routing)
-- **Context API** (state management)
-- **Node.js/Express** (backend, see separate repo)
-- **MongoDB/Mongoose** (database, see backend)
+## Environment Variables
+- `VITE_API_URL`: The base URL for the backend API (e.g., `http://localhost:4000/api` or your deployed backend).
 
----
+## Folder Structure
+```
+admin_panel/
+  src/
+    components/      # Reusable UI components
+    contexts/        # React Contexts (Auth, Toast, etc.)
+    pages/           # Page components (Products, Categories, etc.)
+    services/        # API service wrappers
+    index.css        # Global styles
+    main.jsx         # App entry point
+  public/            # Static assets
+  package.json       # Project config
+  tailwind.config.js # Tailwind CSS config
+```
 
-## LIVE Site Link
+## Notes
+- Make sure your backend server is running and accessible at the URL specified in `VITE_API_URL`.
+- Product and category images are uploaded to Cloudinary.
+- Only admin users can access the admin panel.
 
-[https://zyqora-admin.vercel.app](https://zyqora-admin.vercel.app)  
-*(Replace with your actual deployed URL if different)*
-
----
+## License
+This project is for educational/demo purposes. 
 
 ## Team Members & Contributions
 
-- **Bhargav Sathvara**  
+- **Bhargav Satvara**  
   - Project Lead, Admin Panel UI/UX, API Integration, Order Management, Role-based Auth
-- **[Add more team members here]**
-  - [Describe their contributions]
-
----
-
-## Current Features
-
-- Admin authentication (login/logout)
-- Dashboard with order, user, and product stats
-- Manage products, categories, brands, departments, sizes, colors
-- View and update orders (status, details)
-- Manage users (view, edit, delete)
-- Responsive, accessible UI (with aria roles)
-- Real-time notifications and toasts
-
----
-
-## Future Plans
-
-- Add advanced analytics and reporting
-- Implement role-based permissions (super admin, staff, etc.)
-- Add bulk import/export for products
-- Integrate email notifications for order updates
-- Add dark mode toggle
-- Add multi-language support
-
----
-
-*For frontend and backend setup, see their respective README files.* 
+- **Dhruvi Patel**  
+  - Product & Category Management, Testing, Documentation
+- **Dixit Gami**  
+  - User Management, Analytics, Bug Fixes, Deployment 
