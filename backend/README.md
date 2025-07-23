@@ -70,8 +70,10 @@ This is the backend API for Zyqora, a modern, full-featured e-commerce platform.
 
 - **Bhargav Sathvara**  
   - Project Lead, Backend Architecture, Auth, Cart/Order Logic, Stripe Integration, Admin APIs
-- **[Add more team members here]**
-  - [Describe their contributions]
+- **Dhruvi Patel**
+  - API Documentation (Swagger), Data Validation Logic, Testing & Debugging
+- **Dixit Gami**
+  - Database Schema Design, File Uploads (Multer), Product & Category APIs  
 
 ---
 

@@ -51,7 +51,7 @@ This is the frontend for Zyqora, a modern, full-featured e-commerce platform. It
 
 ## LIVE Site Link
 
-[https://zyqora-frontend.vercel.app](https://zyqora-frontend.vercel.app)  
+[https://zyqora-ten.vercel.app/](https://zyqora-ten.vercel.app/)  
 *(Replace with your actual deployed URL if different)*
 
 ---
@@ -60,8 +60,11 @@ This is the frontend for Zyqora, a modern, full-featured e-commerce platform. It
 
 - **Bhargav Sathvara**  
   - Project Lead, Full Stack Development, Stripe Integration, Cart & Checkout Logic, Admin Panel, UI/UX
-- **[Add more team members here]**
-  - [Describe their contributions]
+- **Dhruvi Patel**
+  - Frontend Components Development, Product Page Design, ARIA Accessibility Enhancements
+- **Dixit Gami**
+  -Context API State Management, Routing & Navigation, Cart Features
+
 
 ---
 
