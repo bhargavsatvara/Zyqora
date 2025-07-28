@@ -6,8 +6,12 @@ const Size = require('../models/size');
 const Color = require('../models/color');
 const Order = require('../models/order');
 const Product = require('../models/product'); // Add this import
+const User = require('../models/user'); // Add this import
 const mongoose = require('mongoose'); // Add this import
+const path = require('path'); // Add this import
 const CartAbandonmentService = require('../services/cartAbandonmentService');
+const transporter = require('../utils/mailer'); // Add this import
+const { orderConfirmationEmail } = require('../utils/emailTemplates'); // Add this import
 
 exports.createOrder = async (req, res) => {
   try {
@@ -96,6 +100,64 @@ exports.createOrder = async (req, res) => {
       if (cart.items.length === 0) {
         await CartAbandonmentService.resetAbandonmentCount(cart._id);
       }
+    }
+
+    // 6. Send order confirmation email
+    try {
+      let userEmail = null;
+      let userName = null;
+      let shouldSendEmail = false;
+
+      // Check if user is authenticated
+      if (req.user) {
+        const user = await User.findById(req.user);
+        if (user && user.email && user.settings?.emailNotifications !== false) {
+          userEmail = user.email;
+          userName = user.name || user.email.split('@')[0];
+          shouldSendEmail = true;
+        }
+      } else {
+        // For guest users, check if email is provided in billing address
+        if (billingAddress && billingAddress.email) {
+          userEmail = billingAddress.email;
+          userName = billingAddress.first_name || billingAddress.email.split('@')[0];
+          shouldSendEmail = true;
+        }
+      }
+
+      if (shouldSendEmail && userEmail) {
+        // Get order items with product images
+        const populatedOrderItems = await OrderItem.find({ _id: { $in: orderItemIds } })
+          .populate('product_id', 'image');
+
+        // Generate order URL
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+        const orderUrl = `${frontendUrl}/order-view/${order._id}`;
+
+        // Generate email HTML
+        const emailHtml = orderConfirmationEmail(userName, order, populatedOrderItems, orderUrl);
+
+        // Send email
+        const mailOptions = {
+          from: `"Zyqora Team" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+          to: userEmail,
+          subject: `Order Confirmation - Order #${order._id}`,
+          html: emailHtml,
+          attachments: [
+            {
+              filename: 'zyqora-logo.png',
+              path: path.resolve(__dirname, '..', '..', 'frontend', 'src', 'assets', 'images', 'logo.png'),
+              cid: 'zyqoraLogo'
+            }
+          ]
+        };
+
+        await transporter.sendMail(mailOptions);
+        console.log(`Order confirmation email sent to ${userEmail} for order ${order._id}`);
+      }
+    } catch (emailError) {
+      console.error('Error sending order confirmation email:', emailError);
+      // Don't fail the order creation if email fails
     }
 
     res.status(201).json({ success: true, order });

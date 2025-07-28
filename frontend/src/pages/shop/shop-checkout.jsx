@@ -8,6 +8,7 @@ import Footer from "../../components/footer";
 import Switcher from "../../components/switcher";
 import ScrollToTop from "../../components/scroll-to-top";
 import { useCart } from "../../contexts/CartContext";
+import { userAPI, ordersAPI, countriesAPI, statesAPI, citiesAPI } from "../../services/api";
 
 const stripePromise = loadStripe('pk_test_51RnLFbFW8XM59bhWaYOroZ29ELB4xWqWiadqhP8CPAl3RvZL8ahBcZTdHxI94f9r0hn9IJNaO8BOGcQXrpE2SBYF00CkTXOTtd'); // TODO: Replace with your real Stripe publishable key
 
@@ -55,15 +56,15 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
         // Fetch user info
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
         if (token) {
-            fetch('https://zyqora.onrender.com/api/user/profile', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            })
-                .then(res => res.json())
-                .then(data => {
-                    const name = data.name || (data.data && data.data.name) || '';
-                    const email = data.email || (data.data && data.data.email) || '';
+            userAPI.getProfile()
+                .then(res => {
+                    const name = res.data.name || (res.data.data && res.data.data.name) || '';
+                    const email = res.data.email || (res.data.data && res.data.data.email) || '';
                     setUser({ name, email });
                     setForm(f => ({ ...f, firstName: name, email }));
+                })
+                .catch(error => {
+                    console.error('Error fetching user profile:', error);
                 });
         }
     }, [fetchCart]);
@@ -72,10 +73,8 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
         if (!token) return;
         try {
-            const res = await fetch('https://zyqora.onrender.com/api/user/address', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await res.json();
+            const res = await userAPI.getAddresses();
+            const data = res.data;
             if (Array.isArray(data)) {
                 setAddresses(data);
             }
@@ -113,8 +112,8 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
         }
         async function fetchStates() {
             try {
-                const res = await fetch(`https://zyqora.onrender.com/api/states?country_id=${addressCountry}`);
-                const data = await res.json();
+                const res = await statesAPI.getStates({ country_id: addressCountry });
+                const data = res.data;
                 setAddressStates((data.data && data.data.states) ? data.data.states : []);
             } catch (e) {
                 setAddressStates([]);
@@ -131,8 +130,8 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
         }
         async function fetchCities() {
             try {
-                const res = await fetch(`https://zyqora.onrender.com/api/cities?state_id=${addressState}`);
-                const data = await res.json();
+                const res = await citiesAPI.getCities({ state_id: addressState });
+                const data = res.data;
                 setAddressCities((data.data && data.data.cities) ? data.data.cities : []);
             } catch (e) {
                 setAddressCities([]);
@@ -167,22 +166,10 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
         setError('');
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
         try {
-            const res = await fetch('https://zyqora.onrender.com/api/user/address', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(addressForm)
-            });
-            if (!res.ok) {
-                const err = await res.json();
-                setError(err.message || 'Failed to add address');
-            } else {
-                setShowAddressForm(false);
-                setAddressForm({ street: '', city: '', state: '', country: '', zipCode: '', isDefault: false });
-                fetchAddresses();
-            }
+            const res = await userAPI.createAddress(addressForm);
+            setShowAddressForm(false);
+            setAddressForm({ street: '', city: '', state: '', country: '', zipCode: '', isDefault: false });
+            fetchAddresses();
         } catch (err) {
             setError('Failed to add address');
         } finally {
@@ -236,23 +223,15 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
         // 2. Get PaymentIntent client_secret from backend
         let clientSecret;
         try {
-            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-            const res = await fetch('https://zyqora.onrender.com/api/orders/checkout', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    billingAddress,
-                    cartItems,
-                    totalAmount: totals.total,
-                    subtotal: totals.subtotal,
-                    tax: totals.tax
-                })
+            const res = await ordersAPI.checkout({
+                billingAddress,
+                cartItems,
+                totalAmount: totals.total,
+                subtotal: totals.subtotal,
+                tax: totals.tax
             });
-            const data = await res.json();
-            if (res.ok && data.clientSecret) {
+            const data = res.data;
+            if (data.clientSecret) {
                 clientSecret = data.clientSecret;
             } else {
                 setError(data.message || 'Payment initiation failed');
@@ -294,24 +273,16 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
         }
         // 4. After payment, send order creation request to backend
         try {
-            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-            const res = await fetch('https://zyqora.onrender.com/api/orders/create', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    billingAddress,
-                    cartItems,
-                    totalAmount: totals.total,
-                    subtotal: totals.subtotal,
-                    tax: totals.tax,
-                    paymentIntentId: paymentIntent.id
-                })
+            const res = await ordersAPI.createOrder({
+                billingAddress,
+                cartItems,
+                totalAmount: totals.total,
+                subtotal: totals.subtotal,
+                tax: totals.tax,
+                paymentIntentId: paymentIntent.id
             });
-            const data = await res.json();
-            if (res.ok && (data.success || data._id)) {
+            const data = res.data;
+            if (data.success || data._id) {
                 setSuccess('Order placed successfully!');
                 setTimeout(() => navigate('/'), 2000);
             } else {
@@ -466,8 +437,8 @@ export default function ShopCheckOut() {
     useEffect(() => {
         async function fetchCountries() {
             try {
-                const res = await fetch('https://zyqora.onrender.com/api/countries');
-                const data = await res.json();
+                const res = await countriesAPI.getCountries();
+                const data = res.data;
                 setCountries((data.data && data.data.countries) ? data.data.countries : []);
             } catch (e) {
                 setCountries([]);
@@ -487,8 +458,8 @@ export default function ShopCheckOut() {
         }
         async function fetchStates() {
             try {
-                const res = await fetch(`https://zyqora.onrender.com/api/states?country_id=${selectedCountry}`);
-                const data = await res.json();
+                const res = await statesAPI.getStates({ country_id: selectedCountry });
+                const data = res.data;
                 setStates((data.data && data.data.states) ? data.data.states : []);
             } catch (e) {
                 setStates([]);
@@ -506,8 +477,8 @@ export default function ShopCheckOut() {
         }
         async function fetchCities() {
             try {
-                const res = await fetch(`https://zyqora.onrender.com/api/cities?state_id=${selectedState}`);
-                const data = await res.json();
+                const res = await citiesAPI.getCities({ state_id: selectedState });
+                const data = res.data;
                 setCities((data.data && data.data.cities) ? data.data.cities : []);
             } catch (e) {
                 setCities([]);

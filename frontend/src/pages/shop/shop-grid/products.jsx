@@ -9,6 +9,7 @@ import Filter from "../../../components/filter";
 import { FiHeart, FiEye, FiBookmark, FiChevronLeft, FiChevronRight } from '../../../assets/icons/vander'
 import { AiFillHeart } from 'react-icons/ai';
 import ScrollToTop from "../../../components/scroll-to-top";
+import { productsAPI, wishlistAPI, reviewsAPI, cartAPI } from "../../../services/api";
 
 export default function Products() {
 	const [searchParams] = useSearchParams();
@@ -18,28 +19,38 @@ export default function Products() {
 	const [totalPages, setTotalPages] = useState(1);
 	const [totalRecords, setTotalRecords] = useState(0);
 	const [filters, setFilters] = useState({
-		search: '',
-		category_id: '',
-		brand_id: '',
-		department_id: '',
-		min_price: '',
-		max_price: ''
+		search: null,
+		category_id: null,
+		brand_id: null,
+		department_id: null,
+		min_price: null,
+		max_price: null
 	});
 	const [wishlist, setWishlist] = useState([]);
 	const [productRatings, setProductRatings] = useState({});
-
-	// Wrap fetchProducts in useCallback
+	console.log("products :: ", searchParams.get('category_id'));
+	// Wrap fetchProducts in useCallback for user interactions
 	const fetchProducts = useCallback(async () => {
 		setLoading(true);
 		try {
-			const params = new URLSearchParams({
+			console.log('Current filters state:', filters);
+			
+			// Clean up filters - remove empty values
+			const cleanFilters = Object.fromEntries(
+				Object.entries(filters).filter(([key, value]) => 
+					value !== '' && value !== null && value !== undefined
+				)
+			);
+
+			const params = {
 				page: currentPage,
 				limit: 12,
-				...filters
-			});
+				...cleanFilters
+			};
 
-			const response = await fetch(`https://zyqora.onrender.com/api/products?${params}`);
-			const data = await response.json();
+			console.log('Fetching products with params:', params);
+			const response = await productsAPI.getProducts(params);
+			const data = response.data;
 
 			if (data.data && data.data.products) {
 				setProducts(data.data.products);
@@ -54,27 +65,73 @@ export default function Products() {
 		}
 	}, [currentPage, filters]);
 
-	// Handle URL parameters on component mount
+	// Handle URL parameters on component mount and fetch products
 	useEffect(() => {
 		const categoryId = searchParams.get('category_id');
 		const departmentId = searchParams.get('department_id');
 		const brandId = searchParams.get('brand_id');
 		const search = searchParams.get('search');
+		console.log("categoryId :: ", categoryId);
 
-		if (categoryId || departmentId || brandId || search) {
-			setFilters(prev => ({
-				...prev,
-				category_id: categoryId || '',
-				department_id: departmentId || '',
-				brand_id: brandId || '',
-				search: search || ''
-			}));
-		}
+		const newFilters = {
+			category_id: categoryId || null,
+			department_id: departmentId || null,
+			brand_id: brandId || null,
+			search: search || null,
+			min_price: null,
+			max_price: null
+		};
+
+		setFilters(newFilters);
+		
+		// Fetch products with the new filters
+		const fetchWithFilters = async () => {
+			setLoading(true);
+			try {
+				console.log('Current filters state:', newFilters);
+				
+				// Clean up filters - remove empty values
+				const cleanFilters = Object.fromEntries(
+					Object.entries(newFilters).filter(([key, value]) => 
+						value !== '' && value !== null && value !== undefined
+					)
+				);
+
+				const params = {
+					page: 1,
+					limit: 12,
+					...cleanFilters
+				};
+
+				console.log('Fetching products with params:', params);
+				const response = await productsAPI.getProducts(params);
+				const data = response.data;
+
+				if (data.data && data.data.products) {
+					setProducts(data.data.products);
+					setTotalPages(data.data.pagination?.totalPages || 1);
+					setTotalRecords(data.data.pagination?.totalRecords || 0);
+				}
+			} catch (error) {
+				console.error('Error fetching products:', error);
+				setProducts([]);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		fetchWithFilters();
 	}, [searchParams]);
 
+	// Fetch products when filters change (for user interactions)
 	useEffect(() => {
-		fetchProducts();
-	}, []);
+		// Skip the initial fetch since it's handled by the URL params effect
+		if (filters.category_id !== null || filters.department_id !== null || 
+			filters.brand_id !== null || filters.search !== null ||
+			filters.min_price !== null || filters.max_price !== null) {
+			fetchProducts();
+		}
+	}, [filters, fetchProducts]);
 
 	// Load wishlist on mount
 	useEffect(() => {
@@ -82,16 +139,14 @@ export default function Products() {
 		console.log("token :: ", token);
 		if (token) {
 			// Fetch wishlist from API
-			fetch('https://zyqora.onrender.com/api/wishlist', {
-				headers: {
-					'Authorization': `Bearer ${token}`
-				}
-			})
-				.then(res => res.json())
-				.then(data => {
-					if (data && Array.isArray(data.items)) {
-						setWishlist(data.items.map(w => w._id || w.productId));
+			wishlistAPI.getWishlist()
+				.then(res => {
+					if (res.data && Array.isArray(res.data.items)) {
+						setWishlist(res.data.items.map(w => w._id || w.productId));
 					}
+				})
+				.catch(error => {
+					console.error('Error fetching wishlist:', error);
 				});
 		} else {
 			// Load from localStorage
@@ -106,12 +161,16 @@ export default function Products() {
 			const ratings = {};
 			await Promise.all(products.map(async (item) => {
 				if (item._id) {
-					const res = await fetch(`https://zyqora.onrender.com/api/reviews/${item._id}`);
-					const data = await res.json();
-					if (Array.isArray(data) && data.length > 0) {
-						const avg = data.reduce((sum, r) => sum + (Number(r.rating) || 0), 0) / data.length;
-						ratings[item._id] = { avg, count: data.length };
-					} else {
+					try {
+						const res = await reviewsAPI.getProductReviews(item._id);
+						const data = res.data;
+						if (Array.isArray(data) && data.length > 0) {
+							const avg = data.reduce((sum, r) => sum + (Number(r.rating) || 0), 0) / data.length;
+							ratings[item._id] = { avg, count: data.length };
+						} else {
+							ratings[item._id] = { avg: 0, count: 0 };
+						}
+					} catch (error) {
 						ratings[item._id] = { avg: 0, count: 0 };
 					}
 				}
@@ -153,17 +212,15 @@ export default function Products() {
 	const handleAddToWishlist = async (item) => {
 		const token = localStorage.getItem('token') || sessionStorage.getItem('token');
 		if (token) {
-			await fetch('https://zyqora.onrender.com/api/wishlist/add', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'Authorization': `Bearer ${token}`
-				},
-				body: JSON.stringify({ productId: item._id })
-			});
-			console.log("wishlist :: ", wishlist);
-			setWishlist(prev => prev.includes(item._id) ? prev : [...prev, item._id]);
-			alert('Added to wishlist!');
+			try {
+				await wishlistAPI.addToWishlistAlt({ productId: item._id });
+				console.log("wishlist :: ", wishlist);
+				setWishlist(prev => prev.includes(item._id) ? prev : [...prev, item._id]);
+				alert('Added to wishlist!');
+			} catch (error) {
+				console.error('Error adding to wishlist:', error);
+				alert('Failed to add to wishlist');
+			}
 		} else {
 			let localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
 			if (!localWishlist.find(p => p._id === item._id)) {
@@ -297,7 +354,7 @@ export default function Products() {
 												<div className="flex justify-between items-center mt-1">
 													<p className="text-lg font-semibold">${item.price || 0}</p>
 													<ul className="font-medium text-amber-400 list-none">
-														{[1,2,3,4,5].map(n => (
+														{[1, 2, 3, 4, 5].map(n => (
 															<li className="inline" key={n}>
 																<i className={`mdi mdi-star${(productRatings[item._id]?.avg || 0) >= n ? '' : '-outline'}`}></i>
 															</li>

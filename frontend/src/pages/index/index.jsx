@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
 import Navbar from "../../components/navbar";
+import { categoriesAPI, productsAPI, wishlistAPI, cartAPI, reviewsAPI } from "../../services/api";
 import Footer from "../../components/footer";
 import Switcher from "../../components/switcher";
 import Tagline from "../../components/tagline";
@@ -19,7 +19,7 @@ export default function Index() {
 
   const fetchCollections = async () => {
     try {
-      const response = await axios.get('https://zyqora.onrender.com/api/categories?page=1&limit=5');
+      const response = await categoriesAPI.getCategories({ page: 1, limit: 5 });
       console.log("fetchCollections :: ", response.data.data.categories);
       setCollections(response.data.data.categories);
     } catch (error) {
@@ -30,7 +30,7 @@ export default function Index() {
 
   const fetchNewProduct = async () => {
     try {
-      const response = await axios.get('https://zyqora.onrender.com/api/products');
+      const response = await productsAPI.getProducts();
       console.log("fetchNewProduct :: ", response.data.data.products);
       setNewProduct(response.data.data.products);
     } catch (error) {
@@ -50,16 +50,14 @@ export default function Index() {
   useEffect(() => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (token) {
-      fetch('https://zyqora.onrender.com/api/wishlist', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data && Array.isArray(data.items)) {
-            setWishlist(data.items.map(w => w._id || w.productId));
+      wishlistAPI.getWishlist()
+        .then(res => {
+          if (res.data && Array.isArray(res.data.items)) {
+            setWishlist(res.data.items.map(w => w._id || w.productId));
           }
+        })
+        .catch(error => {
+          console.error('Error fetching wishlist:', error);
         });
     } else {
       const localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
@@ -70,16 +68,14 @@ export default function Index() {
   const handleAddToWishlist = async (item) => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (token) {
-      await fetch('https://zyqora.onrender.com/api/wishlist/add', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ productId: item._id })
-      });
-      setWishlist(prev => prev.includes(item._id) ? prev : [...prev, item._id]);
-      alert('Added to wishlist!');
+      try {
+        await wishlistAPI.addToWishlistAlt({ productId: item._id });
+        setWishlist(prev => prev.includes(item._id) ? prev : [...prev, item._id]);
+        alert('Added to wishlist!');
+      } catch (error) {
+        console.error('Error adding to wishlist:', error);
+        alert('Failed to add to wishlist');
+      }
     } else {
       let localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
       if (!localWishlist.find(p => p._id === item._id)) {
@@ -97,12 +93,16 @@ export default function Index() {
       const ratings = {};
       await Promise.all(newProduct.map(async (item) => {
         if (item._id) {
-          const res = await fetch(`https://zyqora.onrender.com/api/reviews/${item._id}`);
-          const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
-            const avg = data.reduce((sum, r) => sum + (Number(r.rating) || 0), 0) / data.length;
-            ratings[item._id] = { avg, count: data.length };
-          } else {
+          try {
+            const res = await reviewsAPI.getProductReviews(item._id);
+            const data = res.data;
+            if (Array.isArray(data) && data.length > 0) {
+              const avg = data.reduce((sum, r) => sum + (Number(r.rating) || 0), 0) / data.length;
+              ratings[item._id] = { avg, count: data.length };
+            } else {
+              ratings[item._id] = { avg: 0, count: 0 };
+            }
+          } catch (error) {
             ratings[item._id] = { avg: 0, count: 0 };
           }
         }
@@ -297,13 +297,13 @@ export default function Index() {
           <div className="grid gap-6 pt-6 lg:grid-cols-5 md:grid-cols-3 sm:grid-cols-2 grid-cols-2">
             {collections.map((item, index) => (
               <Link
-                to=""
-                className="text-center hover:text-orange-500"
+                to={`/products?category_id=${item._id}`}
+                className="text-center hover:text-orange-500 transition-colors duration-300"
                 key={index}
               >
                 <img
                   src={item.image}
-                  className="w-40 h-40 rounded-full shadow dark:shadow-gray-800"
+                  className="w-40 h-40 rounded-full shadow dark:shadow-gray-800 hover:scale-105 transition-transform duration-300"
                   alt={item.name}
                 />
                 <span className="block mt-3 text-xl font-medium">
@@ -344,20 +344,19 @@ export default function Index() {
                           return;
                         }
                         // Call add to cart API
-                        await fetch('https://zyqora.onrender.com/api/cart/add', {
-                          method: 'POST',
-                          headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                          },
-                          body: JSON.stringify({
+                        try {
+                          await cartAPI.addToCartAlt({
                             product_id: item._id,
                             name: item.name,
                             price: item.price,
                             image: item.image,
                             quantity: 1
-                          })
-                        });
+                          });
+                        } catch (error) {
+                          console.error('Error adding to cart:', error);
+                          alert('Failed to add to cart');
+                          return;
+                        }
                         window.location.href = '/shop-cart';
                       }}
                       className="inline-block w-full px-5 py-2 text-base font-semibold text-white bg-slate-900 rounded-md tracking-wide align-middle duration-500 text-center"
@@ -437,7 +436,7 @@ export default function Index() {
 
                 <div className="mt-4">
                   <Link
-                    to={`/product-detail-one/${item.id}`}
+                    to={`/product-detail-one/${item._id}`}
                     className="block text-lg font-medium hover:text-orange-500"
                   >
                     {item.name}

@@ -10,6 +10,7 @@ import Switcher from "../../../components/switcher";
 import ScrollToTop from "../../../components/scroll-to-top";
 import Lightbox from 'react-18-image-lightbox';
 import 'react-18-image-lightbox/style.css';
+import { productsAPI } from "../../../services/api";
 
 export default function ProductDetailOne() {
 	const { id } = useParams();
@@ -23,8 +24,8 @@ export default function ProductDetailOne() {
 		async function fetchProduct() {
 			try {
 				setLoading(true);
-				const response = await fetch(`https://zyqora.onrender.com/api/products/${id}`);
-				const data = await response.json();
+				const response = await productsAPI.getProduct(id);
+				const data = response.data;
 
 				if (data) {
 					setProduct(data);
