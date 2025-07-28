@@ -1,4 +1,5 @@
 const { Cart, Product } = require('../models');
+const CartAbandonmentService = require('../services/cartAbandonmentService');
 
 // Helper function to normalize product ID for comparison
 const normalizeProductId = (productId) => {
@@ -176,6 +177,11 @@ exports.removeItem = async (req, res) => {
     cart.items = filteredItems;
     await cart.save();
 
+    // Reset abandonment count if cart is now empty
+    if (filteredItems.length === 0) {
+      await CartAbandonmentService.resetAbandonmentCount(cart._id);
+    }
+
     res.json({
       success: true,
       message: 'Item removed from cart',
@@ -198,6 +204,10 @@ exports.clearCart = async (req, res) => {
     }
     cart.items = [];
     await cart.save();
+    
+    // Reset abandonment count when cart is cleared
+    await CartAbandonmentService.resetAbandonmentCount(cart._id);
+    
     res.json({ message: 'Cart cleared' });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });

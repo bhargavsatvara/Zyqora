@@ -9,6 +9,8 @@ const Category = require('../models/category');
 const Brand = require('../models/brand');
 const Coupon = require('../models/coupon');
 const { getDashboardStats } = require('../controllers/adminController');
+const CartAbandonmentService = require('../services/cartAbandonmentService');
+const cartAbandonmentScheduler = require('../scheduler/cartAbandonmentScheduler');
 
 // Apply admin middleware to all routes
 router.use(authenticate, authorizeAdmin);
@@ -211,6 +213,74 @@ router.delete('/reviews/:id', async (req, res) => {
     }
 
     res.json({ success: true, message: 'Review deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Cart abandonment management routes
+router.get('/cart-abandonment/stats', async (req, res) => {
+  try {
+    const stats = await CartAbandonmentService.getAbandonmentStats();
+    res.json({ success: true, data: stats });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+router.get('/cart-abandonment/abandoned-carts', async (req, res) => {
+  try {
+    const abandonedCarts = await CartAbandonmentService.findAbandonedCarts();
+    res.json({ success: true, data: abandonedCarts });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+router.post('/cart-abandonment/send-emails', async (req, res) => {
+  try {
+    const emailsSent = await CartAbandonmentService.processAbandonedCarts();
+    res.json({ 
+      success: true, 
+      message: `Successfully sent ${emailsSent} cart abandonment emails`,
+      emailsSent 
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+router.get('/cart-abandonment/scheduler/status', (req, res) => {
+  try {
+    const status = cartAbandonmentScheduler.getStatus();
+    res.json({ success: true, data: status });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+router.post('/cart-abandonment/scheduler/start', (req, res) => {
+  try {
+    cartAbandonmentScheduler.start();
+    res.json({ success: true, message: 'Cart abandonment scheduler started' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+router.post('/cart-abandonment/scheduler/stop', (req, res) => {
+  try {
+    cartAbandonmentScheduler.stop();
+    res.json({ success: true, message: 'Cart abandonment scheduler stopped' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+router.post('/cart-abandonment/scheduler/test', async (req, res) => {
+  try {
+    const result = await cartAbandonmentScheduler.testAbandonmentService();
+    res.json({ success: true, data: result });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

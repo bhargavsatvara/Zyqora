@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import client from '../assets/images/client/16.jpg'
 import { FiAirplay, FiEdit, FiCreditCard, FiFileText, FiShare2, FiBell, FiSettings, FiLogOut } from '../assets/icons/vander'
@@ -6,18 +6,55 @@ import { FiAirplay, FiEdit, FiCreditCard, FiFileText, FiShare2, FiBell, FiSettin
 export default function Usertab() {
 	const navigate = useNavigate();
 	const [file, setFile] = useState(client);
+	const [user, setUser] = useState(null);
 	let current = window.location.pathname;
+
+	useEffect(() => {
+		// Get user data from localStorage or sessionStorage
+		const userData = localStorage.getItem('user') || sessionStorage.getItem('user');
+		if (userData) {
+			try {
+				const parsedUser = JSON.parse(userData);
+				setUser(parsedUser);
+			} catch (error) {
+				console.error('Error parsing user data:', error);
+			}
+		}
+	}, []);
 
 	function handleChange(e) {
 		setFile(URL.createObjectURL(e.target.files[0]));
 	}
-	
+
 	const handleLogout = () => {
 		localStorage.removeItem("token");
 		localStorage.removeItem("user");
 		sessionStorage.removeItem("token");
 		sessionStorage.removeItem("user");
 		navigate("/login");
+	};
+
+	// Get user display name - use full name if available, otherwise use first name or email
+	const getUserDisplayName = () => {
+		if (!user) return 'User';
+		
+		if (user.full_name) {
+			return user.full_name;
+		} else if (user.first_name && user.last_name) {
+			return `${user.first_name} ${user.last_name}`;
+		} else if (user.first_name) {
+			return user.first_name;
+		} else if (user.name) {
+			return user.name;
+		} else {
+			return user.email ? user.email.split('@')[0] : 'User';
+		}
+	};
+
+	// Get user email
+	const getUserEmail = () => {
+		if (!user) return 'user@example.com';
+		return user.email || 'No email available';
 	};
 
 	return (
@@ -33,8 +70,8 @@ export default function Usertab() {
 							</div>
 
 							<div className="mt-4">
-								<h5 className="text-lg font-semibold">Bhargav Satvara</h5>
-								<p className="text-slate-400">bhargav@gmail.com</p>
+								<h5 className="text-lg font-semibold">{getUserDisplayName()}</h5>
+								<p className="text-slate-400">{getUserEmail()}</p>
 							</div>
 						</div>
 					</div>

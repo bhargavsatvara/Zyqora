@@ -103,14 +103,6 @@ export default function Login() {
               )}
             </button>
           </form>
-
-          <div className="mt-6 p-4 bg-slate-50 rounded-xl">
-            <p className="text-sm text-slate-600 text-center">
-              <strong>Demo Credentials:</strong><br />
-              Email: admin@example.com<br />
-              Password: Admin123!
-            </p>
-          </div>
         </div>
       </div>
     </div>

@@ -9,6 +9,7 @@ import Counter from "../../components/counter";
 
 import ScrollToTop from "../../components/scroll-to-top";
 import { useCart } from "../../contexts/CartContext";
+import { cartAPI } from "../../services/api";
 
 export default function Shopcart(props){
     const [cartData, setCartData] = useState([]);
@@ -37,20 +38,21 @@ export default function Shopcart(props){
         try {
             setLoading(true);
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-            const response = await fetch('https://zyqora.onrender.com/api/cart', {
-                headers: {
-                    ...(token && { 'Authorization': `Bearer ${token}` })
+            if (token) {
+                const response = await cartAPI.getCart();
+                const data = response.data;
+                
+                if (data.success) {
+                    setCartData(data.data.items || []);
+                    setTotals({
+                        subtotal: data.data.subtotal || 0,
+                        tax: data.data.tax || 0,
+                        total: data.data.total || 0
+                    });
+                } else {
+                    setCartData([]);
+                    setTotals({ subtotal: 0, tax: 0, total: 0 });
                 }
-            });
-            const data = await response.json();
-            
-            if (data.success) {
-                setCartData(data.data.items || []);
-                setTotals({
-                    subtotal: data.data.subtotal || 0,
-                    tax: data.data.tax || 0,
-                    total: data.data.total || 0
-                });
             } else {
                 setCartData([]);
                 setTotals({ subtotal: 0, tax: 0, total: 0 });
@@ -90,22 +92,14 @@ export default function Shopcart(props){
 
         try {
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-            const response = await fetch('https://zyqora.onrender.com/api/cart/update', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(token && { 'Authorization': `Bearer ${token}` })
-                },
-                body: JSON.stringify({
+            if (token) {
+                await cartAPI.updateCartItemAlt({
                     itemId: itemId,
                     quantity: newQuantity
-                })
-            });
-
-            if (!response.ok) {
-                fetchCartData();
+                });
             }
         } catch (error) {
+            console.error('Error updating cart item:', error);
             fetchCartData();
         }
     };
@@ -113,21 +107,13 @@ export default function Shopcart(props){
     const removeFromCart = async (item) => {
         try {
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-            const response = await fetch('https://zyqora.onrender.com/api/cart/remove', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    ...(token && { 'Authorization': `Bearer ${token}` })
-                },
-                body: JSON.stringify({
+            if (token) {
+                await cartAPI.removeFromCartAlt({
                     product_id: item.product_id,
                     size: item.size,
                     color: item.color
-                })
-            });
-            const text = await response.text();
-            console.log('Remove response:', text);
-            if (response.ok) {
+                });
+                
                 setCartData(prevCartData => {
                     const updatedCart = prevCartData.filter(
                         i => !(i.product_id === item.product_id && i.size === item.size && i.color === item.color)
@@ -136,11 +122,9 @@ export default function Shopcart(props){
                     return updatedCart;
                 });
                 await fetchCart(); // Update cart context after removing
-            } else {
-                setMessage('Error removing item from cart');
-                setTimeout(() => setMessage(''), 3000);
             }
         } catch (error) {
+            console.error('Error removing item from cart:', error);
             setMessage('Error removing item from cart');
             setTimeout(() => setMessage(''), 3000);
         }
@@ -149,21 +133,12 @@ export default function Shopcart(props){
     const clearCart = async () => {
         try {
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-            const response = await fetch('https://zyqora.onrender.com/api/cart/clear', {
-                method: 'DELETE',
-                headers: {
-                    ...(token && { 'Authorization': `Bearer ${token}` })
-                }
-            });
-
-            if (response.ok) {
+            if (token) {
+                await cartAPI.clearCart();
                 setMessage('Cart cleared successfully');
                 setTimeout(() => setMessage(''), 3000);
                 fetchCartData();
                 await fetchCart(); // Update cart context after clearing
-            } else {
-                setMessage('Error clearing cart');
-                setTimeout(() => setMessage(''), 3000);
             }
         } catch (error) {
             console.error('Error clearing cart:', error);

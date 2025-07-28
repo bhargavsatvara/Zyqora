@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/navbar';
 import Footer from '../components/footer';
+import { wishlistAPI } from '../services/api';
 
 export default function Wishlist() {
   const [items, setItems] = useState([]);
@@ -14,12 +15,9 @@ export default function Wishlist() {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       if (token) {
         try {
-          const res = await fetch('https://zyqora.onrender.com/api/wishlist', {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          const data = await res.json();
-          if (Array.isArray(data.items)) {
-            setItems(data.items);
+          const res = await wishlistAPI.getWishlist();
+          if (Array.isArray(res.data.items)) {
+            setItems(res.data.items);
           } else {
             setItems([]);
           }
@@ -96,11 +94,12 @@ export default function Wishlist() {
                               // Remove from backend or localStorage
                               const token = localStorage.getItem('token') || sessionStorage.getItem('token');
                               if (token) {
-                                await fetch(`https://zyqora.onrender.com/api/wishlist/remove/${item._id || item}`, {
-                                  method: 'DELETE',
-                                  headers: { 'Authorization': `Bearer ${token}` }
-                                });
-                                setItems(items.filter(i => (i._id || i) !== (item._id || item)));
+                                try {
+                                  await wishlistAPI.removeFromWishlistAlt(item._id || item);
+                                  setItems(items.filter(i => (i._id || i) !== (item._id || item)));
+                                } catch (error) {
+                                  console.error('Error removing from wishlist:', error);
+                                }
                               } else {
                                 removeFromLocalWishlist(item._id || item);
                               }

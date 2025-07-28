@@ -27,6 +27,17 @@ This is the backend API for Zyqora, a modern, full-featured e-commerce platform.
      MONGODB_URI=your_mongodb_atlas_connection_string
      JWT_SECRET=your_jwt_secret
      STRIPE_SECRET_KEY=your_stripe_secret_key
+     
+     # Email Configuration (for order confirmations and notifications)
+     SMTP_HOST=smtp.gmail.com
+     SMTP_PORT=465
+     SMTP_SECURE=true
+     SMTP_USER=your.email@gmail.com
+     SMTP_PASS=your_16_char_app_password
+     SMTP_FROM=your.email@gmail.com
+     
+     # Frontend URL (for email links)
+     FRONTEND_URL=http://localhost:3000
      ```
 4. **Start the development server:**
    ```bash
@@ -63,6 +74,13 @@ This is the backend API for Zyqora, a modern, full-featured e-commerce platform.
 - `MONGODB_URI` - MongoDB Atlas connection string
 - `JWT_SECRET` - Secret for JWT token signing
 - `STRIPE_SECRET_KEY` - Stripe secret key for payments
+- `SMTP_HOST` - SMTP server host (e.g., smtp.gmail.com)
+- `SMTP_PORT` - SMTP server port (e.g., 465)
+- `SMTP_SECURE` - Use secure connection (true/false)
+- `SMTP_USER` - SMTP username/email
+- `SMTP_PASS` - SMTP password/app password
+- `SMTP_FROM` - From email address for emails
+- `FRONTEND_URL` - Frontend URL for email links
 
 ---
 
@@ -83,6 +101,7 @@ This is the backend API for Zyqora, a modern, full-featured e-commerce platform.
 - RESTful API for products, categories, brands, departments, sizes, colors
 - Cart management (guest & user, merging on login)
 - Order creation, payment (Stripe), and order history
+- **Email notifications (order confirmations, cart abandonment)**
 - Admin endpoints for managing products, orders, users
 - File uploads for product images
 - API documentation with Swagger
@@ -92,7 +111,7 @@ This is the backend API for Zyqora, a modern, full-featured e-commerce platform.
 
 ## Future Plans
 
-- Add email notifications (order confirmation, password reset)
+- Add more email notification types (shipping updates, delivery confirmations)
 - Implement rate limiting and security hardening
 - Add more analytics endpoints for admin
 - Support for multi-vendor/marketplace features

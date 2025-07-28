@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {FiSearch, FiChevronDown, FiChevronUp} from '../assets/icons/vander'
+import { productsAPI, colorsAPI, brandsAPI, categoriesAPI, departmentsAPI } from '../services/api';
 
 export default function Filter({ onFilterChange, filters }){
     const [colors, setColors] = useState([]);
@@ -35,40 +36,66 @@ export default function Filter({ onFilterChange, filters }){
 
     // Update selected states when filters change from URL
     useEffect(() => {
-        if (filters.category_id && filters.category_id !== selectedCategories[0]) {
+        console.log('Filter component received filters:', filters);
+        
+        // Handle category filter
+        if (filters.category_id) {
+            console.log('Setting selected category:', filters.category_id);
             setSelectedCategories([filters.category_id]);
+        } else {
+            setSelectedCategories([]);
         }
-        if (filters.brand_id && filters.brand_id !== selectedBrands[0]) {
+        
+        // Handle brand filter
+        if (filters.brand_id) {
             setSelectedBrands([filters.brand_id]);
+        } else {
+            setSelectedBrands([]);
         }
-        if (filters.color_id && filters.color_id !== selectedColors[0]) {
+        
+        // Handle color filter
+        if (filters.color_id) {
             setSelectedColors([filters.color_id]);
+        } else {
+            setSelectedColors([]);
         }
-        if (filters.size_id && filters.size_id !== selectedSizes[0]) {
+        
+        // Handle size filter
+        if (filters.size_id) {
             setSelectedSizes([filters.size_id]);
+        } else {
+            setSelectedSizes([]);
         }
-        if (filters.department_id && filters.department_id !== selectedDepartments[0]) {
+        
+        // Handle department filter
+        if (filters.department_id) {
             setSelectedDepartments([filters.department_id]);
             // Fetch categories for the selected department
             fetchCategoriesForDepartment(filters.department_id);
+        } else {
+            setSelectedDepartments([]);
+            // Clear categories when no department is selected
+            setCategories([]);
         }
-    }, [filters.category_id, filters.brand_id, filters.color_id, filters.size_id, filters.department_id]);
+    }, [filters]);
 
     // Fetch available sizes based on current filters
     const fetchAvailableSizes = async () => {
         try {
             // Build query parameters based on current filters
-            const params = new URLSearchParams();
-            if (filters.department_id) params.append('department_id', filters.department_id);
-            if (filters.category_id) params.append('category_id', filters.category_id);
-            if (filters.brand_id) params.append('brand_id', filters.brand_id);
-            if (filters.color_id) params.append('color_id', filters.color_id);
-            if (filters.min_price) params.append('min_price', filters.min_price);
-            if (filters.max_price) params.append('max_price', filters.max_price);
+            const params = {
+                limit: 1000
+            };
+            if (filters.department_id) params.department_id = filters.department_id;
+            if (filters.category_id) params.category_id = filters.category_id;
+            if (filters.brand_id) params.brand_id = filters.brand_id;
+            if (filters.color_id) params.color_id = filters.color_id;
+            if (filters.min_price) params.min_price = filters.min_price;
+            if (filters.max_price) params.max_price = filters.max_price;
             
-            console.log('Fetching available sizes with params:', params.toString());
-            const res = await fetch(`https://zyqora.onrender.com/api/products?${params.toString()}&limit=1000`);
-            const data = await res.json();
+            console.log('Fetching available sizes with params:', params);
+            const res = await productsAPI.getProducts(params);
+            const data = res.data;
             
             if (data.data && data.data.products) {
                 // Extract unique sizes from products
@@ -94,33 +121,30 @@ export default function Filter({ onFilterChange, filters }){
                 }));
                 
                 console.log('Available sizes found:', availableSizes);
-                setSizes(availableSizes);
+                setSizes(Array.isArray(availableSizes) ? availableSizes : []);
             }
         } catch (error) {
             console.error('Error fetching available sizes:', error);
+            setSizes([]);
         }
     };
 
     const fetchFilterData = async () => {
         setLoading(true);
         try {
-            // Fetch colors, brands, categories, and departments in parallel
-            const [colorsRes, brandsRes, categoriesRes, departmentsRes] = await Promise.all([
-                fetch('https://zyqora.onrender.com/api/colors'),
-                fetch('https://zyqora.onrender.com/api/brands'),
-                fetch('https://zyqora.onrender.com/api/categories'),
-                fetch('https://zyqora.onrender.com/api/departments')
+            // Fetch colors, brands, and departments in parallel
+            const [colorsRes, brandsRes, departmentsRes] = await Promise.all([
+                colorsAPI.getColors(),
+                brandsAPI.getBrands(),
+                departmentsAPI.getDepartments()
             ]);
 
-            const colorsData = await colorsRes.json();
-            const brandsData = await brandsRes.json();
-            const categoriesData = await categoriesRes.json();
-            const departmentsData = await departmentsRes.json();
-
-            setColors(colorsData.data?.colors || []);
-            setBrands(brandsData.data?.brands || []);
-            setCategories(categoriesData.data?.categories || []);
-            setDepartments(departmentsData || []);
+            setColors(colorsRes.data?.colors || colorsRes.data || []);
+            setBrands(brandsRes.data?.brands || brandsRes.data || []);
+            setDepartments(departmentsRes.data || departmentsRes || []);
+            
+            // Don't fetch categories initially - they will be fetched when department is selected
+            setCategories([]);
             
             // Fetch available sizes based on current filters
             await fetchAvailableSizes();
@@ -131,12 +155,15 @@ export default function Filter({ onFilterChange, filters }){
         }
     };
 
-    // Fetch categories for a specific department
-    const fetchCategoriesForDepartment = async (departmentId) => {
+    // Fetch all categories (without department filter)
+    const fetchAllCategories = async () => {
         try {
-            console.log(`Fetching categories for department: ${departmentId}`);
-            const res = await fetch(`https://zyqora.onrender.com/api/categories?department_id=${departmentId}`);
-            const data = await res.json();
+            console.log('Fetching all categories');
+            // Request all categories with a high limit to ensure we get all of them
+            const res = await categoriesAPI.getCategories({ limit: 1000 });
+            const data = res.data;
+            
+            console.log('Categories API response:', data);
             
             let categoriesData = [];
             if (data.data && data.data.categories) {
@@ -147,15 +174,47 @@ export default function Filter({ onFilterChange, filters }){
                 categoriesData = data;
             }
             
-            console.log(`Found ${categoriesData.length} categories for department ${departmentId}`);
-            setCategories(categoriesData);
+            console.log(`Found ${categoriesData.length} total categories:`, categoriesData.map(cat => cat.name));
+            setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+        } catch (error) {
+            console.error('Error fetching all categories:', error);
+            setCategories([]);
+        }
+    };
+
+    // Fetch categories for a specific department
+    const fetchCategoriesForDepartment = async (departmentId) => {
+        try {
+            console.log(`Fetching categories for department: ${departmentId}`);
+            // Request all categories for the department with a high limit
+            const res = await categoriesAPI.getCategories({ 
+                department_id: departmentId,
+                limit: 1000 
+            });
+            const data = res.data;
+            
+            console.log('Department categories API response:', data);
+            
+            let categoriesData = [];
+            if (data.data && data.data.categories) {
+                categoriesData = data.data.categories;
+            } else if (data.categories) {
+                categoriesData = data.categories;
+            } else if (Array.isArray(data)) {
+                categoriesData = data;
+            }
+            
+            console.log(`Found ${categoriesData.length} categories for department ${departmentId}:`, categoriesData.map(cat => cat.name));
+            setCategories(Array.isArray(categoriesData) ? categoriesData : []);
         } catch (error) {
             console.error(`Error fetching categories for department ${departmentId}:`, error);
+            setCategories([]);
         }
     };
 
     const handleSearchChange = (e) => {
-        onFilterChange({ search: e.target.value });
+        const value = e.target.value.trim();
+        onFilterChange({ search: value || null });
     };
 
     const toggleSection = (section) => {
@@ -171,18 +230,18 @@ export default function Filter({ onFilterChange, filters }){
             : [departmentId]; // Only allow one department selection
         
         setSelectedDepartments(newSelectedDepartments);
-        onFilterChange({ department_id: newSelectedDepartments.length > 0 ? newSelectedDepartments[0] : '' });
+        onFilterChange({ department_id: newSelectedDepartments.length > 0 ? newSelectedDepartments[0] : null });
         
         // Clear category selection when department changes
         setSelectedCategories([]);
-        onFilterChange({ category_id: '' });
+        onFilterChange({ category_id: null });
         
-        // Fetch categories for the selected department
+        // Always fetch categories for the selected department
         if (newSelectedDepartments.length > 0) {
             fetchCategoriesForDepartment(newSelectedDepartments[0]);
         } else {
-            // If no department selected, show all categories
-            fetchFilterData();
+            // If no department selected, clear categories
+            setCategories([]);
         }
         
         // Refresh available sizes after department change
@@ -195,7 +254,7 @@ export default function Filter({ onFilterChange, filters }){
             : [...selectedCategories, categoryId];
         
         setSelectedCategories(newSelectedCategories);
-        onFilterChange({ category_id: newSelectedCategories.length > 0 ? newSelectedCategories[0] : '' });
+        onFilterChange({ category_id: newSelectedCategories.length > 0 ? newSelectedCategories[0] : null });
         
         // Refresh available sizes after category change
         setTimeout(() => fetchAvailableSizes(), 100);
@@ -207,7 +266,7 @@ export default function Filter({ onFilterChange, filters }){
             : [...selectedColors, colorId];
         
         setSelectedColors(newSelectedColors);
-        onFilterChange({ color_id: newSelectedColors.length > 0 ? newSelectedColors[0] : '' });
+        onFilterChange({ color_id: newSelectedColors.length > 0 ? newSelectedColors[0] : null });
         
         // Refresh available sizes after color change
         setTimeout(() => fetchAvailableSizes(), 100);
@@ -219,7 +278,7 @@ export default function Filter({ onFilterChange, filters }){
             : [...selectedBrands, brandId];
         
         setSelectedBrands(newSelectedBrands);
-        onFilterChange({ brand_id: newSelectedBrands.length > 0 ? newSelectedBrands[0] : '' });
+        onFilterChange({ brand_id: newSelectedBrands.length > 0 ? newSelectedBrands[0] : null });
         
         // Refresh available sizes after brand change
         setTimeout(() => fetchAvailableSizes(), 100);
@@ -231,7 +290,7 @@ export default function Filter({ onFilterChange, filters }){
             : [...selectedSizes, sizeId];
         
         setSelectedSizes(newSelectedSizes);
-        onFilterChange({ size_id: newSelectedSizes.length > 0 ? newSelectedSizes[0] : '' });
+        onFilterChange({ size_id: newSelectedSizes.length > 0 ? newSelectedSizes[0] : null });
     };
 
     const getColorStyle = (color) => {
@@ -260,23 +319,26 @@ export default function Filter({ onFilterChange, filters }){
         setSelectedCategories([]);
         setSelectedDepartments([]);
         onFilterChange({
-            search: '',
-            color_id: '',
-            brand_id: '',
-            size_id: '',
-            category_id: '',
-            department_id: '',
-            min_price: '',
-            max_price: ''
+            search: null,
+            color_id: null,
+            brand_id: null,
+            size_id: null,
+            category_id: null,
+            department_id: null,
+            min_price: null,
+            max_price: null
         });
-        // Reset categories to show all categories and refresh available sizes
-        fetchFilterData();
+        // Clear categories when no department is selected
+        setCategories([]);
+        setTimeout(() => fetchAvailableSizes(), 100);
     };
 
     const renderSection = (title, section, items, selectedItems, handleClick, showMore, setShowMore, maxItems = 5, showSelection = true) => {
         const isExpanded = expandedSections[section];
-        const hasMoreItems = items.length > maxItems;
-        const displayItems = showMore ? items : items.slice(0, maxItems);
+        // Ensure items is an array
+        const itemsArray = Array.isArray(items) ? items : [];
+        const hasMoreItems = itemsArray.length > maxItems;
+        const displayItems = showMore ? itemsArray : itemsArray.slice(0, maxItems);
 
         return (
             <div className="border-b border-gray-200 dark:border-gray-700 last:border-b-0">
@@ -290,7 +352,9 @@ export default function Filter({ onFilterChange, filters }){
                 
                 {isExpanded && (
                     <div className="pb-3">
-                        <div className="max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                        <div className={`overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 ${
+                            showMore ? 'max-h-96' : 'max-h-48'
+                        }`}>
                             {displayItems.map((item, index) => (
                                 <div key={item._id || index} className="flex items-center justify-between py-1">
                                     <button
@@ -316,7 +380,16 @@ export default function Filter({ onFilterChange, filters }){
                                 onClick={() => setShowMore(true)}
                                 className="text-sm text-orange-500 hover:text-orange-600 font-medium mt-2"
                             >
-                                + View More
+                                + View More ({itemsArray.length - maxItems} more)
+                            </button>
+                        )}
+                        
+                        {hasMoreItems && showMore && (
+                            <button
+                                onClick={() => setShowMore(false)}
+                                className="text-sm text-orange-500 hover:text-orange-600 font-medium mt-2"
+                            >
+                                - Show Less
                             </button>
                         )}
                     </div>
@@ -327,8 +400,10 @@ export default function Filter({ onFilterChange, filters }){
 
     const renderColorSection = () => {
         const isExpanded = expandedSections.color;
-        const displayColors = showMoreColors ? colors : colors.slice(0, 5);
-        const hasMoreColors = colors.length > 5;
+        // Ensure colors is an array
+        const colorsArray = Array.isArray(colors) ? colors : [];
+        const displayColors = showMoreColors ? colorsArray : colorsArray.slice(0, 5);
+        const hasMoreColors = colorsArray.length > 5;
 
         return (
             <div className="border-b border-gray-200 dark:border-gray-700 last:border-b-0">
@@ -342,7 +417,9 @@ export default function Filter({ onFilterChange, filters }){
                 
                 {isExpanded && (
                     <div className="pb-3">
-                        <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                        <div className={`grid grid-cols-2 gap-2 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 ${
+                            showMoreColors ? 'max-h-96' : 'max-h-48'
+                        }`}>
                             {displayColors.map((color, index) => (
                                 <div key={color._id || index} className="flex items-center space-x-2 py-1">
                                     <button
@@ -370,7 +447,16 @@ export default function Filter({ onFilterChange, filters }){
                                 onClick={() => setShowMoreColors(true)}
                                 className="text-sm text-orange-500 hover:text-orange-600 font-medium mt-2"
                             >
-                                + View More
+                                + View More ({colorsArray.length - 5} more)
+                            </button>
+                        )}
+                        
+                        {hasMoreColors && showMoreColors && (
+                            <button
+                                onClick={() => setShowMoreColors(false)}
+                                className="text-sm text-orange-500 hover:text-orange-600 font-medium mt-2"
+                            >
+                                - Show Less
                             </button>
                         )}
                     </div>

@@ -1,8 +1,8 @@
 
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
 import { Eye } from "lucide-react";
+import { authAPI } from "../../../services/api";
 
 import logoDark from "../../../assets/images/logo.png";
 import logoLight from "../../../assets/images/Zyqora-light.png";
@@ -20,8 +20,6 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const API_BASE = 'https://zyqora.onrender.com/api/auth';
 
   const handleChange = e => {
     const { name, type, checked, value } = e.target;
@@ -48,7 +46,7 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const res = await axios.post(`https://zyqora.onrender.com/api/auth/login`, {
+      const res = await authAPI.login({
         email,
         password,
         rememberMe

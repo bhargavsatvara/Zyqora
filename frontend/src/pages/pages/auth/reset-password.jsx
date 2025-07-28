@@ -1,7 +1,7 @@
 // src/pages/auth/ResetPassword.jsx
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useParams, Link } from 'react-router-dom';
+import { authAPI } from '../../../services/api';
 
 import logoDark from '../../../assets/images/logo.png';
 import logoLight from '../../../assets/images/Zyqora-light.png';
@@ -18,8 +18,6 @@ export default function ResetPassword() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const API_BASE = 'https://zyqora.onrender.com/api';
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage('');
@@ -32,10 +30,7 @@ export default function ResetPassword() {
 
     setLoading(true);
     try {
-      const res = await axios.post(
-        `${API_BASE}/auth/reset-password/${token}`,
-        { password }
-      );
+      const res = await authAPI.resetPassword(token, { password });
       setMessage(res.data.message);
     } catch (err) {
       setError(

@@ -1,10 +1,8 @@
 // src/pages/auth/Signup.jsx
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
-
 import { Eye } from "lucide-react";
-
+import { authAPI } from "../../../services/api";
 import logoDark from '../../../assets/images/logo.png';
 import logoLight from '../../../assets/images/Zyqora-light.png';
 import bg1 from '../../../assets/images/signup.jpg';
@@ -26,7 +24,6 @@ export default function Signup() {
   const [loading, setLoading]           = useState(false);
 
   const { name, email, password, confirmPassword, acceptTnc } = formData;
-  const API_BASE = 'https://zyqora.onrender.com/api/auth';
 
   const handleChange = e => {
     const { name, value, type, checked } = e.target;
@@ -70,7 +67,7 @@ export default function Signup() {
 
     setLoading(true);
     try {
-      const res = await axios.post(`${API_BASE}/signup`, { name, email, password });
+      const res = await authAPI.signup({ name, email, password });
       console.log("✅ Signup success:", res.data);
       navigate("/login");
     } catch (err) {

@@ -5,6 +5,7 @@ import Usertab from "../../../components/user-tab";
 import Footer from "../../../components/footer";
 import Switcher from "../../../components/switcher";
 import ScrollToTop from "../../../components/scroll-to-top";
+import { ordersAPI, reviewsAPI } from "../../../services/api";
 
 export default function OrderView() {
   const { id } = useParams();
@@ -22,18 +23,10 @@ export default function OrderView() {
     async function fetchOrder() {
       setLoading(true);
       setError("");
-      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
       try {
-        const res = await fetch(`https://zyqora.onrender.com/api/orders/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const data = await res.json();
-        console.log("data :: ", data);
-        if (res.ok) {
-          setOrder(data);
-        } else {
-          setError(data.message || "Order not found");
-        }
+        const res = await ordersAPI.getOrder(id);
+        console.log("data :: ", res.data);
+        setOrder(res.data);
       } catch (e) {
         setError("Failed to fetch order");
       } finally {
@@ -46,10 +39,12 @@ export default function OrderView() {
   useEffect(() => {
     if (order && order.order_items) {
       order.order_items.forEach(item => {
-        fetch(`https://zyqora.onrender.com/api/reviews/${item.product_id}`)
-          .then(res => res.json())
-          .then(data => {
-            setProductReviews(prev => ({ ...prev, [item.product_id]: data }));
+        reviewsAPI.getProductReviews(item.product_id)
+          .then(res => {
+            setProductReviews(prev => ({ ...prev, [item.product_id]: res.data }));
+          })
+          .catch(error => {
+            console.error('Error fetching reviews:', error);
           });
       });
     }
@@ -76,23 +71,14 @@ export default function OrderView() {
     e.preventDefault();
     setReviewSubmitting(true);
     setReviewSuccess("");
-    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
     try {
-      const res = await fetch(`https://zyqora.onrender.com/api/reviews/add`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ rating: review.rating, comment: review.comment, product_id: reviewProductId })
+      const res = await reviewsAPI.addReview({ 
+        rating: review.rating, 
+        comment: review.comment, 
+        product_id: reviewProductId 
       });
-      if (res.ok) {
-        setReviewSuccess("Review submitted successfully!");
-        setShowReviewModal(false);
-      } else {
-        const err = await res.json();
-        setReviewSuccess(err.message || "Failed to submit review");
-      }
+      setReviewSuccess("Review submitted successfully!");
+      setShowReviewModal(false);
     } catch (err) {
       setReviewSuccess("Failed to submit review");
     } finally {

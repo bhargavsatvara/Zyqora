@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { departmentsAPI, categoriesAPI, wishlistAPI } from "../services/api";
 
 import logoDark from "../assets/images/logo.png";
 import logoWhite from "../assets/images/logo.png";
@@ -43,8 +44,8 @@ export default function Navbar({ navClass, navlight }) {
     async function fetchDepartments() {
       try {
         console.log("Fetching departments...");
-        const res = await fetch("https://zyqora.onrender.com/api/departments");
-        const data = await res.json();
+        const res = await departmentsAPI.getDepartments();
+        const data = res.data;
         console.log("Departments fetched:", data);
         setDepartments(data || []);
       } catch (e) {
@@ -81,8 +82,8 @@ export default function Navbar({ navClass, navlight }) {
     try {
       setLoadingCategories(true);
       console.log(`Fetching categories for department: ${departmentId}`);
-      const res = await fetch(`https://zyqora.onrender.com/api/categories?department_id=${departmentId}&limit=1000`);
-      const data = await res.json();
+      const res = await categoriesAPI.getCategories({ department_id: departmentId, limit: 1000 });
+      const data = res.data;
       console.log("Categories API response:", data);
 
       // Handle different response structures
@@ -257,16 +258,14 @@ export default function Navbar({ navClass, navlight }) {
   useEffect(() => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (token) {
-      fetch('https://zyqora.onrender.com/api/wishlist', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data && Array.isArray(data.items)) {
-            setWishlist(data.items.map(w => w._id || w.productId));
+      wishlistAPI.getWishlist()
+        .then(res => {
+          if (res.data && Array.isArray(res.data.items)) {
+            setWishlist(res.data.items.map(w => w._id || w.productId));
           }
+        })
+        .catch(error => {
+          console.error('Error fetching wishlist:', error);
         });
     } else {
       const localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');

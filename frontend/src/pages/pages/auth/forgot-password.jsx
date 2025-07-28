@@ -1,7 +1,7 @@
 // src/pages/auth/ForgotPassword.jsx
 import React, { useState } from 'react';
-import axios from 'axios';
 import { Link } from 'react-router-dom';
+import { authAPI } from '../../../services/api';
 
 import logoDark from '../../../assets/images/logo.png';
 import logoLight from '../../../assets/images/Zyqora-light.png';
@@ -16,8 +16,6 @@ export default function ForgotPassword() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const API_BASE = 'https://zyqora.onrender.com/api';
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -25,7 +23,7 @@ export default function ForgotPassword() {
     setError('');
 
     try {
-      const res = await axios.post(`${API_BASE}/auth/forgot-password`, { email });
+      const res = await authAPI.forgotPassword({ email });
       setMessage(res.data.message);
     } catch (err) {
       setError(

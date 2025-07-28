@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { cartAPI } from "../services/api";
 
 const CartContext = createContext();
 
@@ -25,19 +26,20 @@ export function CartProvider({ children }) {
   const fetchCart = async () => {
     try {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-      const response = await fetch("https://zyqora.onrender.com/api/cart", {
-        headers: {
-          ...(token && { 'Authorization': `Bearer ${token}` })
+      if (token) {
+        const response = await cartAPI.getCart();
+        const data = response.data;
+        if (data.success) {
+          setCartData(data.data.items || []);
+          setTotals({
+            subtotal: data.data.subtotal || 0,
+            tax: data.data.tax || 0,
+            total: data.data.total || 0,
+          });
         }
-      });
-      const data = await response.json();
-      if (data.success) {
-        setCartData(data.data.items || []);
-        setTotals({
-          subtotal: data.data.subtotal || 0,
-          tax: data.data.tax || 0,
-          total: data.data.total || 0,
-        });
+      } else {
+        setCartData([]);
+        setTotals({ subtotal: 0, tax: 0, total: 0 });
       }
     } catch (e) {
       setCartData([]);
