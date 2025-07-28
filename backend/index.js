@@ -38,8 +38,18 @@ mongoose.connect(process.env.MONGODB_URL, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 })
-.then(() => {
+.then(async () => {
     console.log('Connected to MongoDB');
+    
+    // Start cart abandonment scheduler
+    try {
+        const cartAbandonmentScheduler = require('./scheduler/cartAbandonmentScheduler');
+        cartAbandonmentScheduler.start();
+        console.log('✅ Cart abandonment scheduler initialized');
+    } catch (error) {
+        console.error('❌ Failed to start cart abandonment scheduler:', error);
+    }
+    
     // Start server
     const port = process.env.PORT || 4000;
     app.listen(port, () => {

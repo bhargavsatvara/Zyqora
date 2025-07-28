@@ -59,9 +59,7 @@ function App() {
     <CartProvider>
       <Routes>
         <Route path="/" element={<Index />}></Route>
-
         <Route path="/products" element={<Products />}></Route>
-
         <Route path="/shop-list" element={<ShopList />}></Route>
         <Route path="/shop-list-left-sidebar" element={<ShopListLeftSidebar />}></Route>
         <Route path="/shop-list-right-sidebar" element={<ShopListRightSidebar />}></Route>
@@ -75,14 +73,13 @@ function App() {
         <Route path="/user-account" element={<UserAccount />}></Route>
         <Route path="/order-view/:id" element={<OrderView />}></Route>
         <Route path="/user-billing" element={<UserBilling />}></Route>
-        <Route path="/user-payment" element={<UserPayment />}></Route>
+        {/* <Route path="/user-payment" element={<UserPayment />}></Route> */}
         <Route path="/user-invoice" element={<Invoice />}></Route>
         <Route path="/user-social" element={<UserSocial />}></Route>
         <Route path="/user-notification" element={<Notification />}></Route>
         <Route path="/user-setting" element={<UserSetting />}></Route>
         <Route path="/email-cart" element={<EmailCart />}></Route>
-        <Route path="/email-confirmation" element={<EmailConfirmation/>}></Route>
-
+        <Route path="/email-confirmation" element={<EmailConfirmation />}></Route>
         <Route path="/email-offers" element={<EmailOffers />}></Route>
         <Route path="/email-order-success" element={<EmailOrderSuccess />}></Route>
         <Route path="/email-gift-voucher" element={<EmailGiftVoucher />}></Route>

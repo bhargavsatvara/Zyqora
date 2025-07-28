@@ -7,6 +7,7 @@ const Color = require('../models/color');
 const Order = require('../models/order');
 const Product = require('../models/product'); // Add this import
 const mongoose = require('mongoose'); // Add this import
+const CartAbandonmentService = require('../services/cartAbandonmentService');
 
 exports.createOrder = async (req, res) => {
   try {
@@ -89,7 +90,12 @@ exports.createOrder = async (req, res) => {
         )
       );
       console.log('Cart after:', cart.items);
-    await cart.save();
+      await cart.save();
+      
+      // Reset abandonment count if cart is now empty or if items were removed
+      if (cart.items.length === 0) {
+        await CartAbandonmentService.resetAbandonmentCount(cart._id);
+      }
     }
 
     res.status(201).json({ success: true, order });

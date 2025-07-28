@@ -15,17 +15,30 @@ export default function Index() {
   const [newProduct, setNewProduct] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   const [productRatings, setProductRatings] = useState({});
+  const [loading, setLoading] = useState(true);
 
   const fetchCollections = async () => {
-    const response = await axios.get('https://zyqora.onrender.com/api/categories?page=1&limit=5');
-    console.log("fetchCollections :: ", response.data.data.categories);
-    setCollections(response.data.data.categories);
+    try {
+      const response = await axios.get('https://zyqora.onrender.com/api/categories?page=1&limit=5');
+      console.log("fetchCollections :: ", response.data.data.categories);
+      setCollections(response.data.data.categories);
+    } catch (error) {
+      console.error('Error fetching collections:', error);
+      setCollections([]);
+    }
   };
 
   const fetchNewProduct = async () => {
-    const response = await axios.get('https://zyqora.onrender.com/api/products');
-    console.log("fetchNewProduct :: ", response.data.data.products);
-    setNewProduct(response.data.data.products);
+    try {
+      const response = await axios.get('https://zyqora.onrender.com/api/products');
+      console.log("fetchNewProduct :: ", response.data.data.products);
+      setNewProduct(response.data.data.products);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      setNewProduct([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -98,6 +111,128 @@ export default function Index() {
     }
     if (newProduct.length > 0) fetchRatings();
   }, [newProduct]);
+
+  // Loading component
+  const LoadingSpinner = () => (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500"></div>
+    </div>
+  );
+
+  // Loading skeleton for collections
+  const CollectionsSkeleton = () => (
+    <div className="grid gap-6 pt-6 lg:grid-cols-5 md:grid-cols-3 sm:grid-cols-2 grid-cols-2">
+      {[1, 2, 3, 4, 5].map((item) => (
+        <div key={item} className="text-center animate-pulse">
+          <div className="w-40 h-40 rounded-full bg-gray-200 mx-auto"></div>
+          <div className="mt-3 h-6 bg-gray-200 rounded w-24 mx-auto"></div>
+        </div>
+      ))}
+    </div>
+  );
+
+  // Loading skeleton for products
+  const ProductsSkeleton = () => (
+    <div className="grid gap-6 pt-6 lg:grid-cols-4 md:grid-cols-3 sm:grid-cols-2 grid-cols-1">
+      {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
+        <div key={item} className="group animate-pulse">
+          <div className="relative overflow-hidden rounded-md shadow dark:shadow-gray-800">
+            <div className="w-full h-64 bg-gray-200"></div>
+          </div>
+          <div className="mt-4">
+            <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+            <div className="flex items-center justify-between mt-2">
+              <div className="h-4 bg-gray-200 rounded w-16"></div>
+              <div className="h-4 bg-gray-200 rounded w-24"></div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  if (loading) {
+    return (
+      <>
+        <Tagline />
+        <Navbar navClass="defaultscroll is-sticky tagline-height" />
+        
+        {/* Hero Section with video background */}
+        <section className="relative flex items-center w-full md:h-screen py-36 overflow-hidden" role="banner">
+          {/* Video as full-bleed background */}
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover"
+          >
+            <source src={heroVideo} type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+
+          {/* Overlay to slightly darken video if needed */}
+          <div className="absolute inset-0 bg-emerald-500/5"></div>
+
+          {/* Content on top of video */}
+          <div className="container relative z-10">
+            <div className="grid grid-cols-1 justify-center text-center">
+              <span className="uppercase font-semibold text-lg text-white">
+                New Collection
+              </span>
+              <h4 className="mt-3 text-4xl font-bold md:text-6xl md:leading-normal leading-normal text-white">
+                The Gift Suite
+              </h4>
+              <p className="mt-2 text-lg text-white">
+                Our latest collection of essential basics.
+              </p>
+
+              <div className="mt-6">
+                <Link
+                  to="#"
+                  className="inline-block w-max px-5 py-2 font-semibold tracking-wide text-center text-white bg-slate-900 dark:bg-orange-500 rounded-md"
+                >
+                  Shop Now <i className="mdi mdi-arrow-right"></i>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Collections Section with Loading Skeleton */}
+        <section className="relative py-16 md:py-24" role="main">
+          <div className="container relative" role="region" aria-label="Shop The Collections">
+            <div className="grid grid-cols-1 justify-center mb-6 text-center">
+              <h5 className="mb-4 text-3xl font-semibold leading-normal">
+                Shop The Collections
+              </h5>
+              <p className="max-w-xl mx-auto text-slate-500 text-xl">
+                Shop the latest products from the most popular collections
+              </p>
+            </div>
+            <CollectionsSkeleton />
+          </div>
+
+          {/* New Arrival Products with Loading Skeleton */}
+          <div className="container relative mt-16 md:mt-24" role="region" aria-label="New Arrival Products">
+            <div className="grid grid-cols-1 justify-center mb-6 text-center">
+              <h5 className="mb-4 text-3xl font-semibold leading-normal">
+                New Arrival Products
+              </h5>
+              <p className="max-w-xl mx-auto text-slate-500 text-xl">
+                Shop the latest products from the most popular collections
+              </p>
+            </div>
+            <ProductsSkeleton />
+          </div>
+        </section>
+
+        <Footer />
+        <Switcher />
+        <ScrollToTop />
+      </>
+    );
+  }
 
   return (
     <>
