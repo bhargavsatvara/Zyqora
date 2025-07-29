@@ -6,8 +6,6 @@ import Footer from "../../../components/footer";
 import Switcher from "../../../components/switcher";
 import ScrollToTop from "../../../components/scroll-to-top";
 import { productsAPI, reviewsAPI, wishlistAPI } from "../../../services/api";
-import Toast from '../../../components/Toast';
-import { useWishlist } from '../../../contexts/WishlistContext';
 
 import { FiHeart, FiEye, FiBookmark, FiChevronLeft, FiChevronRight } from '../../../assets/icons/vander'
 import { AiFillHeart } from 'react-icons/ai';
@@ -19,7 +17,7 @@ export default function ShopList() {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalRecords, setTotalRecords] = useState(0);
-    const { wishlist, refreshWishlist } = useWishlist();
+    const [wishlist, setWishlist] = useState([]);
     const [productRatings, setProductRatings] = useState({});
     const [filters, setFilters] = useState({
         search: '',
@@ -29,7 +27,6 @@ export default function ShopList() {
         min_price: '',
         max_price: ''
     });
-    const [toast, setToast] = useState({ message: '', type: 'info' });
 
     // Handle URL parameters on component mount
     useEffect(() => {
@@ -93,18 +90,18 @@ export default function ShopList() {
             if (token) {
                 const response = await wishlistAPI.getWishlist();
                 if (response.data && Array.isArray(response.data.items)) {
-                    // setWishlist(response.data.items.map(w => w._id || w.productId)); // Removed - using context now
+                    setWishlist(response.data.items.map(w => w._id || w.productId));
                 }
             } else {
                 // Load from localStorage for non-authenticated users
                 const localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-                // setWishlist(localWishlist.map(w => w._id)); // Removed - using context now
+                setWishlist(localWishlist.map(w => w._id));
             }
         } catch (error) {
             console.error('Error fetching wishlist:', error);
             // Fallback to localStorage
             const localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-            // setWishlist(localWishlist.map(w => w._id)); // Removed - using context now
+            setWishlist(localWishlist.map(w => w._id));
         }
     };
 
@@ -168,20 +165,20 @@ export default function ShopList() {
         if (token) {
             try {
                 await wishlistAPI.addToWishlist(item._id);
-                await refreshWishlist();
-                setToast({ message: 'Added to wishlist!', type: 'success' });
+                setWishlist(prev => prev.includes(item._id) ? prev : [...prev, item._id]);
+                alert('Added to wishlist!');
             } catch (error) {
                 console.error('Error adding to wishlist:', error);
-                setToast({ message: 'Failed to add to wishlist', type: 'error' });
+                alert('Failed to add to wishlist');
             }
         } else {
             let localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
             if (!localWishlist.find(p => p._id === item._id)) {
                 localWishlist.push(item);
                 localStorage.setItem('wishlist', JSON.stringify(localWishlist));
+                setWishlist(prev => prev.includes(item._id) ? prev : [...prev, item._id]);
             }
-            await refreshWishlist();
-            setToast({ message: 'Added to wishlist (local)!', type: 'success' });
+            alert('Added to wishlist (local)!');
         }
     };
 
@@ -234,7 +231,6 @@ export default function ShopList() {
 
     return (
         <>
-            <Toast message={toast.message} type={toast.type} onClose={() => setToast({ message: '', type: 'info' })} />
             <Navbar navClass="defaultscroll is-sticky" />
             <section className="relative table w-full py-20 lg:py-24 md:pt-28 bg-gray-50 dark:bg-slate-800">
                 <div className="container relative">

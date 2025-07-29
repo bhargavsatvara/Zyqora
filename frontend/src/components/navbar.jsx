@@ -21,7 +21,6 @@ import { AiFillHeart } from 'react-icons/ai';
 
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { useCart } from "../contexts/CartContext";
-import { useWishlist } from "../contexts/WishlistContext";
 
 export default function Navbar({ navClass, navlight }) {
   const [scrolling, setScrolling] = useState(false);
@@ -252,8 +251,27 @@ export default function Navbar({ navClass, navlight }) {
   const cartCount = cartData.reduce((sum, item) => sum + item.quantity, 0);
   const cartTotal = totals.total;
 
-  const { wishlist, refreshWishlist } = useWishlist();
+  const [wishlist, setWishlist] = useState([]);
+  // Add state for search input
   const [searchTerm, setSearchTerm] = useState("");
+  // Load wishlist on mount
+  useEffect(() => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    if (token) {
+      wishlistAPI.getWishlist()
+        .then(res => {
+          if (res.data && Array.isArray(res.data.items)) {
+            setWishlist(res.data.items.map(w => w._id || w.productId));
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching wishlist:', error);
+        });
+    } else {
+      const localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+      setWishlist(localWishlist.map(w => w._id));
+    }
+  }, []);
   const wishlistCount = wishlist.length;
 
   // Add state for mobile menu

@@ -3,14 +3,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/navbar';
 import Footer from '../components/footer';
 import { wishlistAPI } from '../services/api';
-import { useWishlist } from '../contexts/WishlistContext';
 
 export default function Wishlist() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { refreshWishlist } = useWishlist();
 
   useEffect(() => {
     const fetchWishlist = async () => {
@@ -99,13 +97,11 @@ export default function Wishlist() {
                                 try {
                                   await wishlistAPI.removeFromWishlistAlt(item._id || item);
                                   setItems(items.filter(i => (i._id || i) !== (item._id || item)));
-                                  await refreshWishlist();
                                 } catch (error) {
                                   console.error('Error removing from wishlist:', error);
                                 }
                               } else {
                                 removeFromLocalWishlist(item._id || item);
-                                await refreshWishlist();
                               }
                             }}
                             className="transition-colors text-red-600 hover:text-red-800"
