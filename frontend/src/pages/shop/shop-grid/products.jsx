@@ -5,13 +5,11 @@ import Navbar from "../../../components/navbar";
 import Footer from "../../../components/footer";
 import Switcher from "../../../components/switcher";
 import Filter from "../../../components/filter";
-import Toast from '../../../components/Toast';
 
 import { FiHeart, FiEye, FiBookmark, FiChevronLeft, FiChevronRight } from '../../../assets/icons/vander'
 import { AiFillHeart } from 'react-icons/ai';
 import ScrollToTop from "../../../components/scroll-to-top";
 import { productsAPI, wishlistAPI, reviewsAPI, cartAPI } from "../../../services/api";
-import { useWishlist } from '../../../contexts/WishlistContext';
 
 export default function Products() {
 	const [searchParams] = useSearchParams();
@@ -28,9 +26,8 @@ export default function Products() {
 		min_price: null,
 		max_price: null
 	});
-	const { wishlist, refreshWishlist } = useWishlist();
+	const [wishlist, setWishlist] = useState([]);
 	const [productRatings, setProductRatings] = useState({});
-	const [toast, setToast] = useState({ message: '', type: 'info' });
 	console.log("products :: ", searchParams.get('category_id'));
 	// Wrap fetchProducts in useCallback for user interactions
 	const fetchProducts = useCallback(async () => {
@@ -145,7 +142,7 @@ export default function Products() {
 			wishlistAPI.getWishlist()
 				.then(res => {
 					if (res.data && Array.isArray(res.data.items)) {
-						// setWishlist(res.data.items.map(w => w._id || w.productId)); // This line is removed as per edit hint
+						setWishlist(res.data.items.map(w => w._id || w.productId));
 					}
 				})
 				.catch(error => {
@@ -154,7 +151,7 @@ export default function Products() {
 		} else {
 			// Load from localStorage
 			const localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-			// setWishlist(localWishlist.map(w => w._id)); // This line is removed as per edit hint
+			setWishlist(localWishlist.map(w => w._id));
 		}
 	}, []);
 
@@ -217,26 +214,26 @@ export default function Products() {
 		if (token) {
 			try {
 				await wishlistAPI.addToWishlistAlt({ productId: item._id });
-				await refreshWishlist();
-				setToast({ message: 'Added to wishlist!', type: 'success' });
+				console.log("wishlist :: ", wishlist);
+				setWishlist(prev => prev.includes(item._id) ? prev : [...prev, item._id]);
+				alert('Added to wishlist!');
 			} catch (error) {
 				console.error('Error adding to wishlist:', error);
-				setToast({ message: 'Failed to add to wishlist', type: 'error' });
+				alert('Failed to add to wishlist');
 			}
 		} else {
 			let localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
 			if (!localWishlist.find(p => p._id === item._id)) {
 				localWishlist.push(item);
 				localStorage.setItem('wishlist', JSON.stringify(localWishlist));
+				setWishlist(prev => prev.includes(item._id) ? prev : [...prev, item._id]);
 			}
-			await refreshWishlist();
-			setToast({ message: 'Added to wishlist (local)!', type: 'success' });
+			alert('Added to wishlist (local)!');
 		}
 	};
 
 	return (
 		<>
-			<Toast message={toast.message} type={toast.type} onClose={() => setToast({ message: '', type: 'info' })} />
 			<Navbar navClass="defaultscroll is-sticky" />
 			<section className="relative table w-full py-20 lg:py-24 md:pt-28 bg-gray-50 dark:bg-slate-800">
 				<div className="container relative">
