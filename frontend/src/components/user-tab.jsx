@@ -71,7 +71,9 @@ export default function Usertab() {
 
 							<div className="mt-4">
 								<h5 className="text-lg font-semibold">{getUserDisplayName()}</h5>
-								<p className="text-slate-400">{getUserEmail()}</p>
+								<p className="text-slate-400 truncate overflow-hidden whitespace-nowrap max-w-[180px] mx-auto" title={getUserEmail()}>
+									{getUserEmail()}
+								</p>
 							</div>
 						</div>
 					</div>
