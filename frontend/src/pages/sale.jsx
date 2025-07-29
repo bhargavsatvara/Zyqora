@@ -10,12 +10,15 @@ import { productsAPI, reviewsAPI, wishlistAPI } from "../services/api";
 import { FiHeart, FiEye, FiBookmark } from '../assets/icons/vander'
 import { AiFillHeart } from 'react-icons/ai';
 import ScrollToTop from "../components/scroll-to-top";
+import Toast from '../components/Toast';
+import { useWishlist } from '../contexts/WishlistContext';
 
 export default function Sale() {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [wishlist, setWishlist] = useState([]);
+    const { wishlist, refreshWishlist } = useWishlist();
     const [productRatings, setProductRatings] = useState({});
+    const [toast, setToast] = useState({ message: '', type: 'info' });
 
     // Mock sales data - in a real app, this would come from an API
     const salesData = [
@@ -79,18 +82,18 @@ export default function Sale() {
             if (token) {
                 const response = await wishlistAPI.getWishlist();
                 if (response.data && Array.isArray(response.data.items)) {
-                    setWishlist(response.data.items.map(w => w._id || w.productId));
+                    // setWishlist(response.data.items.map(w => w._id || w.productId)); // Removed - using context now
                 }
             } else {
                 // Load from localStorage for non-authenticated users
                 const localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-                setWishlist(localWishlist.map(w => w._id));
+                // setWishlist(localWishlist.map(w => w._id)); // Removed - using context now
             }
         } catch (error) {
             console.error('Error fetching wishlist:', error);
             // Fallback to localStorage
             const localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-            setWishlist(localWishlist.map(w => w._id));
+            // setWishlist(localWishlist.map(w => w._id)); // Removed - using context now
         }
     };
 
@@ -154,20 +157,20 @@ export default function Sale() {
         if (token) {
             try {
                 await wishlistAPI.addToWishlist(item._id);
-                setWishlist(prev => prev.includes(item._id) ? prev : [...prev, item._id]);
-                alert('Added to wishlist!');
+                await refreshWishlist();
+                setToast({ message: 'Added to wishlist!', type: 'success' });
             } catch (error) {
                 console.error('Error adding to wishlist:', error);
-                alert('Failed to add to wishlist');
+                setToast({ message: 'Failed to add to wishlist', type: 'error' });
             }
         } else {
             let localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
             if (!localWishlist.find(p => p._id === item._id)) {
                 localWishlist.push(item);
                 localStorage.setItem('wishlist', JSON.stringify(localWishlist));
-                setWishlist(prev => prev.includes(item._id) ? prev : [...prev, item._id]);
             }
-            alert('Added to wishlist (local)!');
+            await refreshWishlist();
+            setToast({ message: 'Added to wishlist (local)!', type: 'success' });
         }
     };
 
@@ -211,6 +214,7 @@ export default function Sale() {
 
     return (
         <>
+            <Toast message={toast.message} type={toast.type} onClose={() => setToast({ message: '', type: 'info' })} />
             <div className="tagline bg-white dark:bg-slate-900">
                 <div className="container relative">
                     <div className="grid grid-cols-1">

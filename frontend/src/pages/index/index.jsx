@@ -9,6 +9,8 @@ import ScrollToTop from "../../components/scroll-to-top";
 import heroVideo from '../../assets/videos/heroVideo6.mp4';
 import { FiHeart, FiEye, FiBookmark } from '../../assets/icons/vander';
 import { AiFillHeart } from 'react-icons/ai';
+import Toast from '../../components/Toast';
+import { useWishlist } from '../../contexts/WishlistContext';
 
 export default function Index() {
   const [collections, setCollections] = useState([]);
@@ -16,6 +18,8 @@ export default function Index() {
   const [wishlist, setWishlist] = useState([]);
   const [productRatings, setProductRatings] = useState({});
   const [loading, setLoading] = useState(true);
+  const { wishlist: contextWishlist, refreshWishlist } = useWishlist();
+  const [toast, setToast] = useState({ message: '', type: 'info' });
 
   const fetchCollections = async () => {
     try {
@@ -70,20 +74,20 @@ export default function Index() {
     if (token) {
       try {
         await wishlistAPI.addToWishlistAlt({ productId: item._id });
-        setWishlist(prev => prev.includes(item._id) ? prev : [...prev, item._id]);
-        alert('Added to wishlist!');
+        await refreshWishlist();
+        setToast({ message: 'Added to wishlist!', type: 'success' });
       } catch (error) {
         console.error('Error adding to wishlist:', error);
-        alert('Failed to add to wishlist');
+        setToast({ message: 'Failed to add to wishlist', type: 'error' });
       }
     } else {
       let localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
       if (!localWishlist.find(p => p._id === item._id)) {
         localWishlist.push(item);
         localStorage.setItem('wishlist', JSON.stringify(localWishlist));
-        setWishlist(prev => prev.includes(item._id) ? prev : [...prev, item._id]);
       }
-      alert('Added to wishlist (local)!');
+      await refreshWishlist();
+      setToast({ message: 'Added to wishlist (local)!', type: 'success' });
     }
   };
 
@@ -236,6 +240,7 @@ export default function Index() {
 
   return (
     <>
+      <Toast message={toast.message} type={toast.type} onClose={() => setToast({ message: '', type: 'info' })} />
       <Tagline />
       <Navbar navClass="defaultscroll is-sticky tagline-height" />
 
