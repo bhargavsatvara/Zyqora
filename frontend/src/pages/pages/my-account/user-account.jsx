@@ -6,11 +6,13 @@ import Switcher from "../../../components/switcher"
 import Footer from "../../../components/footer"
 import ScrollToTop from "../../../components/scroll-to-top";
 import { FiTrash2 } from '../../../assets/icons/vander'
+import { useWishlist } from '../../../contexts/WishlistContext';
 
 export default function UserAccount() {
 	const [orders, setOrders] = useState([]);
 	const [wishlist, setWishlist] = useState([]);
 	const [loading, setLoading] = useState(true);
+	const { refreshWishlist } = useWishlist();
 
 	useEffect(() => {
 		const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -56,12 +58,14 @@ export default function UserAccount() {
 				}
 			});
 			setWishlist(wishlist => wishlist.filter(w => (w._id || w.productId?._id || w.productId) !== (item._id || item.productId?._id || item.productId)));
+			await refreshWishlist();
 		} else {
 			// Remove from localStorage
 			let localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
 			localWishlist = localWishlist.filter(w => (w._id || w.productId?._id || w.productId) !== (item._id || item.productId?._id || item.productId));
 			localStorage.setItem('wishlist', JSON.stringify(localWishlist));
 			setWishlist(localWishlist);
+			await refreshWishlist();
 		}
 	};
 
