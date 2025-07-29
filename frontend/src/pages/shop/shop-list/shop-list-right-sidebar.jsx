@@ -10,6 +10,8 @@ import { productsAPI, reviewsAPI, wishlistAPI } from "../../../services/api";
 import { FiHeart, FiEye, FiBookmark, FiChevronLeft, FiChevronRight } from '../../../assets/icons/vander'
 import { AiFillHeart } from 'react-icons/ai';
 import ScrollToTop from "../../../components/scroll-to-top";
+import Toast from '../../../components/Toast';
+import { useWishlist } from '../../../contexts/WishlistContext';
 
 export default function ShopListRightSidebar() {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -18,7 +20,7 @@ export default function ShopListRightSidebar() {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalRecords, setTotalRecords] = useState(0);
-    const [wishlist, setWishlist] = useState([]);
+    const { wishlist, refreshWishlist } = useWishlist();
     const [productRatings, setProductRatings] = useState({});
     const [sortBy, setSortBy] = useState('featured');
     const [filters, setFilters] = useState({
@@ -29,6 +31,7 @@ export default function ShopListRightSidebar() {
         min_price: '',
         max_price: ''
     });
+    const [toast, setToast] = useState({ message: '', type: 'info' });
 
     // Handle URL parameters on component mount
     useEffect(() => {
@@ -111,18 +114,18 @@ export default function ShopListRightSidebar() {
             if (token) {
                 const response = await wishlistAPI.getWishlist();
                 if (response.data && Array.isArray(response.data.items)) {
-                    setWishlist(response.data.items.map(w => w._id || w.productId));
+                    // setWishlist(response.data.items.map(w => w._id || w.productId)); // Removed - using context now
                 }
             } else {
                 // Load from localStorage for non-authenticated users
                 const localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-                setWishlist(localWishlist.map(w => w._id));
+                // setWishlist(localWishlist.map(w => w._id)); // Removed - using context now
             }
         } catch (error) {
             console.error('Error fetching wishlist:', error);
             // Fallback to localStorage
             const localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-            setWishlist(localWishlist.map(w => w._id));
+            // setWishlist(localWishlist.map(w => w._id)); // Removed - using context now
         }
     };
 
@@ -186,20 +189,20 @@ export default function ShopListRightSidebar() {
         if (token) {
             try {
                 await wishlistAPI.addToWishlist(item._id);
-                setWishlist(prev => prev.includes(item._id) ? prev : [...prev, item._id]);
-                alert('Added to wishlist!');
+                await refreshWishlist();
+                setToast({ message: 'Added to wishlist!', type: 'success' });
             } catch (error) {
                 console.error('Error adding to wishlist:', error);
-                alert('Failed to add to wishlist');
+                setToast({ message: 'Failed to add to wishlist', type: 'error' });
             }
         } else {
             let localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
             if (!localWishlist.find(p => p._id === item._id)) {
                 localWishlist.push(item);
                 localStorage.setItem('wishlist', JSON.stringify(localWishlist));
-                setWishlist(prev => prev.includes(item._id) ? prev : [...prev, item._id]);
             }
-            alert('Added to wishlist (local)!');
+            await refreshWishlist();
+            setToast({ message: 'Added to wishlist (local)!', type: 'success' });
         }
     };
 
@@ -257,6 +260,7 @@ export default function ShopListRightSidebar() {
 
     return (
         <>
+            <Toast message={toast.message} type={toast.type} onClose={() => setToast({ message: '', type: 'info' })} />
             <Navbar navClass="defaultscroll is-sticky" />
             <section className="relative table w-full py-20 lg:py-24 md:pt-28 bg-gray-50 dark:bg-slate-800">
                 <div className="container relative">
