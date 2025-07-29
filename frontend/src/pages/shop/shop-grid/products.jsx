@@ -10,8 +10,10 @@ import { FiHeart, FiEye, FiBookmark, FiChevronLeft, FiChevronRight } from '../..
 import { AiFillHeart } from 'react-icons/ai';
 import ScrollToTop from "../../../components/scroll-to-top";
 import { productsAPI, wishlistAPI, reviewsAPI, cartAPI } from "../../../services/api";
+import { useToast } from "../../../contexts/ToastContext";
 
 export default function Products() {
+	const { showSuccess, showError } = useToast();
 	const [searchParams] = useSearchParams();
 	const [products, setProducts] = useState([]);
 	const [loading, setLoading] = useState(true);
@@ -216,10 +218,10 @@ export default function Products() {
 				await wishlistAPI.addToWishlistAlt({ productId: item._id });
 				console.log("wishlist :: ", wishlist);
 				setWishlist(prev => prev.includes(item._id) ? prev : [...prev, item._id]);
-				alert('Added to wishlist!');
+				showSuccess('Added to wishlist!');
 			} catch (error) {
 				console.error('Error adding to wishlist:', error);
-				alert('Failed to add to wishlist');
+				showError('Failed to add to wishlist');
 			}
 		} else {
 			let localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
@@ -228,7 +230,7 @@ export default function Products() {
 				localStorage.setItem('wishlist', JSON.stringify(localWishlist));
 				setWishlist(prev => prev.includes(item._id) ? prev : [...prev, item._id]);
 			}
-			alert('Added to wishlist (local)!');
+			showSuccess('Added to wishlist (local)!');
 		}
 	};
 

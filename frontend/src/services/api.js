@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://zyqora.onrender.com/api';
-// const API_BASE_URL = 'http://localhost:4000/api';
+// const API_BASE_URL = 'https://zyqora.onrender.com/api';
+const API_BASE_URL = 'http://localhost:4000/api';
 
 // Create axios instance
 const api = axios.create({
@@ -106,6 +106,7 @@ export const ordersAPI = {
   checkout: (data) => api.post('/orders/checkout', data),
   updateOrderStatus: (id, data) => api.put(`/orders/${id}/status`, data),
   cancelOrder: (id) => api.put(`/orders/${id}/cancel`),
+  generateInvoice: (id) => api.get(`/orders/${id}/invoice`),
 };
 
 // User API

@@ -303,3 +303,115 @@ exports.updateOrderStatusAdmin = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 }; 
+
+// Generate invoice for an order
+exports.generateInvoice = async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    
+    // Get order with all related data
+    const order = await Order.findById(orderId)
+      .populate('user_id', 'name email')
+      .populate('order_items')
+      .populate('billing_address')
+      .exec();
+
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    // Check if user has permission to access this order
+    console.log('User info:', { 
+      userId: req.user,
+      orderUserId: order.user_id?._id || order.user_id 
+    });
+    
+    // If no user is authenticated, deny access
+    if (!req.user) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+    
+    // Check if user is admin
+    let isAdmin = false;
+    try {
+      const user = await User.findById(req.user);
+      isAdmin = user && user.role === 'admin';
+      console.log('User role check:', { userId: req.user, role: user?.role, isAdmin });
+    } catch (error) {
+      console.error('Error checking user role:', error);
+      return res.status(500).json({ message: 'Error checking permissions' });
+    }
+    
+    // If not admin, check if user owns this order
+    if (!isAdmin) {
+      const userId = req.user.toString();
+      const orderUserId = (order.user_id._id || order.user_id).toString();
+      
+      console.log('Permission check:', { userId, orderUserId, match: userId === orderUserId });
+      
+      if (userId !== orderUserId) {
+        return res.status(403).json({ message: 'Access denied - You can only access your own orders' });
+      }
+    }
+
+    // Generate invoice data
+    const invoiceData = {
+      invoiceNumber: `INV-${order._id.toString().slice(-8).toUpperCase()}`,
+      orderNumber: order._id.toString().slice(-8).toUpperCase(),
+      orderDate: new Date(order.created_at).toLocaleDateString(),
+      dueDate: new Date(order.created_at).toLocaleDateString(),
+      
+      // Company information
+      company: {
+        name: 'Zyqora',
+        address: '123 Fashion Street, New York, NY 10001',
+        phone: '+1 (555) 123-4567',
+        email: 'support@zyqora.com',
+        website: 'https://zyqora.com'
+      },
+      
+      // Customer information
+      customer: {
+        name: order.user_id?.name || 'Guest Customer',
+        email: order.user_id?.email || 'guest@example.com',
+        address: order.billing_address ? {
+          street: order.billing_address.street || '',
+          city: order.billing_address.city || '',
+          state: order.billing_address.state || '',
+          country: order.billing_address.country || '',
+          zipCode: order.billing_address.zipCode || ''
+        } : null
+      },
+      
+      // Order items
+      items: order.order_items.map(item => ({
+        name: item.product_name,
+        sku: item.sku || 'N/A',
+        quantity: item.quantity,
+        price: Number(item.price?.$numberDecimal || item.price || 0),
+        total: Number(item.total?.$numberDecimal || item.total || 0),
+        size: item.size || '',
+        color: item.color || ''
+      })),
+      
+      // Totals
+      subtotal: Number(order.subtotal?.$numberDecimal || order.subtotal || 0),
+      tax: Number(order.tax_amount?.$numberDecimal || order.tax_amount || 0),
+      shipping: Number(order.shipping_charge?.$numberDecimal || order.shipping_charge || 0),
+      discount: Number(order.discount_amount?.$numberDecimal || order.discount_amount || 0),
+      total: Number(order.total_amount?.$numberDecimal || order.total_amount || 0),
+      
+      // Payment information
+      paymentMethod: order.payment_method || 'Credit Card',
+      status: order.status
+    };
+
+    res.json({
+      success: true,
+      invoice: invoiceData
+    });
+  } catch (err) {
+    console.error('Invoice generation error:', err);
+    res.status(500).json({ message: 'Failed to generate invoice' });
+  }
+}; 

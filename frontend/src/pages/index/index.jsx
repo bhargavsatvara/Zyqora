@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../../components/navbar";
 import { categoriesAPI, productsAPI, wishlistAPI, cartAPI, reviewsAPI } from "../../services/api";
+import { useToast } from "../../contexts/ToastContext";
 import Footer from "../../components/footer";
 import Switcher from "../../components/switcher";
 import Tagline from "../../components/tagline";
@@ -11,6 +12,7 @@ import { FiHeart, FiEye, FiBookmark } from '../../assets/icons/vander';
 import { AiFillHeart } from 'react-icons/ai';
 
 export default function Index() {
+  const { showSuccess, showError } = useToast();
   const [collections, setCollections] = useState([]);
   const [newProduct, setNewProduct] = useState([]);
   const [wishlist, setWishlist] = useState([]);
@@ -71,10 +73,10 @@ export default function Index() {
       try {
         await wishlistAPI.addToWishlistAlt({ productId: item._id });
         setWishlist(prev => prev.includes(item._id) ? prev : [...prev, item._id]);
-        alert('Added to wishlist!');
+        showSuccess('Added to wishlist!');
       } catch (error) {
         console.error('Error adding to wishlist:', error);
-        alert('Failed to add to wishlist');
+        showError('Failed to add to wishlist');
       }
     } else {
       let localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
@@ -83,7 +85,7 @@ export default function Index() {
         localStorage.setItem('wishlist', JSON.stringify(localWishlist));
         setWishlist(prev => prev.includes(item._id) ? prev : [...prev, item._id]);
       }
-      alert('Added to wishlist (local)!');
+      showSuccess('Added to wishlist (local)!');
     }
   };
 
@@ -354,7 +356,7 @@ export default function Index() {
                           });
                         } catch (error) {
                           console.error('Error adding to cart:', error);
-                          alert('Failed to add to cart');
+                          showError('Failed to add to cart');
                           return;
                         }
                         window.location.href = '/shop-cart';

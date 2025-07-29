@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Eye, Edit, Package, Truck, CheckCircle, Clock, Calendar, DollarSign, ShoppingCart, AlertTriangle, Trash2 } from 'lucide-react';
+import { Search, Eye, Edit, Package, Truck, CheckCircle, Clock, Calendar, DollarSign, ShoppingCart, AlertTriangle, Trash2, FileText } from 'lucide-react';
 import { ordersAPI } from '../services/api';
+import { useToast } from '../contexts/ToastContext';
+import Invoice from '../components/Invoice';
 
 export default function Orders() {
+  const { showSuccess, showError } = useToast();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -11,6 +14,9 @@ export default function Orders() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalOrders, setTotalOrders] = useState(0);
+  const [showInvoice, setShowInvoice] = useState(false);
+  const [invoiceData, setInvoiceData] = useState(null);
+  const [invoiceLoading, setInvoiceLoading] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -55,9 +61,9 @@ export default function Orders() {
       setOrders(prev => prev.map(order => 
         order._id === orderId ? { ...order, status: newStatus } : order
       ));
-      alert('Order status updated successfully!');
+      showSuccess('Order status updated successfully!');
     } catch (error) {
-      alert('Error updating order status: ' + (error.response?.data?.message || error.message));
+      showError('Error updating order status: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -66,10 +72,25 @@ export default function Orders() {
       try {
         await ordersAPI.deleteOrder(orderId);
         setOrders(prev => prev.filter(order => order._id !== orderId));
-        alert('Order deleted successfully!');
+        showSuccess('Order deleted successfully!');
       } catch (error) {
-        alert('Error deleting order: ' + (error.response?.data?.message || error.message));
+        showError('Error deleting order: ' + (error.response?.data?.message || error.message));
       }
+    }
+  };
+
+  const handleGenerateInvoice = async (orderId) => {
+    setInvoiceLoading(true);
+    try {
+      const response = await ordersAPI.generateInvoice(orderId);
+      setInvoiceData(response.data.invoice);
+      setShowInvoice(true);
+      showSuccess('Invoice generated successfully!');
+    } catch (error) {
+      console.error('Error generating invoice:', error);
+      showError('Failed to generate invoice');
+    } finally {
+      setInvoiceLoading(false);
     }
   };
 
@@ -305,6 +326,141 @@ export default function Orders() {
                         <Edit className="h-4 w-4" />
                       </button>
                       <button 
+                        onClick={() => handleGenerateInvoice(order._id)}
+                        disabled={invoiceLoading}
+                        className="text-purple-600 hover:text-purple-700 hover:bg-purple-50 p-2 rounded-lg transition-colors disabled:opacity-50"
+                        title="Generate Invoice"
+                      >
+                        <FileText className="h-4 w-4" />
+                      </button>
+                      {invoiceData && (
+                        <button 
+                          onClick={() => {
+                            const printWindow = window.open('', '_blank');
+                            printWindow.document.write(`
+                              <html>
+                                <head>
+                                  <title>Invoice ${invoiceData.invoiceNumber}</title>
+                                  <style>
+                                    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+                                    .invoice-header { text-align: center; margin-bottom: 30px; }
+                                    .company-info { margin-bottom: 20px; }
+                                    .invoice-details { display: flex; justify-content: space-between; margin-bottom: 30px; }
+                                    .customer-info { margin-bottom: 20px; }
+                                    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                                    th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+                                    th { background-color: #f8f9fa; }
+                                    .totals { text-align: right; }
+                                    .totals table { width: 300px; margin-left: auto; }
+                                    .totals td { border: none; padding: 5px; }
+                                    .footer { margin-top: 40px; text-align: center; color: #666; }
+                                    @media print {
+                                      .no-print { display: none; }
+                                    }
+                                  </style>
+                                </head>
+                                <body>
+                                  <div class="invoice-header">
+                                    <h1>INVOICE</h1>
+                                    <h2>${invoiceData.company.name}</h2>
+                                  </div>
+                                  
+                                  <div class="company-info">
+                                    <p><strong>${invoiceData.company.name}</strong></p>
+                                    <p>${invoiceData.company.address}</p>
+                                    <p>Phone: ${invoiceData.company.phone} | Email: ${invoiceData.company.email}</p>
+                                    <p>Website: ${invoiceData.company.website}</p>
+                                  </div>
+                                  
+                                  <div class="invoice-details">
+                                    <div>
+                                      <p><strong>Invoice Number:</strong> ${invoiceData.invoiceNumber}</p>
+                                      <p><strong>Order Number:</strong> ${invoiceData.orderNumber}</p>
+                                      <p><strong>Order Date:</strong> ${invoiceData.orderDate}</p>
+                                      <p><strong>Due Date:</strong> ${invoiceData.dueDate}</p>
+                                    </div>
+                                    <div class="customer-info">
+                                      <p><strong>Bill To:</strong></p>
+                                      <p>${invoiceData.customer.name}</p>
+                                      <p>${invoiceData.customer.email}</p>
+                                      ${invoiceData.customer.address ? `
+                                        <p>${invoiceData.customer.address.street}</p>
+                                        <p>${invoiceData.customer.address.city}, ${invoiceData.customer.address.state} ${invoiceData.customer.address.zipCode}</p>
+                                        <p>${invoiceData.customer.address.country}</p>
+                                      ` : ''}
+                                    </div>
+                                  </div>
+                                  
+                                  <table>
+                                    <thead>
+                                      <tr>
+                                        <th>Item</th>
+                                        <th>SKU</th>
+                                        <th>Size</th>
+                                        <th>Color</th>
+                                        <th>Qty</th>
+                                        <th>Price</th>
+                                        <th>Total</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      ${invoiceData.items.map(item => `
+                                        <tr>
+                                          <td>${item.name}</td>
+                                          <td>${item.sku}</td>
+                                          <td>${item.size}</td>
+                                          <td>${item.color}</td>
+                                          <td>${item.quantity}</td>
+                                          <td>$${(item.price || 0).toFixed(2)}</td>
+                                          <td>$${(item.total || 0).toFixed(2)}</td>
+                                        </tr>
+                                      `).join('')}
+                                    </tbody>
+                                  </table>
+                                  
+                                  <div class="totals">
+                                    <table>
+                                      <tr>
+                                        <td><strong>Subtotal:</strong></td>
+                                        <td>$${(invoiceData.subtotal || 0).toFixed(2)}</td>
+                                      </tr>
+                                      <tr>
+                                        <td><strong>Tax:</strong></td>
+                                        <td>$${(invoiceData.tax || 0).toFixed(2)}</td>
+                                      </tr>
+                                      <tr>
+                                        <td><strong>Shipping:</strong></td>
+                                        <td>$${(invoiceData.shipping || 0).toFixed(2)}</td>
+                                      </tr>
+                                      <tr>
+                                        <td><strong>Discount:</strong></td>
+                                        <td>-$${(invoiceData.discount || 0).toFixed(2)}</td>
+                                      </tr>
+                                      <tr>
+                                        <td><strong>Total:</strong></td>
+                                        <td><strong>$${(invoiceData.total || 0).toFixed(2)}</strong></td>
+                                      </tr>
+                                    </table>
+                                  </div>
+                                  
+                                  <div class="footer">
+                                    <p>Thank you for your business!</p>
+                                    <p>Payment Method: ${invoiceData.paymentMethod}</p>
+                                    <p>Order Status: ${invoiceData.status}</p>
+                                  </div>
+                                </body>
+                              </html>
+                            `);
+                            printWindow.document.close();
+                            printWindow.print();
+                          }}
+                          className="text-green-600 hover:text-green-700 hover:bg-green-50 p-2 rounded-lg transition-colors"
+                          title="Download Invoice"
+                        >
+                          <Download className="h-4 w-4" />
+                        </button>
+                      )}
+                      <button 
                         onClick={() => deleteOrder(order._id)}
                         className="text-red-600 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors"
                       >
@@ -345,6 +501,14 @@ export default function Orders() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Invoice Modal */}
+      {showInvoice && invoiceData && (
+        <Invoice
+          invoiceData={invoiceData}
+          onClose={() => setShowInvoice(false)}
+        />
       )}
     </div>
   );
