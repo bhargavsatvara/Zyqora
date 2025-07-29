@@ -253,4 +253,35 @@ router.put(
   orderController.updateOrderStatusAdmin
 );
 
+/**
+ * @swagger
+ * /orders/{id}/invoice:
+ *   get:
+ *     summary: Generate invoice for an order
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Order ID
+ *     responses:
+ *       200:
+ *         description: Invoice data generated successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Access denied
+ *       404:
+ *         description: Order not found
+ */
+router.get(
+  '/:id/invoice',
+  authenticate,
+  orderController.generateInvoice
+);
+
 module.exports = router;
