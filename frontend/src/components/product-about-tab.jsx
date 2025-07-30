@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { commentsData } from "../data/data";
+import { reviewsAPI } from "../services/api";
 
 import { FiUser, FiMail, FiMessageCircle } from '../assets/icons/vander'
 
@@ -12,10 +13,13 @@ export default function ProductAboutTab({ product }){
     useEffect(() => {
         if (product && product._id) {
             setLoading(true);
-            fetch(`https://zyqora.onrender.com/api/reviews/${product._id}`)
-                .then(res => res.json())
-                .then(data => {
-                    setReviews(Array.isArray(data) ? data : []);
+            reviewsAPI.getProductReviews(product._id)
+                .then(res => {
+                    setReviews(Array.isArray(res.data) ? res.data : []);
+                })
+                .catch(error => {
+                    console.error('Error fetching reviews:', error);
+                    setReviews([]);
                 })
                 .finally(() => setLoading(false));
         }

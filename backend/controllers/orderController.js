@@ -50,12 +50,20 @@ exports.createOrder = async (req, res) => {
         const colorDoc = await Color.findById(item.color);
         colorName = colorDoc ? colorDoc.name : '';
       }
-      console.log('Creating OrderItem with order_id:', order._id, 'and item:', item, 'size:', sizeName, 'color:', colorName);
+      
+      // Fetch product to get SKU if not available in cart item
+      let sku = item.sku;
+      if (!sku) {
+        const product = await Product.findById(item.product_id);
+        sku = product?.sku || 'N/A';
+      }
+      
+      console.log('Creating OrderItem with order_id:', order._id, 'and item:', item, 'size:', sizeName, 'color:', colorName, 'sku:', sku);
       const orderItem = new OrderItem({
         order_id: order._id,
         product_id: item.product_id,
         product_name: item.name,
-        sku: item.sku,
+        sku: sku,
         quantity: item.quantity,
         price: item.price,
         subtotal: item.subtotal,
@@ -312,9 +320,22 @@ exports.generateInvoice = async (req, res) => {
     // Get order with all related data
     const order = await Order.findById(orderId)
       .populate('user_id', 'name email')
-      .populate('order_items')
+      .populate({
+        path: 'order_items',
+        populate: {
+          path: 'product_id',
+          select: 'sku name'
+        }
+      })
       .populate('billing_address')
       .exec();
+
+    console.log('Order debug:', {
+      orderId,
+      billingAddressId: order?.billing_address,
+      billingAddress: order?.billing_address,
+      user: order?.user_id
+    });
 
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
@@ -354,6 +375,19 @@ exports.generateInvoice = async (req, res) => {
       }
     }
 
+    // Debug billing address
+    console.log('Billing address debug:', {
+      hasBillingAddress: !!order.billing_address,
+      billingAddressData: order.billing_address,
+      billingAddressFields: order.billing_address ? {
+        street: order.billing_address.street,
+        city: order.billing_address.city,
+        state: order.billing_address.state,
+        country: order.billing_address.country,
+        zipCode: order.billing_address.zipCode
+      } : null
+    });
+
     // Generate invoice data
     const invoiceData = {
       invoiceNumber: `INV-${order._id.toString().slice(-8).toUpperCase()}`,
@@ -367,32 +401,51 @@ exports.generateInvoice = async (req, res) => {
         address: '123 Fashion Street, New York, NY 10001',
         phone: '+1 (555) 123-4567',
         email: 'support@zyqora.com',
-        website: 'https://zyqora.com'
+        website: 'https://zyqora-ten.vercel.app/'
       },
       
       // Customer information
       customer: {
         name: order.user_id?.name || 'Guest Customer',
         email: order.user_id?.email || 'guest@example.com',
-        address: order.billing_address ? {
-          street: order.billing_address.street || '',
-          city: order.billing_address.city || '',
-          state: order.billing_address.state || '',
-          country: order.billing_address.country || '',
-          zipCode: order.billing_address.zipCode || ''
-        } : null
+        address: order.billing_address ? (
+          typeof order.billing_address === 'object' ? {
+            street: order.billing_address.street || '',
+            city: order.billing_address.city || '',
+            state: order.billing_address.state || '',
+            country: order.billing_address.country || '',
+            zipCode: order.billing_address.zipCode || ''
+          } : (typeof order.billing_address === 'string' ? 
+            (() => {
+              try {
+                return JSON.parse(order.billing_address);
+              } catch (e) {
+                console.log('Failed to parse billing address string:', order.billing_address);
+                return null;
+              }
+            })() : null)
+        ) : null
       },
       
       // Order items
-      items: order.order_items.map(item => ({
-        name: item.product_name,
-        sku: item.sku || 'N/A',
-        quantity: item.quantity,
-        price: Number(item.price?.$numberDecimal || item.price || 0),
-        total: Number(item.total?.$numberDecimal || item.total || 0),
-        size: item.size || '',
-        color: item.color || ''
-      })),
+      items: order.order_items.map(item => {
+        const sku = item.sku || (item.product_id?.sku) || 'N/A';
+        console.log('Invoice item SKU debug:', {
+          itemSku: item.sku,
+          productSku: item.product_id?.sku,
+          finalSku: sku,
+          productName: item.product_name
+        });
+        return {
+          name: item.product_name,
+          sku: sku,
+          quantity: item.quantity,
+          price: Number(item.price?.$numberDecimal || item.price || 0),
+          total: Number(item.total?.$numberDecimal || item.total || 0),
+          size: item.size || '',
+          color: item.color || ''
+        };
+      }),
       
       // Totals
       subtotal: Number(order.subtotal?.$numberDecimal || order.subtotal || 0),

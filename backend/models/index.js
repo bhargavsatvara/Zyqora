@@ -16,6 +16,7 @@ const Cart = require('./cart');
 const Order = require('./order');
 const Payment = require('./payment');
 const Review = require('./review');
+const Contact = require('./contact');
 
 module.exports = {
   User,
@@ -35,5 +36,6 @@ module.exports = {
   Cart,
   Order,
   Payment,
-  Review,
-}; 
+  Review
+  Contact,
+};

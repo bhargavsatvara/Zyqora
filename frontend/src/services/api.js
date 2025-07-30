@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://zyqora.onrender.com/api';
-// const API_BASE_URL = 'http://localhost:4000/api';
+// const API_BASE_URL = 'https://zyqora.onrender.com/api';
+const API_BASE_URL = 'http://localhost:4000/api';
 
 // Create axios instance
 const api = axios.create({
@@ -114,6 +114,11 @@ export const userAPI = {
   getProfile: () => api.get('/user/profile'),
   updateProfile: (data) => api.put('/user/profile', data),
   updatePassword: (data) => api.put('/user/password', data),
+  uploadProfileImage: (formData) => api.post('/user/profile-image', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  }),
   getAddresses: () => api.get('/user/address'),
   createAddress: (data) => api.post('/user/address', data),
   updateAddress: (id, data) => api.put(`/user/address/${id}`, data),
@@ -169,6 +174,12 @@ export const couponsAPI = {
   getCoupons: (params) => api.get('/coupons', { params }),
   getCoupon: (id) => api.get(`/coupons/${id}`),
   validateCoupon: (code) => api.post('/coupons/validate', { code }),
+};
+
+// Contact API
+export const contactAPI = {
+  submitContact: (data) => api.post('/contacts', data),
+  getUserContacts: (params) => api.get('/contacts/user', { params }),
 };
 
 export default api; 

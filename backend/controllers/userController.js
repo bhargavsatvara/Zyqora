@@ -1,5 +1,6 @@
 const { User, Address } = require('../models');
 const bcrypt = require('bcryptjs');
+const cloudinary = require('../utils/cloudinary');
 
 exports.getProfile = async (req, res) => {
   try {
@@ -118,5 +119,47 @@ exports.updatePassword = async (req, res) => {
     res.json({ message: 'Password updated successfully' });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.uploadProfileImage = async (req, res) => {
+  try {
+    console.log('Uploading profile image:', req.file);
+    console.log('REQ BODY:', req.body);
+    
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image file provided' });
+    }
+
+    // Get current user
+    const user = await User.findById(req.user);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Delete old profile image from Cloudinary if exists
+    if (user.profileImage) {
+      try {
+        const publicId = user.profileImage.split('/').pop().split('.')[0];
+        await cloudinary.uploader.destroy(publicId);
+      } catch (error) {
+        console.error('Error deleting old profile image:', error);
+      }
+    }
+
+    // Use the Cloudinary URL directly from req.file.path (like products do)
+    const imageUrl = req.file.path; // This is already the Cloudinary URL
+
+    // Update user profile image
+    user.profileImage = imageUrl;
+    await user.save();
+
+    res.json({
+      message: 'Profile image uploaded successfully',
+      profileImage: imageUrl
+    });
+  } catch (error) {
+    console.error('Error uploading profile image:', error);
+    res.status(500).json({ message: 'Error uploading profile image' });
   }
 }; 
