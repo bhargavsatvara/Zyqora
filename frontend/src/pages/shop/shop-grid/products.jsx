@@ -11,9 +11,11 @@ import { AiFillHeart } from 'react-icons/ai';
 import ScrollToTop from "../../../components/scroll-to-top";
 import { productsAPI, wishlistAPI, reviewsAPI, cartAPI } from "../../../services/api";
 import { useToast } from "../../../contexts/ToastContext";
+import { useWishlist } from "../../../contexts/WishlistContext";
 
 export default function Products() {
 	const { showSuccess, showError } = useToast();
+	const { wishlist, addToWishlist, isInWishlist } = useWishlist();
 	const [searchParams] = useSearchParams();
 	const [products, setProducts] = useState([]);
 	const [loading, setLoading] = useState(true);
@@ -28,7 +30,6 @@ export default function Products() {
 		min_price: null,
 		max_price: null
 	});
-	const [wishlist, setWishlist] = useState([]);
 	const [productRatings, setProductRatings] = useState({});
 	console.log("products :: ", searchParams.get('category_id'));
 	// Wrap fetchProducts in useCallback for user interactions
@@ -135,27 +136,7 @@ export default function Products() {
 		}
 	}, [filters, fetchProducts]);
 
-	// Load wishlist on mount
-	useEffect(() => {
-		const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-		console.log("token :: ", token);
-		if (token) {
-			// Fetch wishlist from API
-			wishlistAPI.getWishlist()
-				.then(res => {
-					if (res.data && Array.isArray(res.data.items)) {
-						setWishlist(res.data.items.map(w => w._id || w.productId));
-					}
-				})
-				.catch(error => {
-					console.error('Error fetching wishlist:', error);
-				});
-		} else {
-			// Load from localStorage
-			const localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-			setWishlist(localWishlist.map(w => w._id));
-		}
-	}, []);
+
 
 	// Fetch ratings for visible products
 	useEffect(() => {
@@ -212,25 +193,16 @@ export default function Products() {
 
 	// Update wishlist state on add
 	const handleAddToWishlist = async (item) => {
-		const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-		if (token) {
-			try {
-				await wishlistAPI.addToWishlistAlt({ productId: item._id });
-				console.log("wishlist :: ", wishlist);
-				setWishlist(prev => prev.includes(item._id) ? prev : [...prev, item._id]);
+		try {
+			const success = await addToWishlist(item);
+			if (success) {
 				showSuccess('Added to wishlist!');
-			} catch (error) {
-				console.error('Error adding to wishlist:', error);
+			} else {
 				showError('Failed to add to wishlist');
 			}
-		} else {
-			let localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-			if (!localWishlist.find(p => p._id === item._id)) {
-				localWishlist.push(item);
-				localStorage.setItem('wishlist', JSON.stringify(localWishlist));
-				setWishlist(prev => prev.includes(item._id) ? prev : [...prev, item._id]);
-			}
-			showSuccess('Added to wishlist (local)!');
+		} catch (error) {
+			console.error('Error adding to wishlist:', error);
+			showError('Failed to add to wishlist');
 		}
 	};
 
@@ -333,13 +305,13 @@ export default function Products() {
 													<li>
 														<button
 															type="button"
-															className={`inline-flex items-center justify-center w-10 h-10 rounded-full shadow duration-500 border-none focus:outline-none ${wishlist.includes(item._id) ? 'bg-red-100 text-red-500' : 'bg-white text-slate-900 hover:bg-slate-900 hover:text-white'}`}
+															className={`inline-flex items-center justify-center w-10 h-10 rounded-full shadow duration-500 border-none focus:outline-none ${isInWishlist(item._id) ? 'bg-red-100 text-red-500' : 'bg-white text-slate-900 hover:bg-slate-900 hover:text-white'}`}
 															onClick={async (e) => {
 																e.preventDefault();
 																handleAddToWishlist(item);
 															}}
 														>
-															{wishlist.includes(item._id) ? (
+															{isInWishlist(item._id) ? (
 																<AiFillHeart className="w-4 h-4" color="#ef4444" />
 															) : (
 																<FiHeart className="w-4 h-4" />

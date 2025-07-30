@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { departmentsAPI, categoriesAPI, wishlistAPI } from "../services/api";
+import { useWishlist } from "../contexts/WishlistContext";
 
 import logoDark from "../assets/images/logo.png";
 import logoWhite from "../assets/images/logo.png";
@@ -251,28 +252,10 @@ export default function Navbar({ navClass, navlight }) {
   const cartCount = cartData.reduce((sum, item) => sum + item.quantity, 0);
   const cartTotal = totals.total;
 
-  const [wishlist, setWishlist] = useState([]);
+  const { getWishlistCount } = useWishlist();
   // Add state for search input
   const [searchTerm, setSearchTerm] = useState("");
-  // Load wishlist on mount
-  useEffect(() => {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    if (token) {
-      wishlistAPI.getWishlist()
-        .then(res => {
-          if (res.data && Array.isArray(res.data.items)) {
-            setWishlist(res.data.items.map(w => w._id || w.productId));
-          }
-        })
-        .catch(error => {
-          console.error('Error fetching wishlist:', error);
-        });
-    } else {
-      const localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-      setWishlist(localWishlist.map(w => w._id));
-    }
-  }, []);
-  const wishlistCount = wishlist.length;
+  const wishlistCount = getWishlistCount();
 
   // Add state for mobile menu
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

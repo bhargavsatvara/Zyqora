@@ -3,44 +3,41 @@ import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/navbar';
 import Footer from '../components/footer';
 import { wishlistAPI } from '../services/api';
+import { useWishlist } from '../contexts/WishlistContext';
 
 export default function Wishlist() {
+  const { wishlist, removeFromWishlist } = useWishlist();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchWishlist = async () => {
-      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-      if (token) {
-        try {
+    const loadWishlistItems = async () => {
+      try {
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        if (token) {
           const res = await wishlistAPI.getWishlist();
           if (Array.isArray(res.data.items)) {
             setItems(res.data.items);
           } else {
             setItems([]);
           }
-        } catch (err) {
-          setError('Failed to fetch wishlist');
+        } else {
+          // Not logged in: get from localStorage
+          const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+          setItems(wishlist);
         }
-      } else {
-        // Not logged in: get from localStorage
-        const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-        setItems(wishlist);
+      } catch (err) {
+        setError('Failed to fetch wishlist');
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
-    fetchWishlist();
+    loadWishlistItems();
   }, []);
 
-  // Remove from local wishlist (for guest users)
-  const removeFromLocalWishlist = (id) => {
-    let wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-    wishlist = wishlist.filter(item => (item._id || item) !== id);
-    localStorage.setItem('wishlist', JSON.stringify(wishlist));
-    setItems(wishlist);
-  };
+
 
   return (
     <>
@@ -91,17 +88,11 @@ export default function Wishlist() {
                         <td className="p-4">
                           <button
                             onClick={async () => {
-                              // Remove from backend or localStorage
-                              const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-                              if (token) {
-                                try {
-                                  await wishlistAPI.removeFromWishlistAlt(item._id || item);
-                                  setItems(items.filter(i => (i._id || i) !== (item._id || item)));
-                                } catch (error) {
-                                  console.error('Error removing from wishlist:', error);
-                                }
-                              } else {
-                                removeFromLocalWishlist(item._id || item);
+                              try {
+                                await removeFromWishlist(item._id || item);
+                                setItems(items.filter(i => (i._id || i) !== (item._id || item)));
+                              } catch (error) {
+                                console.error('Error removing from wishlist:', error);
                               }
                             }}
                             className="transition-colors text-red-600 hover:text-red-800"

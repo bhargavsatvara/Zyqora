@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://zyqora.onrender.com/api';
-// const API_BASE_URL = 'http://localhost:4000/api';
+// const API_BASE_URL = 'https://zyqora.onrender.com/api';
+const API_BASE_URL = 'http://localhost:4000/api';
 
 // Create axios instance
 const api = axios.create({
@@ -91,10 +91,10 @@ export const cartAPI = {
   addToCart: (data) => api.post('/cart', data),
   addToCartAlt: (data) => api.post('/cart/add', data),
   updateCartItem: (itemId, data) => api.put(`/cart/${itemId}`, data),
-  updateCartItemAlt: (data) => api.post('/cart/update', data),
+  updateCartItemAlt: (data) => api.put('/cart/update', data),
   removeFromCart: (itemId) => api.delete(`/cart/${itemId}`),
   removeFromCartAlt: (data) => api.post('/cart/remove', data),
-  clearCart: () => api.delete('/cart'),
+  clearCart: () => api.delete('/cart/clear'),
   clearCartAlt: () => api.post('/cart/clear'),
 };
 

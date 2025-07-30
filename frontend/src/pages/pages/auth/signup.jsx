@@ -170,9 +170,7 @@ export default function Signup() {
                 />
                 <button
                   type="button"
-                  onMouseDown={() => setShowPassword(true)}
-                  onMouseUp={() => setShowPassword(false)}
-                  onMouseLeave={() => setShowPassword(false)}
+                  onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-3 top-[38px] flex items-center text-gray-500"
                   tabIndex={-1}
                 >
@@ -196,9 +194,7 @@ export default function Signup() {
                 />
                 <button
                   type="button"
-                  onMouseDown={() => setShowConfirm(true)}
-                  onMouseUp={() => setShowConfirm(false)}
-                  onMouseLeave={() => setShowConfirm(false)}
+                  onClick={() => setShowConfirm(!showConfirm)}
                   className="absolute inset-y-0 right-3 top-[38px] flex items-center text-gray-500"
                   tabIndex={-1}
                 >
@@ -243,13 +239,7 @@ export default function Signup() {
               </p>
             </form>
 
-            <p className="mt-6 text-center text-gray-400 text-xs">
-              © {new Date().getFullYear()} Zyqora. Made with{" "}
-              <span role="img" aria-label="love">
-                ❤️
-              </span>{" "}
-              by Group 7.
-            </p>
+            
           </div>
         </div>
       </div>
