@@ -36,6 +36,6 @@ module.exports = {
   Cart,
   Order,
   Payment,
-  Review
-  Contact,
+  Review,
+  Contact
 };
