@@ -13,7 +13,7 @@ import { userAPI, ordersAPI, countriesAPI, statesAPI, citiesAPI } from "../../se
 const stripePromise = loadStripe('pk_test_51RnLFbFW8XM59bhWaYOroZ29ELB4xWqWiadqhP8CPAl3RvZL8ahBcZTdHxI94f9r0hn9IJNaO8BOGcQXrpE2SBYF00CkTXOTtd'); // TODO: Replace with your real Stripe publishable key
 
 function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedCountry, selectedState, setSelectedState, selectedCity, setSelectedCity, zipCode, setZipCode }) {
-    const { cartData, totals, fetchCart } = useCart();
+    const { cartData, totals } = useCart();
     const [form, setForm] = useState({
         firstName: '',
         lastName: '',
@@ -51,23 +51,30 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
     const [user, setUser] = useState({ name: '', email: '' });
 
     useEffect(() => {
-        fetchCart(); // Always fetch latest cart on mount
-        fetchAddresses();
-        // Fetch user info
-        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-        if (token) {
-            userAPI.getProfile()
-                .then(res => {
+        // Fetch data only once on mount
+        const initializeData = async () => {
+            try {
+                // Fetch addresses
+                await fetchAddresses();
+                
+                // Fetch user info
+                const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+                if (token) {
+                    const res = await userAPI.getProfile();
                     const name = res.data.name || (res.data.data && res.data.data.name) || '';
                     const email = res.data.email || (res.data.data && res.data.data.email) || '';
                     setUser({ name, email });
                     setForm(f => ({ ...f, firstName: name, email }));
-                })
-                .catch(error => {
-                    console.error('Error fetching user profile:', error);
-                });
-        }
-    }, [fetchCart]);
+                }
+            } catch (error) {
+                console.error('Error initializing checkout data:', error);
+            }
+        };
+        
+        initializeData();
+    }, []); // Empty dependency array - run only once
+
+
 
     const fetchAddresses = async () => {
         const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -85,7 +92,7 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
 
     // When an address is selected, fill the form fields
     useEffect(() => {
-        if (selectedAddressId && addresses.length > 0) {
+        if (selectedAddressId && addresses.length > 0 && countries.length > 0) {
             const addr = addresses.find(a => a._id === selectedAddressId);
             if (addr) {
                 setForm(f => ({
@@ -94,12 +101,18 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
                     address2: '',
                 }));
                 setZipCode(addr.zipCode || '');
-                setSelectedCountry(countries.find(c => c.name === addr.country)?._id || '');
-                setSelectedState(states.find(s => s.name === addr.state)?._id || '');
-                setSelectedCity(cities.find(c => c.name === addr.city)?._id || '');
+                
+                // Find and set country, state, city IDs
+                const countryId = countries.find(c => c.name === addr.country)?._id || '';
+                const stateId = states.find(s => s.name === addr.state)?._id || '';
+                const cityId = cities.find(c => c.name === addr.city)?._id || '';
+                
+                setSelectedCountry(countryId);
+                setSelectedState(stateId);
+                setSelectedCity(cityId);
             }
         }
-    }, [selectedAddressId, addresses, countries, states, cities, setSelectedCountry, setSelectedState, setSelectedCity, setZipCode]);
+    }, [selectedAddressId, addresses, countries, states, cities]);
 
     // Fetch states for address form
     useEffect(() => {
@@ -110,17 +123,28 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
             setAddressCity('');
             return;
         }
+        
+        let isMounted = true;
         async function fetchStates() {
             try {
                 const res = await statesAPI.getStates({ country_id: addressCountry });
-                const data = res.data;
-                setAddressStates((data.data && data.data.states) ? data.data.states : []);
+                if (isMounted) {
+                    const data = res.data;
+                    setAddressStates((data.data && data.data.states) ? data.data.states : []);
+                }
             } catch (e) {
-                setAddressStates([]);
+                if (isMounted) {
+                    setAddressStates([]);
+                }
             }
         }
         fetchStates();
+        
+        return () => {
+            isMounted = false;
+        };
     }, [addressCountry]);
+    
     // Fetch cities for address form
     useEffect(() => {
         if (!addressState) {
@@ -128,16 +152,26 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
             setAddressCity('');
             return;
         }
+        
+        let isMounted = true;
         async function fetchCities() {
             try {
                 const res = await citiesAPI.getCities({ state_id: addressState });
-                const data = res.data;
-                setAddressCities((data.data && data.data.cities) ? data.data.cities : []);
+                if (isMounted) {
+                    const data = res.data;
+                    setAddressCities((data.data && data.data.cities) ? data.data.cities : []);
+                }
             } catch (e) {
-                setAddressCities([]);
+                if (isMounted) {
+                    setAddressCities([]);
+                }
             }
         }
         fetchCities();
+        
+        return () => {
+            isMounted = false;
+        };
     }, [addressState]);
 
     const handleInput = e => {
@@ -456,16 +490,26 @@ export default function ShopCheckOut() {
             setSelectedCity('');
             return;
         }
+        
+        let isMounted = true;
         async function fetchStates() {
             try {
                 const res = await statesAPI.getStates({ country_id: selectedCountry });
-                const data = res.data;
-                setStates((data.data && data.data.states) ? data.data.states : []);
+                if (isMounted) {
+                    const data = res.data;
+                    setStates((data.data && data.data.states) ? data.data.states : []);
+                }
             } catch (e) {
-                setStates([]);
+                if (isMounted) {
+                    setStates([]);
+                }
             }
         }
         fetchStates();
+        
+        return () => {
+            isMounted = false;
+        };
     }, [selectedCountry]);
 
     // Fetch cities when state changes
@@ -475,16 +519,26 @@ export default function ShopCheckOut() {
             setSelectedCity('');
             return;
         }
+        
+        let isMounted = true;
         async function fetchCities() {
             try {
                 const res = await citiesAPI.getCities({ state_id: selectedState });
-                const data = res.data;
-                setCities((data.data && data.data.cities) ? data.data.cities : []);
+                if (isMounted) {
+                    const data = res.data;
+                    setCities((data.data && data.data.cities) ? data.data.cities : []);
+                }
             } catch (e) {
-                setCities([]);
+                if (isMounted) {
+                    setCities([]);
+                }
             }
         }
         fetchCities();
+        
+        return () => {
+            isMounted = false;
+        };
     }, [selectedState]);
 
     return (

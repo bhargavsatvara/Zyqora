@@ -9,7 +9,7 @@ import Filter from "../../../components/filter";
 import { FiHeart, FiEye, FiBookmark, FiChevronLeft, FiChevronRight } from '../../../assets/icons/vander'
 import { AiFillHeart } from 'react-icons/ai';
 import ScrollToTop from "../../../components/scroll-to-top";
-import { productsAPI, wishlistAPI, reviewsAPI, cartAPI } from "../../../services/api";
+import { productsAPI, wishlistAPI, reviewsAPI, cartAPI, categoriesAPI } from "../../../services/api";
 import { useToast } from "../../../contexts/ToastContext";
 
 export default function Products() {
@@ -31,6 +31,34 @@ export default function Products() {
 	const [wishlist, setWishlist] = useState([]);
 	const [productRatings, setProductRatings] = useState({});
 	console.log("products :: ", searchParams.get('category_id'));
+
+	// Function to find department for a category
+	const findDepartmentForCategory = async (categoryId) => {
+		try {
+			console.log(`Finding department for category: ${categoryId}`);
+			const res = await categoriesAPI.getCategories({ limit: 1000 });
+			const data = res.data;
+			
+			let categoriesData = [];
+			if (data.data && data.data.categories) {
+				categoriesData = data.data.categories;
+			} else if (data.categories) {
+				categoriesData = data.categories;
+			} else if (Array.isArray(data)) {
+				categoriesData = data;
+			}
+			
+			const category = categoriesData.find(cat => cat._id === categoryId);
+			if (category && category.department_id) {
+				console.log(`Found department ${category.department_id} for category ${categoryId}`);
+				return category.department_id;
+			}
+			return null;
+		} catch (error) {
+			console.error(`Error finding department for category ${categoryId}:`, error);
+			return null;
+		}
+	};
 	// Wrap fetchProducts in useCallback for user interactions
 	const fetchProducts = useCallback(async () => {
 		setLoading(true);
@@ -84,17 +112,27 @@ export default function Products() {
 			max_price: null
 		};
 
+		// Set filters immediately - no need to wait for department discovery if both are provided
 		setFilters(newFilters);
 		
 		// Fetch products with the new filters
 		const fetchWithFilters = async () => {
+			// If we have both department_id and category_id, use them directly
+			// If we only have category_id, find the department
+			let finalFilters = newFilters;
+			if (categoryId && !departmentId) {
+				const deptId = await findDepartmentForCategory(categoryId);
+				if (deptId) {
+					finalFilters = { ...newFilters, department_id: deptId };
+				}
+			}
 			setLoading(true);
 			try {
-				console.log('Current filters state:', newFilters);
+				console.log('Current filters state:', finalFilters);
 				
 				// Clean up filters - remove empty values
 				const cleanFilters = Object.fromEntries(
-					Object.entries(newFilters).filter(([key, value]) => 
+					Object.entries(finalFilters).filter(([key, value]) => 
 						value !== '' && value !== null && value !== undefined
 					)
 				);
@@ -127,12 +165,8 @@ export default function Products() {
 
 	// Fetch products when filters change (for user interactions)
 	useEffect(() => {
-		// Skip the initial fetch since it's handled by the URL params effect
-		if (filters.category_id !== null || filters.department_id !== null || 
-			filters.brand_id !== null || filters.search !== null ||
-			filters.min_price !== null || filters.max_price !== null) {
-			fetchProducts();
-		}
+		// Always fetch products when filters change, including when clearing all filters
+		fetchProducts();
 	}, [filters, fetchProducts]);
 
 	// Load wishlist on mount

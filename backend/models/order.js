@@ -15,8 +15,8 @@ const OrderSchema = new Schema({
   shipping_charge: { type: mongoose.Schema.Types.Decimal128, default: 0 },
   discount_amount: { type: mongoose.Schema.Types.Decimal128, default: 0 },
   payment_method: { type: String, maxlength: 100 },
-  shipping_address: { type: String },
-  billing_address: { type: String },
+  shipping_address: { type: Schema.Types.ObjectId, ref: 'Address' },
+  billing_address: { type: Schema.Types.ObjectId, ref: 'Address' },
   order_items: [{ type: Schema.Types.ObjectId, ref: 'OrderItem' }],
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now }

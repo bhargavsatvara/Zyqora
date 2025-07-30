@@ -43,7 +43,7 @@ exports.getCart = async (req, res) => {
 exports.addItem = async (req, res) => {
   try {
     console.log('req.user:', req.user);
-    const { product_id, name, price, image, quantity, size, color, stock_qty } = req.body;
+    const { product_id, name, price, image, quantity, size, color, stock_qty, sku } = req.body;
     
     // Validate required fields
     if (!product_id || !name || !price || !quantity) {
@@ -99,7 +99,7 @@ exports.addItem = async (req, res) => {
         quantity,
         size,
         color,
-        stock_qty
+        sku
       });
     }
 

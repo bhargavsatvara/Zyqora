@@ -352,7 +352,8 @@ export default function Index() {
                             name: item.name,
                             price: item.price,
                             image: item.image,
-                            quantity: 1
+                            quantity: 1,
+                            sku: item.sku
                           });
                         } catch (error) {
                           console.error('Error adding to cart:', error);

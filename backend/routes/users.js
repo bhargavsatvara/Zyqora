@@ -3,6 +3,7 @@ const router = express.Router();
 const userController = require('../controllers/userController');
 const addressController = require('../controllers/addressController');
 const { authenticate } = require('../middleware/auth');
+const { uploadProfileImage } = require('../utils/multer');
 
 /**
  * @swagger
@@ -110,6 +111,32 @@ router.put('/settings', authenticate, userController.updateSettings);
  *       401: { description: Unauthorized }
  */
 router.put('/password', authenticate, userController.updatePassword);
+
+/**
+ * @swagger
+ * /user/profile-image:
+ *   post:
+ *     summary: Upload profile image
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required: [image]
+ *             properties:
+ *               image: 
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200: { description: Profile image uploaded successfully }
+ *       400: { description: No image file provided }
+ *       401: { description: Unauthorized }
+ */
+router.post('/profile-image', authenticate, uploadProfileImage.single('image'), userController.uploadProfileImage);
 
 /**
  * @swagger

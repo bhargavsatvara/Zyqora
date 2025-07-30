@@ -6,6 +6,7 @@ import Footer from "../../../components/footer";
 import Switcher from "../../../components/switcher";
 import ScrollToTop from "../../../components/scroll-to-top";
 import { FiEdit, FiMapPin, FiPhone } from '../../../assets/icons/vander'
+import { addressesAPI, countriesAPI, statesAPI, citiesAPI } from "../../../services/api";
 
 export default function UserBilling() {
   const [addresses, setAddresses] = useState([]);
@@ -14,33 +15,131 @@ export default function UserBilling() {
   const [formType, setFormType] = useState('billing');
   const [formData, setFormData] = useState({
     street: '',
-    city: '',
-    state: '',
-    country: '',
+    city_id: '',
+    state_id: '',
+    country_id: '',
     zipCode: '',
     isDefault: false
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [countries, setCountries] = useState([]);
+  const [states, setStates] = useState([]);
+  const [cities, setCities] = useState([]);
+  const [loadingCountries, setLoadingCountries] = useState(false);
+  const [loadingStates, setLoadingStates] = useState(false);
+  const [loadingCities, setLoadingCities] = useState(false);
 
   useEffect(() => {
     fetchAddresses();
+    fetchCountries();
   }, []);
+
+  const fetchCountries = async () => {
+    setLoadingCountries(true);
+    try {
+      console.log('Fetching countries...');
+      const response = await countriesAPI.getCountries();
+      console.log('Countries response:', response);
+      const data = response.data;
+      console.log('Countries data:', data);
+      
+      // Handle nested response structure
+      let countriesData = [];
+      if (data && data.data && data.data.countries) {
+        countriesData = data.data.countries;
+      } else if (Array.isArray(data)) {
+        countriesData = data;
+      } else if (data && Array.isArray(data.countries)) {
+        countriesData = data.countries;
+      }
+      
+      console.log('Countries data extracted:', countriesData);
+      setCountries(countriesData);
+    } catch (error) {
+      console.error('Error fetching countries:', error);
+    } finally {
+      setLoadingCountries(false);
+    }
+  };
+
+  const fetchStates = async (countryId) => {
+    if (!countryId) {
+      setStates([]);
+      return;
+    }
+    setLoadingStates(true);
+    try {
+      console.log('Fetching states for country:', countryId);
+      const response = await statesAPI.getStates({ country_id: countryId });
+      console.log('States response:', response);
+      const data = response.data;
+      console.log('States data:', data);
+      
+      // Handle nested response structure
+      let statesData = [];
+      if (data && data.data && data.data.states) {
+        statesData = data.data.states;
+      } else if (Array.isArray(data)) {
+        statesData = data;
+      } else if (data && Array.isArray(data.states)) {
+        statesData = data.states;
+      }
+      
+      console.log('States data extracted:', statesData);
+      setStates(statesData);
+    } catch (error) {
+      console.error('Error fetching states:', error);
+    } finally {
+      setLoadingStates(false);
+    }
+  };
+
+  const fetchCities = async (stateId) => {
+    if (!stateId) {
+      setCities([]);
+      return;
+    }
+    setLoadingCities(true);
+    try {
+      console.log('Fetching cities for state:', stateId);
+      const response = await citiesAPI.getCities({ state_id: stateId });
+      console.log('Cities response:', response);
+      const data = response.data;
+      console.log('Cities data:', data);
+      
+      // Handle nested response structure
+      let citiesData = [];
+      if (data && data.data && data.data.cities) {
+        citiesData = data.data.cities;
+      } else if (Array.isArray(data)) {
+        citiesData = data;
+      } else if (data && Array.isArray(data.cities)) {
+        citiesData = data.cities;
+      }
+      
+      console.log('Cities data extracted:', citiesData);
+      setCities(citiesData);
+    } catch (error) {
+      console.error('Error fetching cities:', error);
+    } finally {
+      setLoadingCities(false);
+    }
+  };
 
   const fetchAddresses = () => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (!token) return;
     setLoading(true);
-    fetch('https://zyqora.onrender.com/api/addresses', {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    })
-      .then(res => res.json())
-      .then(data => {
+    addressesAPI.getAddresses()
+      .then(res => {
+        const data = res.data;
         if (Array.isArray(data)) {
           setAddresses(data);
         }
+      })
+      .catch(error => {
+        console.error('Error fetching addresses:', error);
       })
       .finally(() => setLoading(false));
   };
@@ -65,9 +164,9 @@ export default function UserBilling() {
     setShowAddressForm(true);
     setFormData({
       street: '',
-      city: '',
-      state: '',
-      country: '',
+      city_id: '',
+      state_id: '',
+      country_id: '',
       zipCode: '',
       isDefault: false
     });
@@ -76,35 +175,48 @@ export default function UserBilling() {
 
   const handleFormChange = (e) => {
     const { name, value, type: inputType, checked } = e.target;
+    
     setFormData({
       ...formData,
       [name]: inputType === 'checkbox' ? checked : value
     });
+
+    // Handle cascading dropdowns
+    if (name === 'country_id') {
+      // Reset state and city when country changes
+      setFormData(prev => ({
+        ...prev,
+        state_id: '',
+        city_id: ''
+      }));
+      setStates([]);
+      setCities([]);
+      if (value) {
+        fetchStates(value);
+      }
+    } else if (name === 'state_id') {
+      // Reset city when state changes
+      setFormData(prev => ({
+        ...prev,
+        city_id: ''
+      }));
+      setCities([]);
+      if (value) {
+        fetchCities(value);
+      }
+    }
   };
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     setError('');
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     try {
-      const res = await fetch('https://zyqora.onrender.com/api/addresses', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(formData)
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        setError(err.message || 'Failed to add address');
-      } else {
-        setShowAddressForm(false);
-        fetchAddresses();
-      }
+      const res = await addressesAPI.createAddress(formData);
+      setShowAddressForm(false);
+      fetchAddresses();
     } catch (err) {
-      setError('Failed to add address');
+      setError(err.response?.data?.message || 'Failed to add address');
     } finally {
       setSubmitting(false);
     }
@@ -163,15 +275,64 @@ export default function UserBilling() {
               </div>
               {/* Address Form Modal */}
               {showAddressForm && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-500 bg-opacity-40">
                   <div className="bg-white dark:bg-slate-900 p-8 rounded shadow-lg w-full max-w-md relative">
                     <button className="absolute top-2 right-2 text-gray-400 hover:text-orange-500" onClick={() => setShowAddressForm(false)}>&times;</button>
                     <h4 className="text-lg font-semibold mb-4">Add {formType === 'billing' ? 'Billing' : 'Shipping'} Address</h4>
                     <form onSubmit={handleFormSubmit} className="space-y-3">
                       <input type="text" name="street" value={formData.street} onChange={handleFormChange} placeholder="Street Address" className="w-full border rounded px-3 py-2" required />
-                      <input type="text" name="city" value={formData.city} onChange={handleFormChange} placeholder="City" className="w-full border rounded px-3 py-2" required />
-                      <input type="text" name="state" value={formData.state} onChange={handleFormChange} placeholder="State" className="w-full border rounded px-3 py-2" required />
-                      <input type="text" name="country" value={formData.country} onChange={handleFormChange} placeholder="Country" className="w-full border rounded px-3 py-2" required />
+                      
+                      {/* Country Dropdown */}
+                      <select 
+                        name="country_id" 
+                        value={formData.country_id} 
+                        onChange={handleFormChange} 
+                        className="w-full border rounded px-3 py-2" 
+                        required
+                        disabled={loadingCountries}
+                      >
+                        <option value="">{loadingCountries ? 'Loading countries...' : 'Select Country'}</option>
+                        {countries.map(country => (
+                          <option key={country._id} value={country._id}>
+                            {country.name}
+                          </option>
+                        ))}
+                      </select>
+                      
+                      {/* State Dropdown */}
+                      <select 
+                        name="state_id" 
+                        value={formData.state_id} 
+                        onChange={handleFormChange} 
+                        className="w-full border rounded px-3 py-2" 
+                        required
+                        disabled={loadingStates || !formData.country_id}
+                      >
+                        <option value="">{loadingStates ? 'Loading states...' : 'Select State'}</option>
+                        {states.map(state => (
+                          <option key={state._id} value={state._id}>
+                            {state.name}
+                          </option>
+                        ))}
+                      </select>
+                      
+                      {/* City Dropdown */}
+                      <select 
+                        name="city_id" 
+                        value={formData.city_id} 
+                        onChange={handleFormChange} 
+                        className="w-full border rounded px-3 py-2" 
+                        required
+                        disabled={loadingCities || !formData.state_id}
+                      >
+                        <option value="">{loadingCities ? 'Loading cities...' : 'Select City'}</option>
+                        {cities.map(city => (
+                          <option key={city._id} value={city._id}>
+                            {city.name}
+                          </option>
+                        ))}
+                      </select>
+                      
                       <input type="text" name="zipCode" value={formData.zipCode} onChange={handleFormChange} placeholder="ZIP/Postal Code" className="w-full border rounded px-3 py-2" required />
                       <label className="flex items-center space-x-2">
                         <input type="checkbox" name="isDefault" checked={formData.isDefault} onChange={handleFormChange} />

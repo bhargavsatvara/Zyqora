@@ -93,7 +93,7 @@ export default function OrderView() {
     setReviewSubmitting(true);
     setReviewSuccess("");
     try {
-      const res = await reviewsAPI.addReview({
+     await reviewsAPI.addReview({
         rating: review.rating,
         comment: review.comment,
         product_id: reviewProductId

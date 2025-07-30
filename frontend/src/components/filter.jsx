@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
-import {FiSearch, FiChevronDown, FiChevronUp} from '../assets/icons/vander'
+import { FiSearch, FiChevronDown, FiChevronUp } from '../assets/icons/vander'
 import { productsAPI, colorsAPI, brandsAPI, categoriesAPI, departmentsAPI } from '../services/api';
+import { useToast } from '../contexts/ToastContext';
 
-export default function Filter({ onFilterChange, filters }){
+export default function Filter({ onFilterChange, filters }) {
+    const { showSuccess } = useToast();
     const [colors, setColors] = useState([]);
     const [brands, setBrands] = useState([]);
     const [sizes, setSizes] = useState([]);
@@ -20,7 +22,8 @@ export default function Filter({ onFilterChange, filters }){
         department: true,
         category: true,
         size: false,
-        color: true
+        color: true,
+        brand: false
     });
 
     // View more states
@@ -37,45 +40,75 @@ export default function Filter({ onFilterChange, filters }){
     // Update selected states when filters change from URL
     useEffect(() => {
         console.log('Filter component received filters:', filters);
-        
+        console.log('Current selected states:', {
+            categories: selectedCategories,
+            departments: selectedDepartments,
+            brands: selectedBrands,
+            colors: selectedColors,
+            sizes: selectedSizes
+        });
+
         // Handle category filter
         if (filters.category_id) {
             console.log('Setting selected category:', filters.category_id);
             setSelectedCategories([filters.category_id]);
+            console.log('Category selection updated');
+
+            // Expand category section when category is selected
+            setExpandedSections(prev => ({
+                ...prev,
+                category: true
+            }));
+
+            // If we have a category but no department, try to find it
+            if (!filters.department_id) {
+                findDepartmentForCategory(filters.category_id);
+            }
         } else {
             setSelectedCategories([]);
         }
-        
+
         // Handle brand filter
         if (filters.brand_id) {
             setSelectedBrands([filters.brand_id]);
         } else {
             setSelectedBrands([]);
         }
-        
+
         // Handle color filter
         if (filters.color_id) {
             setSelectedColors([filters.color_id]);
         } else {
             setSelectedColors([]);
         }
-        
+
         // Handle size filter
         if (filters.size_id) {
             setSelectedSizes([filters.size_id]);
         } else {
             setSelectedSizes([]);
         }
-        
+
         // Handle department filter
         if (filters.department_id) {
+            console.log('Setting selected department:', filters.department_id);
             setSelectedDepartments([filters.department_id]);
+            console.log('Department selection updated');
+
+            // Expand department section when department is selected
+            setExpandedSections(prev => ({
+                ...prev,
+                department: true
+            }));
+
             // Fetch categories for the selected department
             fetchCategoriesForDepartment(filters.department_id);
         } else {
             setSelectedDepartments([]);
-            // Clear categories when no department is selected
-            setCategories([]);
+            // Don't clear categories if we have a category filter
+            if (!filters.category_id) {
+                setCategories([]);
+            }
         }
     }, [filters]);
 
@@ -92,17 +125,17 @@ export default function Filter({ onFilterChange, filters }){
             if (filters.color_id) params.color_id = filters.color_id;
             if (filters.min_price) params.min_price = filters.min_price;
             if (filters.max_price) params.max_price = filters.max_price;
-            
+
             console.log('Fetching available sizes with params:', params);
             const res = await productsAPI.getProducts(params);
             const data = res.data;
-            
+
             if (data.data && data.data.products) {
                 // Extract unique sizes from products
                 const sizeSet = new Set();
                 data.data.products.forEach(product => {
                     if (product.attributes) {
-                        const sizeAttribute = product.attributes.find(attr => 
+                        const sizeAttribute = product.attributes.find(attr =>
                             attr.attribute_name && attr.attribute_name.toLowerCase().includes('size')
                         );
                         if (sizeAttribute && sizeAttribute.attribute_values) {
@@ -114,12 +147,12 @@ export default function Filter({ onFilterChange, filters }){
                         }
                     }
                 });
-                
+
                 const availableSizes = Array.from(sizeSet).map(sizeName => ({
                     _id: sizeName, // Use size name as ID for consistency
                     name: sizeName
                 }));
-                
+
                 console.log('Available sizes found:', availableSizes);
                 setSizes(Array.isArray(availableSizes) ? availableSizes : []);
             }
@@ -142,16 +175,63 @@ export default function Filter({ onFilterChange, filters }){
             setColors(colorsRes.data?.colors || colorsRes.data || []);
             setBrands(brandsRes.data?.brands || brandsRes.data || []);
             setDepartments(departmentsRes.data || departmentsRes || []);
-            
+
             // Don't fetch categories initially - they will be fetched when department is selected
             setCategories([]);
-            
+
             // Fetch available sizes based on current filters
             await fetchAvailableSizes();
         } catch (error) {
             console.error('Error fetching filter data:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Find department for a specific category
+    const findDepartmentForCategory = async (categoryId) => {
+        try {
+            console.log(`Finding department for category: ${categoryId}`);
+
+            // First try to get the specific category to see if it has department info
+            const res = await categoriesAPI.getCategories({ limit: 1000 });
+            const data = res.data;
+
+            let categoriesData = [];
+            if (data.data && data.data.categories) {
+                categoriesData = data.data.categories;
+            } else if (data.categories) {
+                categoriesData = data.categories;
+            } else if (Array.isArray(data)) {
+                categoriesData = data;
+            }
+
+            console.log('All categories fetched:', categoriesData.map(cat => ({ id: cat._id, name: cat.name, dept: cat.department_id })));
+
+            // Find the category and its department
+            const category = categoriesData.find(cat => cat._id === categoryId);
+            console.log('Found category:', category);
+
+            if (category && category.department_id) {
+                console.log(`Found department ${category.department_id} for category ${categoryId}`);
+
+                // Set the department as selected
+                setSelectedDepartments([category.department_id]);
+
+                // Fetch categories for this department
+                await fetchCategoriesForDepartment(category.department_id);
+
+                // Don't call onFilterChange here to avoid circular updates
+                // The parent component should handle the department_id from the URL
+            } else {
+                console.log(`Department not found for category ${categoryId}, fetching all categories`);
+                // If we can't find the department, just fetch all categories
+                await fetchAllCategories();
+            }
+        } catch (error) {
+            console.error(`Error finding department for category ${categoryId}:`, error);
+            // Fallback to fetching all categories
+            await fetchAllCategories();
         }
     };
 
@@ -162,9 +242,9 @@ export default function Filter({ onFilterChange, filters }){
             // Request all categories with a high limit to ensure we get all of them
             const res = await categoriesAPI.getCategories({ limit: 1000 });
             const data = res.data;
-            
+
             console.log('Categories API response:', data);
-            
+
             let categoriesData = [];
             if (data.data && data.data.categories) {
                 categoriesData = data.data.categories;
@@ -173,7 +253,7 @@ export default function Filter({ onFilterChange, filters }){
             } else if (Array.isArray(data)) {
                 categoriesData = data;
             }
-            
+
             console.log(`Found ${categoriesData.length} total categories:`, categoriesData.map(cat => cat.name));
             setCategories(Array.isArray(categoriesData) ? categoriesData : []);
         } catch (error) {
@@ -187,14 +267,14 @@ export default function Filter({ onFilterChange, filters }){
         try {
             console.log(`Fetching categories for department: ${departmentId}`);
             // Request all categories for the department with a high limit
-            const res = await categoriesAPI.getCategories({ 
+            const res = await categoriesAPI.getCategories({
                 department_id: departmentId,
-                limit: 1000 
+                limit: 1000
             });
             const data = res.data;
-            
+
             console.log('Department categories API response:', data);
-            
+
             let categoriesData = [];
             if (data.data && data.data.categories) {
                 categoriesData = data.data.categories;
@@ -203,7 +283,7 @@ export default function Filter({ onFilterChange, filters }){
             } else if (Array.isArray(data)) {
                 categoriesData = data;
             }
-            
+
             console.log(`Found ${categoriesData.length} categories for department ${departmentId}:`, categoriesData.map(cat => cat.name));
             setCategories(Array.isArray(categoriesData) ? categoriesData : []);
         } catch (error) {
@@ -228,14 +308,14 @@ export default function Filter({ onFilterChange, filters }){
         const newSelectedDepartments = selectedDepartments.includes(departmentId)
             ? selectedDepartments.filter(id => id !== departmentId)
             : [departmentId]; // Only allow one department selection
-        
+
         setSelectedDepartments(newSelectedDepartments);
         onFilterChange({ department_id: newSelectedDepartments.length > 0 ? newSelectedDepartments[0] : null });
-        
+
         // Clear category selection when department changes
         setSelectedCategories([]);
         onFilterChange({ category_id: null });
-        
+
         // Always fetch categories for the selected department
         if (newSelectedDepartments.length > 0) {
             fetchCategoriesForDepartment(newSelectedDepartments[0]);
@@ -243,7 +323,7 @@ export default function Filter({ onFilterChange, filters }){
             // If no department selected, clear categories
             setCategories([]);
         }
-        
+
         // Refresh available sizes after department change
         setTimeout(() => fetchAvailableSizes(), 100);
     };
@@ -251,11 +331,11 @@ export default function Filter({ onFilterChange, filters }){
     const handleCategoryClick = (categoryId) => {
         const newSelectedCategories = selectedCategories.includes(categoryId)
             ? selectedCategories.filter(id => id !== categoryId)
-            : [...selectedCategories, categoryId];
-        
+            : [categoryId]; // Only allow one category selection
+
         setSelectedCategories(newSelectedCategories);
         onFilterChange({ category_id: newSelectedCategories.length > 0 ? newSelectedCategories[0] : null });
-        
+
         // Refresh available sizes after category change
         setTimeout(() => fetchAvailableSizes(), 100);
     };
@@ -263,11 +343,11 @@ export default function Filter({ onFilterChange, filters }){
     const handleColorClick = (colorId) => {
         const newSelectedColors = selectedColors.includes(colorId)
             ? selectedColors.filter(id => id !== colorId)
-            : [...selectedColors, colorId];
-        
+            : [colorId]; // Only allow one color selection
+
         setSelectedColors(newSelectedColors);
         onFilterChange({ color_id: newSelectedColors.length > 0 ? newSelectedColors[0] : null });
-        
+
         // Refresh available sizes after color change
         setTimeout(() => fetchAvailableSizes(), 100);
     };
@@ -275,11 +355,11 @@ export default function Filter({ onFilterChange, filters }){
     const handleBrandClick = (brandId) => {
         const newSelectedBrands = selectedBrands.includes(brandId)
             ? selectedBrands.filter(id => id !== brandId)
-            : [...selectedBrands, brandId];
-        
+            : [brandId]; // Only allow one brand selection
+
         setSelectedBrands(newSelectedBrands);
         onFilterChange({ brand_id: newSelectedBrands.length > 0 ? newSelectedBrands[0] : null });
-        
+
         // Refresh available sizes after brand change
         setTimeout(() => fetchAvailableSizes(), 100);
     };
@@ -287,8 +367,8 @@ export default function Filter({ onFilterChange, filters }){
     const handleSizeClick = (sizeId) => {
         const newSelectedSizes = selectedSizes.includes(sizeId)
             ? selectedSizes.filter(id => id !== sizeId)
-            : [...selectedSizes, sizeId];
-        
+            : [sizeId]; // Only allow one size selection
+
         setSelectedSizes(newSelectedSizes);
         onFilterChange({ size_id: newSelectedSizes.length > 0 ? newSelectedSizes[0] : null });
     };
@@ -313,11 +393,14 @@ export default function Filter({ onFilterChange, filters }){
     };
 
     const clearAllFilters = () => {
+        // Clear all selected states
         setSelectedColors([]);
         setSelectedBrands([]);
         setSelectedSizes([]);
         setSelectedCategories([]);
         setSelectedDepartments([]);
+
+        // Clear all filters to show all products
         onFilterChange({
             search: null,
             color_id: null,
@@ -328,9 +411,23 @@ export default function Filter({ onFilterChange, filters }){
             min_price: null,
             max_price: null
         });
-        // Clear categories when no department is selected
+
+        // Clear categories and reload all available sizes
         setCategories([]);
-        setTimeout(() => fetchAvailableSizes(), 100);
+
+        // Fetch all available sizes without any filters
+        setTimeout(() => {
+            fetchAvailableSizes();
+        }, 100);
+
+        // Reset search input field
+        const searchInput = document.getElementById('searchItem');
+        if (searchInput) {
+            searchInput.value = '';
+        }
+
+        // Show success message
+        showSuccess('All filters cleared! Showing all products.');
     };
 
     const renderSection = (title, section, items, selectedItems, handleClick, showMore, setShowMore, maxItems = 5, showSelection = true) => {
@@ -349,12 +446,11 @@ export default function Filter({ onFilterChange, filters }){
                     {title}
                     {isExpanded ? <FiChevronUp className="size-4" /> : <FiChevronDown className="size-4" />}
                 </button>
-                
+
                 {isExpanded && (
                     <div className="pb-3">
-                        <div className={`overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 ${
-                            showMore ? 'max-h-96' : 'max-h-48'
-                        }`}>
+                        <div className={`overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 ${showMore ? 'max-h-96' : 'max-h-48'
+                            }`}>
                             {displayItems.map((item, index) => (
                                 <div key={item._id || index} className="flex items-center justify-between py-1">
                                     <button
@@ -362,11 +458,10 @@ export default function Filter({ onFilterChange, filters }){
                                         className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300 hover:text-orange-500 transition-colors"
                                     >
                                         {showSelection && (
-                                            <div className={`size-3 rounded-full border ${
-                                                selectedItems.includes(item._id) 
-                                                    ? 'bg-orange-500 border-orange-500' 
+                                            <div className={`size-3 rounded-full border ${selectedItems.includes(item._id)
+                                                    ? 'bg-orange-500 border-orange-500'
                                                     : 'border-gray-300'
-                                            }`}></div>
+                                                }`}></div>
                                         )}
                                         <span>{item.name}</span>
                                     </button>
@@ -374,7 +469,7 @@ export default function Filter({ onFilterChange, filters }){
                                 </div>
                             ))}
                         </div>
-                        
+
                         {hasMoreItems && !showMore && (
                             <button
                                 onClick={() => setShowMore(true)}
@@ -383,7 +478,7 @@ export default function Filter({ onFilterChange, filters }){
                                 + View More ({itemsArray.length - maxItems} more)
                             </button>
                         )}
-                        
+
                         {hasMoreItems && showMore && (
                             <button
                                 onClick={() => setShowMore(false)}
@@ -414,12 +509,11 @@ export default function Filter({ onFilterChange, filters }){
                     Color
                     {isExpanded ? <FiChevronUp className="size-4" /> : <FiChevronDown className="size-4" />}
                 </button>
-                
+
                 {isExpanded && (
                     <div className="pb-3">
-                        <div className={`grid grid-cols-2 gap-2 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 ${
-                            showMoreColors ? 'max-h-96' : 'max-h-48'
-                        }`}>
+                        <div className={`grid grid-cols-2 gap-2 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 ${showMoreColors ? 'max-h-96' : 'max-h-48'
+                            }`}>
                             {displayColors.map((color, index) => (
                                 <div key={color._id || index} className="flex items-center space-x-2 py-1">
                                     <button
@@ -427,7 +521,7 @@ export default function Filter({ onFilterChange, filters }){
                                         className="relative group"
                                         title={color.name}
                                     >
-                                        <div 
+                                        <div
                                             className="size-6 rounded-full ring-2 ring-gray-200 dark:ring-slate-800 hover:ring-orange-500 transition-all duration-200 group-hover:scale-110"
                                             style={getColorStyle(color)}
                                         ></div>
@@ -441,7 +535,7 @@ export default function Filter({ onFilterChange, filters }){
                                 </div>
                             ))}
                         </div>
-                        
+
                         {hasMoreColors && !showMoreColors && (
                             <button
                                 onClick={() => setShowMoreColors(true)}
@@ -450,7 +544,7 @@ export default function Filter({ onFilterChange, filters }){
                                 + View More ({colorsArray.length - 5} more)
                             </button>
                         )}
-                        
+
                         {hasMoreColors && showMoreColors && (
                             <button
                                 onClick={() => setShowMoreColors(false)}
@@ -484,13 +578,13 @@ export default function Filter({ onFilterChange, filters }){
         );
     }
 
-    return(
+    return (
         <div className="lg:col-span-3 md:col-span-4">
             <div className="rounded shadow dark:shadow-gray-800 p-4 sticky top-20">
                 <div className="flex justify-between items-center mb-4">
-                <h5 className="text-xl font-medium">Filter</h5>
+                    <h5 className="text-xl font-medium">Filter</h5>
                     {(selectedColors.length > 0 || selectedBrands.length > 0 || selectedSizes.length > 0 || selectedCategories.length > 0 || selectedDepartments.length > 0) && (
-                        <button 
+                        <button
                             onClick={clearAllFilters}
                             className="text-sm text-orange-500 hover:text-orange-600 font-medium"
                         >
@@ -504,11 +598,11 @@ export default function Filter({ onFilterChange, filters }){
                         <label htmlFor="searchname" className="font-medium">Search:</label>
                         <div className="relative mt-2">
                             <FiSearch className="absolute size-4 top-[9px] end-4 text-slate-900 dark:text-white"></FiSearch>
-                            <input 
-                                type="text" 
-                                className="h-9 pe-10 rounded px-3 border border-gray-100 dark:border-gray-800 focus:ring-0 outline-none bg-white dark:bg-slate-900" 
-                                name="s" 
-                                id="searchItem" 
+                            <input
+                                type="text"
+                                className="h-9 pe-10 rounded px-3 border border-gray-100 dark:border-gray-800 focus:ring-0 outline-none bg-white dark:bg-slate-900"
+                                name="s"
+                                id="searchItem"
                                 placeholder="Search products..."
                                 value={filters.search || ''}
                                 onChange={handleSearchChange}
