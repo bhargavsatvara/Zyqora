@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Search, Eye, Edit, Package, Truck, CheckCircle, Clock, Calendar, DollarSign, ShoppingCart, AlertTriangle, Trash2, FileText } from 'lucide-react';
 import { ordersAPI } from '../services/api';
 import { useToast } from '../contexts/ToastContext';
-import Invoice from '../components/Invoice';
 
 export default function Orders() {
   const { showSuccess, showError } = useToast();
@@ -14,9 +13,11 @@ export default function Orders() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalOrders, setTotalOrders] = useState(0);
-  const [showInvoice, setShowInvoice] = useState(false);
-  const [invoiceData, setInvoiceData] = useState(null);
   const [invoiceLoading, setInvoiceLoading] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [showOrderModal, setShowOrderModal] = useState(false);
+  const [editingOrder, setEditingOrder] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -79,16 +80,145 @@ export default function Orders() {
     }
   };
 
+  const handleViewOrder = (order) => {
+    setSelectedOrder(order);
+    setShowOrderModal(true);
+  };
+
+  const handleEditOrder = (order) => {
+    setEditingOrder(order);
+    setShowEditModal(true);
+  };
+
   const handleGenerateInvoice = async (orderId) => {
+    console.log('Generating invoice for order:', orderId);
     setInvoiceLoading(true);
     try {
+      console.log('Calling ordersAPI.generateInvoice...');
       const response = await ordersAPI.generateInvoice(orderId);
-      setInvoiceData(response.data.invoice);
-      setShowInvoice(true);
-      showSuccess('Invoice generated successfully!');
+      console.log('Invoice API response:', response);
+      const invoiceData = response.data.invoice;
+      
+      // Open invoice in new tab
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Invoice ${invoiceData.invoiceNumber}</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+              .invoice-header { text-align: center; margin-bottom: 30px; }
+              .company-info { margin-bottom: 20px; }
+              .invoice-details { display: flex; justify-content: space-between; margin-bottom: 30px; }
+              .customer-info { margin-bottom: 20px; }
+              table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+              th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+              th { background-color: #f8f9fa; }
+              .totals { text-align: right; }
+              .totals table { width: 300px; margin-left: auto; }
+              .totals td { border: none; padding: 5px; }
+              .footer { margin-top: 40px; text-align: center; color: #666; }
+            </style>
+          </head>
+          <body>
+            <div class="invoice-header">
+              <h1>INVOICE</h1>
+              <h2>${invoiceData.company.name}</h2>
+            </div>
+            
+            <div class="company-info">
+              <p><strong>${invoiceData.company.name}</strong></p>
+              <p>${invoiceData.company.address}</p>
+              <p>Phone: ${invoiceData.company.phone} | Email: ${invoiceData.company.email}</p>
+              <p>Website: ${invoiceData.company.website}</p>
+            </div>
+            
+            <div class="invoice-details">
+              <div>
+                <p><strong>Invoice Number:</strong> ${invoiceData.invoiceNumber}</p>
+                <p><strong>Order Number:</strong> ${invoiceData.orderNumber}</p>
+                <p><strong>Order Date:</strong> ${invoiceData.orderDate}</p>
+                <p><strong>Due Date:</strong> ${invoiceData.dueDate}</p>
+              </div>
+              <div class="customer-info">
+                <p><strong>Bill To:</strong></p>
+                <p>${invoiceData.customer.name}</p>
+                <p>${invoiceData.customer.email}</p>
+                ${invoiceData.customer.address ? `
+                  <p>${invoiceData.customer.address.street}</p>
+                  <p>${invoiceData.customer.address.city}, ${invoiceData.customer.address.state} ${invoiceData.customer.address.zipCode}</p>
+                  <p>${invoiceData.customer.address.country}</p>
+                ` : ''}
+              </div>
+            </div>
+            
+            <table>
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>SKU</th>
+                  <th>Size</th>
+                  <th>Color</th>
+                  <th>Qty</th>
+                  <th>Price</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${invoiceData.items.map(item => `
+                  <tr>
+                    <td>${item.name}</td>
+                    <td>${item.sku}</td>
+                    <td>${item.size}</td>
+                    <td>${item.color}</td>
+                    <td>${item.quantity}</td>
+                    <td>$${(item.price || 0).toFixed(2)}</td>
+                    <td>$${(item.total || 0).toFixed(2)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            
+            <div class="totals">
+              <table>
+                <tr>
+                  <td><strong>Subtotal:</strong></td>
+                  <td>$${(invoiceData.subtotal || 0).toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td><strong>Tax:</strong></td>
+                  <td>$${(invoiceData.tax || 0).toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td><strong>Shipping:</strong></td>
+                  <td>$${(invoiceData.shipping || 0).toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td><strong>Discount:</strong></td>
+                  <td>-$${(invoiceData.discount || 0).toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td><strong>Total:</strong></td>
+                  <td><strong>$${(invoiceData.total || 0).toFixed(2)}</strong></td>
+                </tr>
+              </table>
+            </div>
+            
+            <div class="footer">
+              <p>Thank you for your business!</p>
+              <p>Payment Method: ${invoiceData.paymentMethod}</p>
+              <p>Order Status: ${invoiceData.status}</p>
+            </div>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      showSuccess('Invoice opened in new tab!');
     } catch (error) {
       console.error('Error generating invoice:', error);
-      showError('Failed to generate invoice');
+      console.error('Error details:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      showError('Failed to generate invoice: ' + (error.response?.data?.message || error.message));
     } finally {
       setInvoiceLoading(false);
     }
@@ -319,10 +449,18 @@ export default function Orders() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <button className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 p-2 rounded-lg transition-colors">
+                      <button 
+                        onClick={() => handleViewOrder(order)}
+                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 p-2 rounded-lg transition-colors"
+                        title="View Order Details"
+                      >
                         <Eye className="h-4 w-4" />
                       </button>
-                      <button className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 p-2 rounded-lg transition-colors">
+                      <button 
+                        onClick={() => handleEditOrder(order)}
+                        className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 p-2 rounded-lg transition-colors"
+                        title="Edit Order"
+                      >
                         <Edit className="h-4 w-4" />
                       </button>
                       <button 
@@ -333,133 +471,7 @@ export default function Orders() {
                       >
                         <FileText className="h-4 w-4" />
                       </button>
-                      {invoiceData && (
-                        <button 
-                          onClick={() => {
-                            const printWindow = window.open('', '_blank');
-                            printWindow.document.write(`
-                              <html>
-                                <head>
-                                  <title>Invoice ${invoiceData.invoiceNumber}</title>
-                                  <style>
-                                    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-                                    .invoice-header { text-align: center; margin-bottom: 30px; }
-                                    .company-info { margin-bottom: 20px; }
-                                    .invoice-details { display: flex; justify-content: space-between; margin-bottom: 30px; }
-                                    .customer-info { margin-bottom: 20px; }
-                                    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-                                    th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-                                    th { background-color: #f8f9fa; }
-                                    .totals { text-align: right; }
-                                    .totals table { width: 300px; margin-left: auto; }
-                                    .totals td { border: none; padding: 5px; }
-                                    .footer { margin-top: 40px; text-align: center; color: #666; }
-                                    @media print {
-                                      .no-print { display: none; }
-                                    }
-                                  </style>
-                                </head>
-                                <body>
-                                  <div class="invoice-header">
-                                    <h1>INVOICE</h1>
-                                    <h2>${invoiceData.company.name}</h2>
-                                  </div>
-                                  
-                                  <div class="company-info">
-                                    <p><strong>${invoiceData.company.name}</strong></p>
-                                    <p>${invoiceData.company.address}</p>
-                                    <p>Phone: ${invoiceData.company.phone} | Email: ${invoiceData.company.email}</p>
-                                    <p>Website: ${invoiceData.company.website}</p>
-                                  </div>
-                                  
-                                  <div class="invoice-details">
-                                    <div>
-                                      <p><strong>Invoice Number:</strong> ${invoiceData.invoiceNumber}</p>
-                                      <p><strong>Order Number:</strong> ${invoiceData.orderNumber}</p>
-                                      <p><strong>Order Date:</strong> ${invoiceData.orderDate}</p>
-                                      <p><strong>Due Date:</strong> ${invoiceData.dueDate}</p>
-                                    </div>
-                                    <div class="customer-info">
-                                      <p><strong>Bill To:</strong></p>
-                                      <p>${invoiceData.customer.name}</p>
-                                      <p>${invoiceData.customer.email}</p>
-                                      ${invoiceData.customer.address ? `
-                                        <p>${invoiceData.customer.address.street}</p>
-                                        <p>${invoiceData.customer.address.city}, ${invoiceData.customer.address.state} ${invoiceData.customer.address.zipCode}</p>
-                                        <p>${invoiceData.customer.address.country}</p>
-                                      ` : ''}
-                                    </div>
-                                  </div>
-                                  
-                                  <table>
-                                    <thead>
-                                      <tr>
-                                        <th>Item</th>
-                                        <th>SKU</th>
-                                        <th>Size</th>
-                                        <th>Color</th>
-                                        <th>Qty</th>
-                                        <th>Price</th>
-                                        <th>Total</th>
-                                      </tr>
-                                    </thead>
-                                    <tbody>
-                                      ${invoiceData.items.map(item => `
-                                        <tr>
-                                          <td>${item.name}</td>
-                                          <td>${item.sku}</td>
-                                          <td>${item.size}</td>
-                                          <td>${item.color}</td>
-                                          <td>${item.quantity}</td>
-                                          <td>$${(item.price || 0).toFixed(2)}</td>
-                                          <td>$${(item.total || 0).toFixed(2)}</td>
-                                        </tr>
-                                      `).join('')}
-                                    </tbody>
-                                  </table>
-                                  
-                                  <div class="totals">
-                                    <table>
-                                      <tr>
-                                        <td><strong>Subtotal:</strong></td>
-                                        <td>$${(invoiceData.subtotal || 0).toFixed(2)}</td>
-                                      </tr>
-                                      <tr>
-                                        <td><strong>Tax:</strong></td>
-                                        <td>$${(invoiceData.tax || 0).toFixed(2)}</td>
-                                      </tr>
-                                      <tr>
-                                        <td><strong>Shipping:</strong></td>
-                                        <td>$${(invoiceData.shipping || 0).toFixed(2)}</td>
-                                      </tr>
-                                      <tr>
-                                        <td><strong>Discount:</strong></td>
-                                        <td>-$${(invoiceData.discount || 0).toFixed(2)}</td>
-                                      </tr>
-                                      <tr>
-                                        <td><strong>Total:</strong></td>
-                                        <td><strong>$${(invoiceData.total || 0).toFixed(2)}</strong></td>
-                                      </tr>
-                                    </table>
-                                  </div>
-                                  
-                                  <div class="footer">
-                                    <p>Thank you for your business!</p>
-                                    <p>Payment Method: ${invoiceData.paymentMethod}</p>
-                                    <p>Order Status: ${invoiceData.status}</p>
-                                  </div>
-                                </body>
-                              </html>
-                            `);
-                            printWindow.document.close();
-                            printWindow.print();
-                          }}
-                          className="text-green-600 hover:text-green-700 hover:bg-green-50 p-2 rounded-lg transition-colors"
-                          title="Download Invoice"
-                        >
-                          <Download className="h-4 w-4" />
-                        </button>
-                      )}
+
                       <button 
                         onClick={() => deleteOrder(order._id)}
                         className="text-red-600 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors"
@@ -503,13 +515,158 @@ export default function Orders() {
         </div>
       )}
 
-      {/* Invoice Modal */}
-      {showInvoice && invoiceData && (
-        <Invoice
-          invoiceData={invoiceData}
-          onClose={() => setShowInvoice(false)}
-        />
+            {/* View Order Modal */}
+      {showOrderModal && selectedOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setShowOrderModal(false)}>
+          <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Order Details</h2>
+              <button
+                onClick={() => setShowOrderModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="font-semibold mb-2">Order Information</h3>
+                <p><strong>Order ID:</strong> {selectedOrder._id}</p>
+                <p><strong>Status:</strong> <span className={`px-2 py-1 rounded text-xs ${getStatusColor(selectedOrder.status)}`}>{selectedOrder.status}</span></p>
+                <p><strong>Date:</strong> {new Date(selectedOrder.created_at).toLocaleDateString()}</p>
+                <p><strong>Total Amount:</strong> ${Number(selectedOrder.total_amount?.$numberDecimal || 0).toFixed(2)}</p>
+                <p><strong>Payment Method:</strong> {selectedOrder.payment_method || 'N/A'}</p>
+              </div>
+              
+              <div>
+                <h3 className="font-semibold mb-2">Customer Information</h3>
+                <p><strong>Name:</strong> {selectedOrder.user_id?.name || 'Unknown'}</p>
+                <p><strong>Email:</strong> {selectedOrder.user_id?.email || 'No email'}</p>
+                <p><strong>Phone:</strong> {selectedOrder.user_id?.phone || 'No phone'}</p>
+              </div>
+            </div>
+            
+            <div className="mt-6">
+              <h3 className="font-semibold mb-2">Order Items</h3>
+              <div className="space-y-2">
+                {selectedOrder.order_items?.map((item, index) => (
+                  <div key={index} className="border rounded p-3">
+                    <p><strong>Product:</strong> {item.product_name}</p>
+                    <p><strong>Brand:</strong> {item.product_id?.brand_id?.name || 'N/A'}</p>
+                    <p><strong>Color:</strong> {item.color}</p>
+                    <p><strong>Size:</strong> {item.size}</p>
+                    <p><strong>Quantity:</strong> {item.quantity}</p>
+                    <p><strong>Price:</strong> ${Number(item.price || 0).toFixed(2)}</p>
+                    <p><strong>Total:</strong> ${Number(item.total || 0).toFixed(2)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setShowOrderModal(false)}
+                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
+
+      {/* Edit Order Modal */}
+      {showEditModal && editingOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setShowEditModal(false)}>
+                    <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Edit Order</h2>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Order Status</label>
+                <select
+                  value={editingOrder.status}
+                  onChange={(e) => setEditingOrder({...editingOrder, status: e.target.value})}
+                  className="w-full border rounded px-3 py-2"
+                >
+                  <option value="pending">Pending</option>
+                  <option value="processing">Processing</option>
+                  <option value="shipped">Shipped</option>
+                  <option value="delivered">Delivered</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Order ID</label>
+                <input
+                  type="text"
+                  value={editingOrder._id}
+                  disabled
+                  className="w-full border rounded px-3 py-2 bg-gray-100"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Customer</label>
+                <input
+                  type="text"
+                  value={editingOrder.user_id?.name || 'Unknown'}
+                  disabled
+                  className="w-full border rounded px-3 py-2 bg-gray-100"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Total Amount</label>
+                <input
+                  type="text"
+                  value={`$${Number(editingOrder.total_amount?.$numberDecimal || 0).toFixed(2)}`}
+                  disabled
+                  className="w-full border rounded px-3 py-2 bg-gray-100"
+                />
+              </div>
+            </div>
+            
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    await updateOrderStatus(editingOrder._id, editingOrder.status);
+                    setShowEditModal(false);
+                    showSuccess('Order updated successfully!');
+                  } catch (error) {
+                    showError('Failed to update order');
+                  }
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 } 

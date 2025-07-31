@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import Navbar from "../../components/navbar";
 import { categoriesAPI, productsAPI, wishlistAPI, cartAPI, reviewsAPI } from "../../services/api";
 import { useToast } from "../../contexts/ToastContext";
-import { useWishlist } from "../../contexts/WishlistContext";
 import Footer from "../../components/footer";
 import Switcher from "../../components/switcher";
 import Tagline from "../../components/tagline";
@@ -14,9 +13,9 @@ import { AiFillHeart } from 'react-icons/ai';
 
 export default function Index() {
   const { showSuccess, showError } = useToast();
-  const { wishlist, addToWishlist, isInWishlist } = useWishlist();
   const [collections, setCollections] = useState([]);
   const [newProduct, setNewProduct] = useState([]);
+  const [wishlist, setWishlist] = useState([]);
   const [productRatings, setProductRatings] = useState({});
   const [loading, setLoading] = useState(true);
 
@@ -49,19 +48,44 @@ export default function Index() {
     fetchNewProduct();
   }, []);
 
-
+  // Load wishlist on mount
+  useEffect(() => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    if (token) {
+      wishlistAPI.getWishlist()
+        .then(res => {
+          if (res.data && Array.isArray(res.data.items)) {
+            setWishlist(res.data.items.map(w => w._id || w.productId));
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching wishlist:', error);
+        });
+    } else {
+      const localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+      setWishlist(localWishlist.map(w => w._id));
+    }
+  }, []);
 
   const handleAddToWishlist = async (item) => {
-    try {
-      const success = await addToWishlist(item);
-      if (success) {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    if (token) {
+      try {
+        await wishlistAPI.addToWishlistAlt({ productId: item._id });
+        setWishlist(prev => prev.includes(item._id) ? prev : [...prev, item._id]);
         showSuccess('Added to wishlist!');
-      } else {
+      } catch (error) {
+        console.error('Error adding to wishlist:', error);
         showError('Failed to add to wishlist');
       }
-    } catch (error) {
-      console.error('Error adding to wishlist:', error);
-      showError('Failed to add to wishlist');
+    } else {
+      let localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+      if (!localWishlist.find(p => p._id === item._id)) {
+        localWishlist.push(item);
+        localStorage.setItem('wishlist', JSON.stringify(localWishlist));
+        setWishlist(prev => prev.includes(item._id) ? prev : [...prev, item._id]);
+      }
+      showSuccess('Added to wishlist (local)!');
     }
   };
 
@@ -314,25 +338,47 @@ export default function Index() {
                   />
 
                   <div className="absolute bottom-[-5rem] start-3 end-3 duration-500 group-hover:bottom-3">
-                    <Link
-                      to={`/product-detail-one/${item._id}`}
+                    <button
+                      onClick={async () => {
+                        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+                        if (!token) {
+                          window.location.href = '/login';
+                          return;
+                        }
+                        // Call add to cart API
+                        try {
+                          await cartAPI.addToCartAlt({
+                            product_id: item._id,
+                            name: item.name,
+                            price: item.price,
+                            image: item.image,
+                            quantity: 1,
+                            sku: item.sku
+                          });
+                        } catch (error) {
+                          console.error('Error adding to cart:', error);
+                          showError('Failed to add to cart');
+                          return;
+                        }
+                        window.location.href = '/shop-cart';
+                      }}
                       className="inline-block w-full px-5 py-2 text-base font-semibold text-white bg-slate-900 rounded-md tracking-wide align-middle duration-500 text-center"
                     >
-                      View Details
-                    </Link>
+                      Add to Cart
+                    </button>
                   </div>
 
                   <ul className="absolute top-[10px] end-4 space-y-1 opacity-0 duration-500 group-hover:opacity-100 list-none">
                     <li>
                       <button
                         type="button"
-                        className={`inline-flex items-center justify-center w-10 h-10 rounded-full shadow duration-500 border-none focus:outline-none ${isInWishlist(item._id) ? 'bg-red-100 text-red-500' : 'bg-white text-slate-900 hover:bg-slate-900 hover:text-white'}`}
+                        className={`inline-flex items-center justify-center w-10 h-10 rounded-full shadow duration-500 border-none focus:outline-none ${wishlist.includes(item._id) ? 'bg-red-100 text-red-500' : 'bg-white text-slate-900 hover:bg-slate-900 hover:text-white'}`}
                         onClick={async (e) => {
                           e.preventDefault();
                           handleAddToWishlist(item);
                         }}
                       >
-                        {isInWishlist(item._id) ? (
+                        {wishlist.includes(item._id) ? (
                           <AiFillHeart className="w-4 h-4" color="#ef4444" />
                         ) : (
                           <FiHeart className="w-4 h-4" />

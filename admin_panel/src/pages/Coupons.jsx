@@ -1,142 +1,174 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Copy, Percent, Calendar, Users, DollarSign, Search } from 'lucide-react';
-
-const mockCoupons = [
-  {
-    id: '1',
-    code: 'WELCOME20',
-    type: 'percentage',
-    value: 20,
-    minAmount: 100,
-    maxDiscount: 50,
-    usageLimit: 1000,
-    usedCount: 234,
-    status: 'active',
-    startDate: '2024-01-01',
-    endDate: '2024-03-31',
-    description: 'Welcome discount for new customers',
-    createdBy: 'Admin'
-  },
-  {
-    id: '2',
-    code: 'SAVE10',
-    type: 'fixed',
-    value: 10,
-    minAmount: 50,
-    maxDiscount: null,
-    usageLimit: 500,
-    usedCount: 89,
-    status: 'active',
-    startDate: '2024-01-15',
-    endDate: '2024-02-15',
-    description: 'Fixed $10 discount',
-    createdBy: 'Admin'
-  },
-  {
-    id: '3',
-    code: 'SUMMER2024',
-    type: 'percentage',
-    value: 15,
-    minAmount: 75,
-    maxDiscount: 25,
-    usageLimit: 2000,
-    usedCount: 1567,
-    status: 'expired',
-    startDate: '2024-06-01',
-    endDate: '2024-08-31',
-    description: 'Summer sale discount',
-    createdBy: 'Admin'
-  },
-  {
-    id: '4',
-    code: 'FIRSTBUY',
-    type: 'percentage',
-    value: 25,
-    minAmount: 200,
-    maxDiscount: 100,
-    usageLimit: null,
-    usedCount: 45,
-    status: 'active',
-    startDate: '2024-01-01',
-    endDate: '2024-12-31',
-    description: 'First-time buyer discount',
-    createdBy: 'Admin'
-  },
-  {
-    id: '5',
-    code: 'FLASH50',
-    type: 'percentage',
-    value: 50,
-    minAmount: 300,
-    maxDiscount: 150,
-    usageLimit: 100,
-    usedCount: 78,
-    status: 'active',
-    startDate: '2024-01-20',
-    endDate: '2024-01-25',
-    description: 'Flash sale - 50% off',
-    createdBy: 'Admin'
-  },
-  {
-    id: '6',
-    code: 'LOYALTY15',
-    type: 'percentage',
-    value: 15,
-    minAmount: 150,
-    maxDiscount: 75,
-    usageLimit: 500,
-    usedCount: 12,
-    status: 'paused',
-    startDate: '2024-01-10',
-    endDate: '2024-06-10',
-    description: 'Loyalty program discount',
-    createdBy: 'Admin'
-  }
-];
+import { useToast } from '../contexts/ToastContext';
+import { couponsAPI } from '../services/api';
 
 export default function Coupons() {
-  const [coupons, setCoupons] = useState(mockCoupons);
+  const { showSuccess, showError } = useToast();
+  const [coupons, setCoupons] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-
-  const filteredCoupons = coupons.filter(coupon => {
-    const matchesSearch = coupon.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         coupon.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || coupon.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCoupons, setTotalCoupons] = useState(0);
+  const [formData, setFormData] = useState({
+    code: '',
+    discountAmount: '',
+    minimumOrderAmount: '',
+    expiryDate: '',
+    isActive: true,
+    usageLimit: ''
   });
 
-  const deleteCoupon = (couponId) => {
-    if (window.confirm('Are you sure you want to delete this coupon?')) {
-      setCoupons(prev => prev.filter(coupon => coupon.id !== couponId));
+  useEffect(() => {
+    fetchCoupons();
+  }, [currentPage, searchTerm, statusFilter]);
+
+  const fetchCoupons = async () => {
+    try {
+      setLoading(true);
+      const params = {
+        page: currentPage,
+        limit: 10,
+        search: searchTerm || undefined,
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+      };
+
+      const response = await couponsAPI.getCoupons(params);
+      setCoupons(response.data.data.coupons);
+      setTotalPages(response.data.data.pagination.totalPages);
+      setTotalCoupons(response.data.data.pagination.totalRecords);
+    } catch (error) {
+      console.error('Error fetching coupons:', error);
+      showError('Failed to fetch coupons');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createCoupon = async (couponData) => {
+    try {
+      await couponsAPI.createCoupon(couponData);
+      showSuccess('Coupon created successfully!');
+      fetchCoupons();
+      return true;
+    } catch (error) {
+      console.error('Error creating coupon:', error);
+      showError(error.response?.data?.message || 'Failed to create coupon');
+      return false;
+    }
+  };
+
+  const updateCoupon = async (couponId, couponData) => {
+    try {
+      await couponsAPI.updateCoupon(couponId, couponData);
+      showSuccess('Coupon updated successfully!');
+      fetchCoupons();
+      return true;
+    } catch (error) {
+      console.error('Error updating coupon:', error);
+      showError(error.response?.data?.message || 'Failed to update coupon');
+      return false;
+    }
+  };
+
+  const deleteCoupon = async (couponId) => {
+    if (!window.confirm('Are you sure you want to delete this coupon?')) {
+      return;
+    }
+
+    try {
+      await couponsAPI.deleteCoupon(couponId);
+      showSuccess('Coupon deleted successfully!');
+      fetchCoupons();
+    } catch (error) {
+      console.error('Error deleting coupon:', error);
+      showError(error.response?.data?.message || 'Failed to delete coupon');
     }
   };
 
   const copyCouponCode = (code) => {
     navigator.clipboard.writeText(code);
-    // You would typically show a toast notification here
+    showSuccess('Coupon code copied to clipboard!');
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'active':
-        return 'bg-emerald-100 text-emerald-800';
-      case 'expired':
-        return 'bg-red-100 text-red-800';
-      case 'scheduled':
-        return 'bg-blue-100 text-blue-800';
-      case 'paused':
-        return 'bg-amber-100 text-amber-800';
-      default:
-        return 'bg-slate-100 text-slate-800';
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    const couponData = {
+      code: formData.code,
+      discountAmount: parseFloat(formData.discountAmount),
+      minimumOrderAmount: formData.minimumOrderAmount ? parseFloat(formData.minimumOrderAmount) : 0,
+      expiryDate: formData.expiryDate || null,
+      isActive: formData.isActive,
+      usageLimit: formData.usageLimit ? parseInt(formData.usageLimit) : null
+    };
+
+    let success = false;
+    if (editingCoupon) {
+      success = await updateCoupon(editingCoupon._id, couponData);
+    } else {
+      success = await createCoupon(couponData);
+    }
+
+    if (success) {
+      setShowModal(false);
+      setEditingCoupon(null);
+      resetForm();
     }
   };
 
-  const formatValue = (type, value) => {
-    return type === 'percentage' ? `${value}%` : `$${value}`;
+  const resetForm = () => {
+    setFormData({
+      code: '',
+      discountAmount: '',
+      minimumOrderAmount: '',
+      expiryDate: '',
+      isActive: true,
+      usageLimit: ''
+    });
+  };
+
+  const openEditModal = (coupon) => {
+    setEditingCoupon(coupon);
+    setFormData({
+      code: coupon.code,
+      discountAmount: coupon.discountAmount.toString(),
+      minimumOrderAmount: coupon.minimumOrderAmount ? coupon.minimumOrderAmount.toString() : '',
+      expiryDate: coupon.expiryDate ? new Date(coupon.expiryDate).toISOString().split('T')[0] : '',
+      isActive: coupon.isActive,
+      usageLimit: coupon.usageLimit ? coupon.usageLimit.toString() : ''
+    });
+    setShowModal(true);
+  };
+
+  const openCreateModal = () => {
+    setEditingCoupon(null);
+    resetForm();
+    setShowModal(true);
+  };
+
+  const getStatusColor = (coupon) => {
+    if (!coupon.isActive) {
+      return 'bg-red-100 text-red-800';
+    }
+    if (coupon.expiryDate && new Date(coupon.expiryDate) < new Date()) {
+      return 'bg-red-100 text-red-800';
+    }
+    return 'bg-emerald-100 text-emerald-800';
+  };
+
+  const getStatusText = (coupon) => {
+    if (!coupon.isActive) {
+      return 'Inactive';
+    }
+    if (coupon.expiryDate && new Date(coupon.expiryDate) < new Date()) {
+      return 'Expired';
+    }
+    return 'Active';
   };
 
   const getUsagePercentage = (usedCount, usageLimit) => {
@@ -145,13 +177,16 @@ export default function Coupons() {
   };
 
   const totalSavings = coupons.reduce((sum, coupon) => {
-    if (coupon.type === 'fixed') {
-      return sum + (coupon.value * coupon.usedCount);
-    } else {
-      // Estimate for percentage discounts (assuming average order value)
-      return sum + (coupon.usedCount * 50 * (coupon.value / 100));
-    }
+    return sum + (coupon.discountAmount * coupon.usedCount);
   }, 0);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -162,7 +197,7 @@ export default function Coupons() {
           <p className="text-slate-600 mt-2">Create and manage discount codes for your customers</p>
         </div>
         <button 
-          onClick={() => setShowModal(true)}
+          onClick={openCreateModal}
           className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl hover:from-blue-600 hover:to-blue-700 flex items-center gap-2 shadow-lg transition-all"
         >
           <Plus className="h-4 w-4" />
@@ -176,7 +211,7 @@ export default function Coupons() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-slate-600">Total Coupons</p>
-              <p className="text-3xl font-bold text-slate-900 mt-2">{coupons.length}</p>
+              <p className="text-3xl font-bold text-slate-900 mt-2">{totalCoupons}</p>
             </div>
             <div className="p-3 rounded-2xl bg-blue-100">
               <Percent className="h-6 w-6 text-blue-600" />
@@ -188,7 +223,7 @@ export default function Coupons() {
             <div>
               <p className="text-sm font-medium text-slate-600">Active Coupons</p>
               <p className="text-3xl font-bold text-slate-900 mt-2">
-                {coupons.filter(c => c.status === 'active').length}
+                {coupons.filter(c => c.isActive && (!c.expiryDate || new Date(c.expiryDate) > new Date())).length}
               </p>
             </div>
             <div className="p-3 rounded-2xl bg-emerald-100">
@@ -230,7 +265,7 @@ export default function Coupons() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search coupons by code or description..."
+                placeholder="Search coupons by code..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 pr-4 py-3 w-full border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
@@ -246,8 +281,6 @@ export default function Coupons() {
               <option value="all">All Status</option>
               <option value="active">Active</option>
               <option value="expired">Expired</option>
-              <option value="scheduled">Scheduled</option>
-              <option value="paused">Paused</option>
             </select>
           </div>
         </div>
@@ -255,8 +288,8 @@ export default function Coupons() {
 
       {/* Coupons Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {filteredCoupons.map((coupon) => (
-          <div key={coupon.id} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
+        {coupons.map((coupon) => (
+          <div key={coupon._id} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
@@ -270,13 +303,9 @@ export default function Coupons() {
                     <Copy className="h-4 w-4" />
                   </button>
                 </div>
-                <p className="text-sm text-slate-600 mb-3">{coupon.description}</p>
                 <div className="flex items-center gap-2">
-                  <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(coupon.status)}`}>
-                    {coupon.status}
-                  </span>
-                  <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                    {coupon.type}
+                  <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(coupon)}`}>
+                    {getStatusText(coupon)}
                   </span>
                 </div>
               </div>
@@ -285,7 +314,7 @@ export default function Coupons() {
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="p-3 bg-slate-50 rounded-xl">
                 <p className="text-sm font-medium text-slate-600">Discount</p>
-                <p className="text-2xl font-bold text-slate-900">{formatValue(coupon.type, coupon.value)}</p>
+                <p className="text-2xl font-bold text-slate-900">${coupon.discountAmount}</p>
               </div>
               <div className="p-3 bg-slate-50 rounded-xl">
                 <p className="text-sm font-medium text-slate-600">Used</p>
@@ -296,18 +325,18 @@ export default function Coupons() {
             <div className="space-y-2 mb-4">
               <div className="flex justify-between text-sm">
                 <span className="text-slate-600">Min Amount:</span>
-                <span className="font-medium text-slate-900">${coupon.minAmount}</span>
+                <span className="font-medium text-slate-900">${coupon.minimumOrderAmount}</span>
               </div>
-              {coupon.maxDiscount && (
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-600">Created:</span>
+                <span className="font-medium text-slate-900">{new Date(coupon.createdAt).toLocaleDateString()}</span>
+              </div>
+              {coupon.expiryDate && (
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Max Discount:</span>
-                  <span className="font-medium text-slate-900">${coupon.maxDiscount}</span>
+                  <span className="text-slate-600">Expires:</span>
+                  <span className="font-medium text-slate-900">{new Date(coupon.expiryDate).toLocaleDateString()}</span>
                 </div>
               )}
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-600">Valid Period:</span>
-                <span className="font-medium text-slate-900">{coupon.startDate} - {coupon.endDate}</span>
-              </div>
             </div>
 
             {coupon.usageLimit && (
@@ -327,16 +356,13 @@ export default function Coupons() {
 
             <div className="flex items-center gap-2">
               <button 
-                onClick={() => {
-                  setEditingCoupon(coupon);
-                  setShowModal(true);
-                }}
+                onClick={() => openEditModal(coupon)}
                 className="flex-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 p-2 rounded-lg transition-colors"
               >
                 <Edit className="h-4 w-4 mx-auto" />
               </button>
               <button 
-                onClick={() => deleteCoupon(coupon.id)}
+                onClick={() => deleteCoupon(coupon._id)}
                 className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors"
               >
                 <Trash2 className="h-4 w-4 mx-auto" />
@@ -346,81 +372,120 @@ export default function Coupons() {
         ))}
       </div>
 
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+          <div className="text-sm text-slate-600">
+            Showing {((currentPage - 1) * 10) + 1} to {Math.min(currentPage * 10, totalCoupons)} of {totalCoupons} coupons
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <span className="px-3 py-2 text-sm text-slate-600">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Add/Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-white/80 backdrop-blur-sm overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md">
             <div className="p-6">
               <h3 className="text-xl font-bold text-slate-900 mb-6">
                 {editingCoupon ? 'Edit Coupon' : 'Create New Coupon'}
               </h3>
-              <form className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Coupon Code
+                    Coupon Code *
                   </label>
                   <input
                     type="text"
-                    defaultValue={editingCoupon?.code || ''}
+                    value={formData.code}
+                    onChange={(e) => setFormData({...formData, code: e.target.value})}
                     className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     placeholder="e.g. SAVE20"
+                    required
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Discount Type
-                  </label>
-                  <select
-                    defaultValue={editingCoupon?.type || 'percentage'}
-                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  >
-                    <option value="percentage">Percentage</option>
-                    <option value="fixed">Fixed Amount</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Discount Value
+                    Discount Amount ($) *
                   </label>
                   <input
                     type="number"
-                    defaultValue={editingCoupon?.value || ''}
+                    step="0.01"
+                    min="0"
+                    value={formData.discountAmount}
+                    onChange={(e) => setFormData({...formData, discountAmount: e.target.value})}
                     className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     placeholder="e.g. 20"
+                    required
                   />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Start Date
-                    </label>
-                    <input
-                      type="date"
-                      defaultValue={editingCoupon?.startDate || ''}
-                      className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      End Date
-                    </label>
-                    <input
-                      type="date"
-                      defaultValue={editingCoupon?.endDate || ''}
-                      className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    />
-                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Description
+                    Minimum Order Amount ($)
                   </label>
-                  <textarea
-                    defaultValue={editingCoupon?.description || ''}
-                    rows={3}
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.minimumOrderAmount}
+                    onChange={(e) => setFormData({...formData, minimumOrderAmount: e.target.value})}
                     className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    placeholder="Enter coupon description"
+                    placeholder="e.g. 50"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Expiry Date
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.expiryDate}
+                    onChange={(e) => setFormData({...formData, expiryDate: e.target.value})}
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Usage Limit
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={formData.usageLimit}
+                    onChange={(e) => setFormData({...formData, usageLimit: e.target.value})}
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    placeholder="e.g. 100"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="isActive"
+                    checked={formData.isActive}
+                    onChange={(e) => setFormData({...formData, isActive: e.target.checked})}
+                    className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <label htmlFor="isActive" className="text-sm font-semibold text-slate-700">
+                    Active
+                  </label>
                 </div>
                 <div className="flex justify-end gap-3 pt-4">
                   <button
@@ -428,6 +493,7 @@ export default function Coupons() {
                     onClick={() => {
                       setShowModal(false);
                       setEditingCoupon(null);
+                      resetForm();
                     }}
                     className="px-6 py-3 text-sm font-semibold text-slate-700 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors"
                   >

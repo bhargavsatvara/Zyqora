@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/navbar";
 import Footer from "../components/footer";
@@ -6,9 +6,127 @@ import Switcher from "../components/switcher";
 import contactImg from '../assets/images/contact.svg'
 import { FiPhone, FiMail, FiMapPin, FiX } from '../assets/icons/vander'
 import ScrollToTop from "../components/scroll-to-top";
+import { contactAPI, userAPI } from "../services/api";
+import { useToast } from "../contexts/ToastContext";
 
 export default function Contact() {
-    let [modal, setModal] = useState(false)
+    const { showSuccess, showError } = useToast();
+    const [modal, setModal] = useState(false);
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        subject: '',
+        message: ''
+    });
+    const [loading, setLoading] = useState(false);
+    const [errors, setErrors] = useState({});
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+    // Check if user is logged in and pre-fill form
+    useEffect(() => {
+        const checkUserProfile = async () => {
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            if (token) {
+                try {
+                    const response = await userAPI.getProfile();
+                    const user = response.data;
+                    setFormData(prev => ({
+                        ...prev,
+                        name: user.name || '',
+                        email: user.email || ''
+                    }));
+                    setIsLoggedIn(true);
+                } catch (error) {
+                    console.log('User not logged in or token expired');
+                    setIsLoggedIn(false);
+                }
+            }
+        };
+
+        checkUserProfile();
+    }, []);
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+        // Clear error when user starts typing
+        if (errors[name]) {
+            setErrors(prev => ({
+                ...prev,
+                [name]: ''
+            }));
+        }
+    };
+
+    const validateForm = () => {
+        const newErrors = {};
+        
+        if (!formData.name.trim()) {
+            newErrors.name = 'Name is required';
+        }
+        
+        if (!formData.email.trim()) {
+            newErrors.email = 'Email is required';
+        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+            newErrors.email = 'Please enter a valid email';
+        }
+        
+        if (!formData.subject.trim()) {
+            newErrors.subject = 'Subject is required';
+        }
+        
+        if (!formData.message.trim()) {
+            newErrors.message = 'Message is required';
+        }
+        
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        
+        if (!validateForm()) {
+            return;
+        }
+        
+        setLoading(true);
+        
+        try {
+            const response = await contactAPI.submitContact(formData);
+            showSuccess(response.data.message || 'Message sent successfully!');
+            
+            // Reset form
+            setFormData({
+                name: '',
+                email: '',
+                subject: '',
+                message: ''
+            });
+            
+        } catch (error) {
+            console.error('Contact form error:', error);
+            if (error.response?.data?.errors) {
+                // Handle validation errors from server
+                const serverErrors = {};
+                error.response.data.errors.forEach(err => {
+                    const field = err.toLowerCase().includes('name') ? 'name' :
+                                err.toLowerCase().includes('email') ? 'email' :
+                                err.toLowerCase().includes('subject') ? 'subject' : 'message';
+                    serverErrors[field] = err;
+                });
+                setErrors(serverErrors);
+            } else {
+                showError(error.response?.data?.message || 'Failed to send message. Please try again.');
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <>
             <Navbar navClass="defaultscroll is-sticky" />
@@ -29,31 +147,125 @@ export default function Contact() {
                         <div className="lg:col-span-5 md:col-span-6">
                             <div className="lg:ms-5">
                                 <div className="bg-white dark:bg-slate-900 rounded-md shadow dark:shadow-gray-700 p-6">
-                                    <h3 className="mb-6 text-2xl leading-normal font-semibold">Get in touch !</h3>
+                                    <div className="flex items-center justify-between mb-6">
+                                        <h3 className="text-2xl leading-normal font-semibold">Get in touch !</h3>
+                                        {/* {isLoggedIn && (
+                                            <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full">
+                                                <i className="mdi mdi-check-circle"></i>
+                                                <span>Logged in</span>
+                                            </div>
+                                        )} */}
+                                    </div>
+                                    
+                                    {/* {isLoggedIn && (
+                                        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                            <p className="text-sm text-blue-700">
+                                                <i className="mdi mdi-information mr-1"></i>
+                                                Your contact information has been pre-filled from your account. This submission will be linked to your user profile.
+                                            </p>
+                                        </div>
+                                    )} */}
 
-                                    <form role="form">
+                                    <form onSubmit={handleSubmit} role="form">
                                         <div className="grid lg:grid-cols-12 grid-cols-1 gap-3">
                                             <div className="lg:col-span-6">
                                                 <label htmlFor="name" className="font-semibold">Your Name:</label>
-                                                <input name="name" id="name" type="text" className="mt-2 w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border border-gray-100 dark:border-gray-800 focus:ring-0" placeholder="Name :" />
+                                                <input 
+                                                    name="name" 
+                                                    id="name" 
+                                                    type="text" 
+                                                    value={formData.name}
+                                                    onChange={handleInputChange}
+                                                    className={`mt-2 w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border focus:ring-0 ${
+                                                        errors.name 
+                                                            ? 'border-red-500 dark:border-red-500' 
+                                                            : 'border-gray-100 dark:border-gray-800'
+                                                    }`} 
+                                                    placeholder="Name :" 
+                                                />
+                                                {errors.name && (
+                                                    <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+                                                )}
                                             </div>
 
                                             <div className="lg:col-span-6">
                                                 <label htmlFor="email" className="font-semibold">Your Email:</label>
-                                                <input name="email" id="email" type="email" className="mt-2 w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border border-gray-100 dark:border-gray-800 focus:ring-0" placeholder="Email :" />
+                                                <input 
+                                                    name="email" 
+                                                    id="email" 
+                                                    type="email" 
+                                                    value={formData.email}
+                                                    onChange={handleInputChange}
+                                                    className={`mt-2 w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border focus:ring-0 ${
+                                                        errors.email 
+                                                            ? 'border-red-500 dark:border-red-500' 
+                                                            : 'border-gray-100 dark:border-gray-800'
+                                                    }`} 
+                                                    placeholder="Email :" 
+                                                />
+                                                {errors.email && (
+                                                    <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                                                )}
                                             </div>
 
                                             <div className="lg:col-span-12">
                                                 <label htmlFor="subject" className="font-semibold">Your Question:</label>
-                                                <input name="subject" id="subject" className="mt-2 w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border border-gray-100 dark:border-gray-800 focus:ring-0" placeholder="Subject :" />
+                                                <input 
+                                                    name="subject" 
+                                                    id="subject" 
+                                                    value={formData.subject}
+                                                    onChange={handleInputChange}
+                                                    className={`mt-2 w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border focus:ring-0 ${
+                                                        errors.subject 
+                                                            ? 'border-red-500 dark:border-red-500' 
+                                                            : 'border-gray-100 dark:border-gray-800'
+                                                    }`} 
+                                                    placeholder="Subject :" 
+                                                />
+                                                {errors.subject && (
+                                                    <p className="text-red-500 text-sm mt-1">{errors.subject}</p>
+                                                )}
                                             </div>
 
                                             <div className="lg:col-span-12">
-                                                <label htmlFor="comments" className="font-semibold">Your Comment:</label>
-                                                <textarea name="comments" id="comments" className="mt-2 w-full py-2 px-3 h-28 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border border-gray-100 dark:border-gray-800 focus:ring-0" placeholder="Message :"></textarea>
+                                                <label htmlFor="message" className="font-semibold">Your Comment:</label>
+                                                <textarea 
+                                                    name="message" 
+                                                    id="message" 
+                                                    value={formData.message}
+                                                    onChange={handleInputChange}
+                                                    className={`mt-2 w-full py-2 px-3 h-28 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border focus:ring-0 ${
+                                                        errors.message 
+                                                            ? 'border-red-500 dark:border-red-500' 
+                                                            : 'border-gray-100 dark:border-gray-800'
+                                                    }`} 
+                                                    placeholder="Message :"
+                                                ></textarea>
+                                                {errors.message && (
+                                                    <p className="text-red-500 text-sm mt-1">{errors.message}</p>
+                                                )}
                                             </div>
                                         </div>
-                                        <button type="submit" id="submit" name="send" className="py-2 px-5 inline-block tracking-wide align-middle duration-500 text-base text-center bg-orange-500 text-white rounded-md mt-2">Send Message</button>
+                                        <button 
+                                            type="submit" 
+                                            id="submit" 
+                                            name="send" 
+                                            disabled={loading}
+                                            className={`py-2 px-5 inline-block tracking-wide align-middle duration-500 text-base text-center rounded-md mt-2 ${
+                                                loading 
+                                                    ? 'bg-gray-400 text-white cursor-not-allowed' 
+                                                    : 'bg-orange-500 text-white hover:bg-orange-600'
+                                            }`}
+                                        >
+                                            {loading ? (
+                                                <span className="flex items-center gap-2">
+                                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                    Sending...
+                                                </span>
+                                            ) : (
+                                                'Send Message'
+                                            )}
+                                        </button>
                                     </form>
                                 </div>
                             </div>

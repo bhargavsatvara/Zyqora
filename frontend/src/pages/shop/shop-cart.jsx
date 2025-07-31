@@ -97,7 +97,6 @@ export default function Shopcart(props){
                     itemId: itemId,
                     quantity: newQuantity
                 });
-                await fetchCart(); // Update cart context after successful update
             }
         } catch (error) {
             console.error('Error updating cart item:', error);
@@ -135,21 +134,16 @@ export default function Shopcart(props){
         try {
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
             if (token) {
-                // Optimistic update - clear local state immediately
-                setCartData([]);
-                setTotals({ subtotal: 0, tax: 0, total: 0 });
+                await cartAPI.clearCart();
                 setMessage('Cart cleared successfully');
                 setTimeout(() => setMessage(''), 3000);
-                
-                await cartAPI.clearCart();
+                fetchCartData();
                 await fetchCart(); // Update cart context after clearing
             }
         } catch (error) {
             console.error('Error clearing cart:', error);
             setMessage('Error clearing cart');
             setTimeout(() => setMessage(''), 3000);
-            // Revert optimistic update on error
-            fetchCartData();
         }
     };
 

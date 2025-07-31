@@ -91,10 +91,10 @@ export const cartAPI = {
   addToCart: (data) => api.post('/cart', data),
   addToCartAlt: (data) => api.post('/cart/add', data),
   updateCartItem: (itemId, data) => api.put(`/cart/${itemId}`, data),
-  updateCartItemAlt: (data) => api.put('/cart/update', data),
+  updateCartItemAlt: (data) => api.post('/cart/update', data),
   removeFromCart: (itemId) => api.delete(`/cart/${itemId}`),
   removeFromCartAlt: (data) => api.post('/cart/remove', data),
-  clearCart: () => api.delete('/cart/clear'),
+  clearCart: () => api.delete('/cart'),
   clearCartAlt: () => api.post('/cart/clear'),
 };
 
@@ -114,6 +114,11 @@ export const userAPI = {
   getProfile: () => api.get('/user/profile'),
   updateProfile: (data) => api.put('/user/profile', data),
   updatePassword: (data) => api.put('/user/password', data),
+  uploadProfileImage: (formData) => api.post('/user/profile-image', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  }),
   getAddresses: () => api.get('/user/address'),
   createAddress: (data) => api.post('/user/address', data),
   updateAddress: (id, data) => api.put(`/user/address/${id}`, data),
@@ -169,6 +174,12 @@ export const couponsAPI = {
   getCoupons: (params) => api.get('/coupons', { params }),
   getCoupon: (id) => api.get(`/coupons/${id}`),
   validateCoupon: (code) => api.post('/coupons/validate', { code }),
+};
+
+// Contact API
+export const contactAPI = {
+  submitContact: (data) => api.post('/contacts', data),
+  getUserContacts: (params) => api.get('/contacts/user', { params }),
 };
 
 export default api; 

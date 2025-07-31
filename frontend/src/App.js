@@ -51,7 +51,6 @@ import SignSuccess from './pages/pages/auth/signup-success';
 import ResetPassword from './pages/pages/auth/reset-password';
 import { CartProvider } from "./contexts/CartContext";
 import { ToastProvider } from "./contexts/ToastContext";
-import { WishlistProvider } from "./contexts/WishlistContext";
 import Wishlist from './pages/wishlist';
 import OrderView from './pages/pages/my-account/order-view';
 
@@ -60,8 +59,7 @@ function App() {
   return (
     <ToastProvider>
       <CartProvider>
-        <WishlistProvider>
-          <Routes>
+        <Routes>
         <Route path="/" element={<Index />}></Route>
         <Route path="/products" element={<Products />}></Route>
         <Route path="/shop-list" element={<ShopList />}></Route>
@@ -114,7 +112,6 @@ function App() {
         <Route path='/reset-password/:token' element={<ResetPassword />}></Route>
         <Route path="/wishlist" element={<Wishlist />} />
       </Routes>
-        </WishlistProvider>
       </CartProvider>
     </ToastProvider>
   );

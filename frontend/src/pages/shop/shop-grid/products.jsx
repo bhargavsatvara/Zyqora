@@ -9,13 +9,11 @@ import Filter from "../../../components/filter";
 import { FiHeart, FiEye, FiBookmark, FiChevronLeft, FiChevronRight } from '../../../assets/icons/vander'
 import { AiFillHeart } from 'react-icons/ai';
 import ScrollToTop from "../../../components/scroll-to-top";
-import { productsAPI, wishlistAPI, reviewsAPI, cartAPI } from "../../../services/api";
+import { productsAPI, wishlistAPI, reviewsAPI, cartAPI, categoriesAPI } from "../../../services/api";
 import { useToast } from "../../../contexts/ToastContext";
-import { useWishlist } from "../../../contexts/WishlistContext";
 
 export default function Products() {
 	const { showSuccess, showError } = useToast();
-	const { wishlist, addToWishlist, isInWishlist } = useWishlist();
 	const [searchParams] = useSearchParams();
 	const [products, setProducts] = useState([]);
 	const [loading, setLoading] = useState(true);
@@ -30,8 +28,37 @@ export default function Products() {
 		min_price: null,
 		max_price: null
 	});
+	const [wishlist, setWishlist] = useState([]);
 	const [productRatings, setProductRatings] = useState({});
 	console.log("products :: ", searchParams.get('category_id'));
+
+	// Function to find department for a category
+	const findDepartmentForCategory = async (categoryId) => {
+		try {
+			console.log(`Finding department for category: ${categoryId}`);
+			const res = await categoriesAPI.getCategories({ limit: 1000 });
+			const data = res.data;
+			
+			let categoriesData = [];
+			if (data.data && data.data.categories) {
+				categoriesData = data.data.categories;
+			} else if (data.categories) {
+				categoriesData = data.categories;
+			} else if (Array.isArray(data)) {
+				categoriesData = data;
+			}
+			
+			const category = categoriesData.find(cat => cat._id === categoryId);
+			if (category && category.department_id) {
+				console.log(`Found department ${category.department_id} for category ${categoryId}`);
+				return category.department_id;
+			}
+			return null;
+		} catch (error) {
+			console.error(`Error finding department for category ${categoryId}:`, error);
+			return null;
+		}
+	};
 	// Wrap fetchProducts in useCallback for user interactions
 	const fetchProducts = useCallback(async () => {
 		setLoading(true);
@@ -85,17 +112,27 @@ export default function Products() {
 			max_price: null
 		};
 
+		// Set filters immediately - no need to wait for department discovery if both are provided
 		setFilters(newFilters);
 		
 		// Fetch products with the new filters
 		const fetchWithFilters = async () => {
+			// If we have both department_id and category_id, use them directly
+			// If we only have category_id, find the department
+			let finalFilters = newFilters;
+			if (categoryId && !departmentId) {
+				const deptId = await findDepartmentForCategory(categoryId);
+				if (deptId) {
+					finalFilters = { ...newFilters, department_id: deptId };
+				}
+			}
 			setLoading(true);
 			try {
-				console.log('Current filters state:', newFilters);
+				console.log('Current filters state:', finalFilters);
 				
 				// Clean up filters - remove empty values
 				const cleanFilters = Object.fromEntries(
-					Object.entries(newFilters).filter(([key, value]) => 
+					Object.entries(finalFilters).filter(([key, value]) => 
 						value !== '' && value !== null && value !== undefined
 					)
 				);
@@ -128,15 +165,31 @@ export default function Products() {
 
 	// Fetch products when filters change (for user interactions)
 	useEffect(() => {
-		// Skip the initial fetch since it's handled by the URL params effect
-		if (filters.category_id !== null || filters.department_id !== null || 
-			filters.brand_id !== null || filters.search !== null ||
-			filters.min_price !== null || filters.max_price !== null) {
-			fetchProducts();
-		}
+		// Always fetch products when filters change, including when clearing all filters
+		fetchProducts();
 	}, [filters, fetchProducts]);
 
-
+	// Load wishlist on mount
+	useEffect(() => {
+		const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+		console.log("token :: ", token);
+		if (token) {
+			// Fetch wishlist from API
+			wishlistAPI.getWishlist()
+				.then(res => {
+					if (res.data && Array.isArray(res.data.items)) {
+						setWishlist(res.data.items.map(w => w._id || w.productId));
+					}
+				})
+				.catch(error => {
+					console.error('Error fetching wishlist:', error);
+				});
+		} else {
+			// Load from localStorage
+			const localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+			setWishlist(localWishlist.map(w => w._id));
+		}
+	}, []);
 
 	// Fetch ratings for visible products
 	useEffect(() => {
@@ -193,16 +246,25 @@ export default function Products() {
 
 	// Update wishlist state on add
 	const handleAddToWishlist = async (item) => {
-		try {
-			const success = await addToWishlist(item);
-			if (success) {
+		const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+		if (token) {
+			try {
+				await wishlistAPI.addToWishlistAlt({ productId: item._id });
+				console.log("wishlist :: ", wishlist);
+				setWishlist(prev => prev.includes(item._id) ? prev : [...prev, item._id]);
 				showSuccess('Added to wishlist!');
-			} else {
+			} catch (error) {
+				console.error('Error adding to wishlist:', error);
 				showError('Failed to add to wishlist');
 			}
-		} catch (error) {
-			console.error('Error adding to wishlist:', error);
-			showError('Failed to add to wishlist');
+		} else {
+			let localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+			if (!localWishlist.find(p => p._id === item._id)) {
+				localWishlist.push(item);
+				localStorage.setItem('wishlist', JSON.stringify(localWishlist));
+				setWishlist(prev => prev.includes(item._id) ? prev : [...prev, item._id]);
+			}
+			showSuccess('Added to wishlist (local)!');
 		}
 	};
 
@@ -305,13 +367,13 @@ export default function Products() {
 													<li>
 														<button
 															type="button"
-															className={`inline-flex items-center justify-center w-10 h-10 rounded-full shadow duration-500 border-none focus:outline-none ${isInWishlist(item._id) ? 'bg-red-100 text-red-500' : 'bg-white text-slate-900 hover:bg-slate-900 hover:text-white'}`}
+															className={`inline-flex items-center justify-center w-10 h-10 rounded-full shadow duration-500 border-none focus:outline-none ${wishlist.includes(item._id) ? 'bg-red-100 text-red-500' : 'bg-white text-slate-900 hover:bg-slate-900 hover:text-white'}`}
 															onClick={async (e) => {
 																e.preventDefault();
 																handleAddToWishlist(item);
 															}}
 														>
-															{isInWishlist(item._id) ? (
+															{wishlist.includes(item._id) ? (
 																<AiFillHeart className="w-4 h-4" color="#ef4444" />
 															) : (
 																<FiHeart className="w-4 h-4" />

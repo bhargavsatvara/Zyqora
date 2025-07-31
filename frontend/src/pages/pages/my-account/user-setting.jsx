@@ -6,9 +6,13 @@ import Switcher from "../../../components/switcher";
 import { FiUser, FiMail, FiKey } from '../../../assets/icons/vander'
 import { FiEdit, FiEye, FiEyeOff } from 'react-icons/fi';
 import ScrollToTop from "../../../components/scroll-to-top";
+import { userAPI } from "../../../services/api";
+import { useToast } from "../../../contexts/ToastContext";
+import defaultProfileImage from '../../../assets/images/client/16.jpg';
 
 export default function UserSetting() {
-  const [user, setUser] = useState({ name: '', email: '' });
+  const { showSuccess, showError } = useToast();
+  const [user, setUser] = useState({ name: '', email: '', profileImage: '' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -21,31 +25,50 @@ export default function UserSetting() {
   const [passwordSuccess, setPasswordSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submittingPassword, setSubmittingPassword] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [originalUser, setOriginalUser] = useState({ name: '', email: '' });
+  const [originalUser, setOriginalUser] = useState({ name: '', email: '', profileImage: '' });
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Function to get proper image URL
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return defaultProfileImage;
+
+    // If it's already a full URL, return as is
+    if (imagePath.startsWith('http')) {
+      return imagePath;
+    }
+
+    // If it starts with /uploads, it's a backend file
+    if (imagePath.startsWith('/uploads')) {
+      return `https://zyqora.onrender.com${imagePath}`;
+    }
+
+    // Default fallback
+    return defaultProfileImage;
+  };
 
   const fetchUserProfile = () => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (!token) return;
     setLoading(true);
-    fetch('https://zyqora.onrender.com/api/user/profile', {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    })
-      .then(res => res.json())
-      .then(data => {
+    userAPI.getProfile()
+      .then(res => {
+        const data = res.data;
         if (data && (data.name || (data.data && data.data.name))) {
           const newUser = {
             name: data.name || (data.data && data.data.name) || '',
-            email: data.email || (data.data && data.data.email) || ''
+            email: data.email || (data.data && data.data.email) || '',
+            profileImage: data.profileImage || (data.data && data.data.profileImage) || ''
           };
           setUser(newUser);
           setOriginalUser(newUser);
         }
+      })
+      .catch(error => {
+        console.error('Error fetching user profile:', error);
       })
       .finally(() => setLoading(false));
   };
@@ -68,31 +91,61 @@ export default function UserSetting() {
     setSuccess('');
   };
 
+  const handleImageUpload = async (e) => {
+    const selectedFile = e.target.files[0];
+    if (!selectedFile) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(selectedFile.type)) {
+      showError('Please select a valid image file (JPEG, PNG, or WebP)');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (selectedFile.size > maxSize) {
+      showError('Image size should be less than 5MB');
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', selectedFile);
+
+      const response = await userAPI.uploadProfileImage(formData);
+
+      // Update user data
+      const updatedUser = { ...user, profileImage: response.data.profileImage };
+      setUser(updatedUser);
+      setOriginalUser(updatedUser);
+
+      // Update storage
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      sessionStorage.setItem('user', JSON.stringify(updatedUser));
+
+      showSuccess('Profile image updated successfully!');
+    } catch (error) {
+      console.error('Error uploading profile image:', error);
+      showError(error.response?.data?.message || 'Failed to upload profile image');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     setError('');
     setSuccess('');
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     try {
-      const res = await fetch('https://zyqora.onrender.com/api/user/profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(user)
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        setError(err.message || 'Failed to update profile');
-      } else {
-        setSuccess('Profile updated successfully!');
-        fetchUserProfile();
-        setEditing(false);
-      }
+      await userAPI.updateProfile(user);
+      setSuccess('Profile updated successfully!');
+      fetchUserProfile();
+      setEditing(false);
     } catch (err) {
-      setError('Failed to update profile');
+      setError(err.response?.data?.message || 'Failed to update profile');
     } finally {
       setSubmitting(false);
     }
@@ -111,28 +164,15 @@ export default function UserSetting() {
       return;
     }
     setSubmittingPassword(true);
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     try {
-      const res = await fetch('https://zyqora.onrender.com/api/user/password', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          oldPassword: passwordFields.oldPassword,
-          newPassword: passwordFields.newPassword
-        })
+      await userAPI.updatePassword({
+        oldPassword: passwordFields.oldPassword,
+        newPassword: passwordFields.newPassword
       });
-      if (!res.ok) {
-        const err = await res.json();
-        setPasswordError(err.message || 'Failed to update password');
-      } else {
-        setPasswordSuccess('Password updated successfully!');
-        setPasswordFields({ oldPassword: '', newPassword: '', confirmPassword: '' });
-      }
+      setPasswordSuccess('Password updated successfully!');
+      setPasswordFields({ oldPassword: '', newPassword: '', confirmPassword: '' });
     } catch (err) {
-      setPasswordError('Failed to update password');
+      setPasswordError(err.response?.data?.message || 'Failed to update password');
     } finally {
       setSubmittingPassword(false);
     }
@@ -157,6 +197,43 @@ export default function UserSetting() {
                       <FiEdit />
                     </button>
                   )}
+                </div>
+
+                {/* Profile Image Section */}
+                <div className="mb-6 text-center">
+                  <div className="relative inline-block">
+                    <img
+                      src={getImageUrl(user.profileImage)}
+                      alt="Profile"
+                      className="w-24 h-24 rounded-full shadow-lg ring-4 ring-slate-100 dark:ring-slate-700 object-cover"
+                      onError={(e) => {
+                        e.target.src = defaultProfileImage;
+                      }}
+                    />
+                    <label
+                      className={`absolute inset-0 cursor-pointer rounded-full ${uploadingImage ? 'cursor-not-allowed opacity-50' : ''}`}
+                      htmlFor="profile-image-upload"
+                      title={uploadingImage ? 'Uploading...' : 'Click to change profile picture'}
+                    >
+                      <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 rounded-full transition-all duration-200 flex items-center justify-center">
+                        <FiEdit className="text-white opacity-0 hover:opacity-100 transition-opacity duration-200" />
+                      </div>
+                    </label>
+                    {uploadingImage && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full">
+                        <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    id="profile-image-upload"
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    className="hidden"
+                    onChange={handleImageUpload}
+                    disabled={uploadingImage}
+                  />
+                  <p className="text-sm text-slate-500 mt-2">Click on the image to change your profile picture</p>
                 </div>
                 <form onSubmit={handleProfileSubmit}>
                   <div className="grid lg:grid-cols-2 grid-cols-1 gap-5">

@@ -6,6 +6,7 @@ import Switcher from "../../../components/switcher"
 import Footer from "../../../components/footer"
 import ScrollToTop from "../../../components/scroll-to-top";
 import { FiTrash2 } from '../../../assets/icons/vander'
+import { ordersAPI, wishlistAPI } from "../../../services/api";
 
 export default function UserAccount() {
 	const [orders, setOrders] = useState([]);
@@ -16,31 +17,31 @@ export default function UserAccount() {
 		const token = localStorage.getItem('token') || sessionStorage.getItem('token');
 		if (!token) return;
 		setLoading(true);
+		
 		// Fetch orders
-		fetch('https://zyqora.onrender.com/api/orders', {
-			headers: {
-				'Authorization': `Bearer ${token}`
-			}
-		})
-			.then(res => res.json())
-			.then(data => {
+		ordersAPI.getOrders()
+			.then(res => {
+				const data = res.data;
 				if (Array.isArray(data)) {
 					setOrders(data);
 				} else if (data && Array.isArray(data.orders)) {
 					setOrders(data.orders);
 				}
+			})
+			.catch(error => {
+				console.error('Error fetching orders:', error);
 			});
+			
 		// Fetch wishlist
-		fetch('https://zyqora.onrender.com/api/wishlist', {
-			headers: {
-				'Authorization': `Bearer ${token}`
-			}
-		})
-			.then(res => res.json())
-			.then(data => {
+		wishlistAPI.getWishlist()
+			.then(res => {
+				const data = res.data;
 				if (data && Array.isArray(data.items)) {
 					setWishlist(data.items);
 				}
+			})
+			.catch(error => {
+				console.error('Error fetching wishlist:', error);
 			})
 			.finally(() => setLoading(false));
 	}, []);
@@ -49,13 +50,12 @@ export default function UserAccount() {
 		const token = localStorage.getItem('token') || sessionStorage.getItem('token');
 		if (token) {
 			// Remove from backend
-			await fetch(`https://zyqora.onrender.com/api/wishlist/remove/${item._id || item.productId?._id || item.productId}`, {
-				method: 'DELETE',
-				headers: {
-					'Authorization': `Bearer ${token}`
-				}
-			});
-			setWishlist(wishlist => wishlist.filter(w => (w._id || w.productId?._id || w.productId) !== (item._id || item.productId?._id || item.productId)));
+			try {
+				await wishlistAPI.removeFromWishlistAlt(item._id || item.productId?._id || item.productId);
+				setWishlist(wishlist => wishlist.filter(w => (w._id || w.productId?._id || w.productId) !== (item._id || item.productId?._id || item.productId)));
+			} catch (error) {
+				console.error('Error removing from wishlist:', error);
+			}
 		} else {
 			// Remove from localStorage
 			let localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');

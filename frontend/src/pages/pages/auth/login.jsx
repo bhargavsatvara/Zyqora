@@ -141,7 +141,9 @@ export default function Login() {
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onMouseDown={() => setShowPassword(true)}
+                  onMouseUp={() => setShowPassword(false)}
+                  onMouseLeave={() => setShowPassword(false)}
                   className="absolute inset-y-0 right-3 top-[38px] flex items-center text-gray-500"
                   tabIndex={-1}
                 >
@@ -186,7 +188,17 @@ export default function Login() {
               </p>
             </form>
 
-            
+            <p className="mt-6 text-center text-gray-400 text-xs">
+              © {new Date().getFullYear()} Zyqora. Design &amp; Develop with{" "}
+              <span role="img" aria-label="love">
+                ❤️
+              </span>{" "}
+              by{" "}
+              <Link to="https://zyqora.in/" target="_blank" className="text-gray-400 hover:underline">
+                Group 7
+              </Link>
+              .
+            </p>
           </div>
         </div>
       </div>

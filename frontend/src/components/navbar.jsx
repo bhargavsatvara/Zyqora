@@ -2,12 +2,10 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { departmentsAPI, categoriesAPI, wishlistAPI } from "../services/api";
 import { useWishlist } from "../contexts/WishlistContext";
-
 import logoDark from "../assets/images/logo.png";
 import logoWhite from "../assets/images/logo.png";
 import logoLight from "../assets/images/logo.png";
 import client from "../assets/images/client/16.jpg";
-
 import {
   FiSearch,
   FiShoppingCart,
@@ -17,10 +15,9 @@ import {
   FiSettings,
   FiLogIn,
   FiLogOut,
+  FiChevronLeft,
+  FiChevronRight,
 } from "../assets/icons/vander";
-import { AiFillHeart } from 'react-icons/ai';
-
-import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { useCart } from "../contexts/CartContext";
 
 export default function Navbar({ navClass, navlight }) {
@@ -29,37 +26,23 @@ export default function Navbar({ navClass, navlight }) {
   const [isOpen, setIsOpen] = useState(false);
   const [cartManu, setCartManu] = useState(false);
   const [userManu, setUserManu] = useState(false);
-
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userName, setUserName] = useState("");
   const navigate = useNavigate();
-
   const dropdownRef = useRef(null);
   const cartRef = useRef(null);
   const userRef = useRef(null);
-
-  // Add state for sliding window of departments
   const [departments, setDepartments] = useState([]);
   const [loadingDepartments, setLoadingDepartments] = useState(true);
+
   useEffect(() => {
     async function fetchDepartments() {
       try {
-        console.log("Fetching departments...");
         const res = await departmentsAPI.getDepartments();
         const data = res.data;
-        console.log("Departments fetched:", data);
         setDepartments(data || []);
       } catch (e) {
         console.error("Error fetching departments:", e);
-        // Fallback to sample departments if API fails
-        setDepartments([
-          { _id: "dept1", name: "Electronics" },
-          { _id: "dept2", name: "Clothing" },
-          { _id: "dept3", name: "Home & Garden" },
-          { _id: "dept4", name: "Sports" },
-          { _id: "dept5", name: "Books" },
-          { _id: "dept6", name: "Toys" }
-        ]);
       } finally {
         setLoadingDepartments(false);
       }
@@ -82,10 +65,8 @@ export default function Navbar({ navClass, navlight }) {
 
     try {
       setLoadingCategories(true);
-      console.log(`Fetching categories for department: ${departmentId}`);
       const res = await categoriesAPI.getCategories({ department_id: departmentId, limit: 1000 });
       const data = res.data;
-      console.log("Categories API response:", data);
 
       // Handle different response structures
       let categoriesData = [];
@@ -96,8 +77,6 @@ export default function Navbar({ navClass, navlight }) {
       } else if (Array.isArray(data)) {
         categoriesData = data;
       }
-
-      console.log(`Found ${categoriesData.length} categories for department ${departmentId}`);
 
       // Cache the categories for this department
       setDepartmentCategories(prev => ({
@@ -114,19 +93,22 @@ export default function Navbar({ navClass, navlight }) {
     }
   };
 
-  // Handle category click - navigate to shop with category filter
   const handleCategoryClick = (category) => {
-    console.log("Category clicked:", category);
     setDropdownOpen(false);
     setHoveredDept(null);
+    const department = departments.find(dept =>
+      departmentCategories[dept._id]?.some(cat => cat._id === category._id)
+    );
 
-    // Navigate to products page with category filter
-    navigate(`/products?category_id=${category._id}`);
+    if (department) {
+      navigate(`/products?department_id=${department._id}&category_id=${category._id}`);
+    } else {
+      navigate(`/products?category_id=${category._id}`);
+    }
   };
 
   // Handle department click - navigate to shop with department filter
   const handleDepartmentClick = (department) => {
-    console.log("Department clicked:", department);
     setDropdownOpen(false);
     setHoveredDept(null);
 
@@ -360,10 +342,8 @@ export default function Navbar({ navClass, navlight }) {
                   {(() => {
                     // Find the department by name to get its ID
                     const department = departments.find(dept => dept.name === hoveredDept);
-                    console.log("Found department:", department);
 
                     if (!department) {
-                      console.log("Department not found for:", hoveredDept);
                       return (
                         <div className="col-span-full text-center">
                           <span className="text-slate-400">Department not found: {hoveredDept}</span>
@@ -373,12 +353,6 @@ export default function Navbar({ navClass, navlight }) {
 
                     // Get cached categories for this department
                     const filteredCategories = departmentCategories[department._id] || [];
-
-                    console.log("Hovered department:", hoveredDept);
-                    console.log("Department ID:", department._id);
-                    console.log("Cached categories for department:", filteredCategories);
-                    console.log("Dropdown is open:", dropdownOpen);
-
                     if (loadingCategories) {
                       return (
                         <div className="col-span-full text-center">
@@ -523,7 +497,7 @@ export default function Navbar({ navClass, navlight }) {
                   {/* Optional: Add a search button inside dropdown */}
                   <button
                     className="absolute right-2 top-1/2 -translate-y-1/2 text-orange-500"
-                    style={{top: '50%', transform: 'translateY(-50%)'}}
+                    style={{ top: '50%', transform: 'translateY(-50%)' }}
                     onClick={() => {
                       if (searchTerm.trim()) {
                         setIsOpen(false);

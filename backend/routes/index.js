@@ -25,7 +25,8 @@ const materialRoutes = require('./materials');
 const couponRoutes = require('./coupons');
 const adminRoutes = require('./admin');
 const sizeChartRoutes = require('./sizeCharts');
-const { uploadProduct, uploadCategory } = require('../utils/multer');
+const contactRoutes = require('./contacts');
+const { uploadProduct, uploadCategory, uploadProfileImage } = require('../utils/multer');
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -71,6 +72,7 @@ router.use('/colors', colorRoutes);
 router.use('/sizes', sizeRoutes);
 router.use('/materials', materialRoutes);
 router.use('/coupons', couponRoutes);
+router.use('/contacts', contactRoutes);
 router.use('/admin', adminRoutes);
 
 module.exports = router; 
