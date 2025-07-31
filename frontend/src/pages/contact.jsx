@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/navbar";
 import Footer from "../components/footer";
-import Switcher from "../components/switcher";
 import contactImg from '../assets/images/contact.svg'
 import { FiPhone, FiMail, FiMapPin, FiX } from '../assets/icons/vander'
 import ScrollToTop from "../components/scroll-to-top";
@@ -330,7 +329,6 @@ export default function Contact() {
                 </div>
             </section>
             <Footer />
-            <Switcher />
             {modal && (
                 <div className="w-full h-screen bg-slate-900/80 fixed top-0 left-0 bottom-0 right-0 z-999 flex items-center justify-center" role="status" aria-modal="true">
                     <div className="w-full h-full px-5 md:px-40 md-py-20 py-5">

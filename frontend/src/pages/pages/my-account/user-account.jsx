@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../../../components/navbar";
 import Usertab from "../../../components/user-tab";
-import Switcher from "../../../components/switcher"
 import Footer from "../../../components/footer"
 import ScrollToTop from "../../../components/scroll-to-top";
 import { FiTrash2 } from '../../../assets/icons/vander'
@@ -164,7 +163,6 @@ export default function UserAccount() {
 				</div>
 			</section>
 			<Footer />
-			<Switcher />
 			<ScrollToTop />
 		</>
 	)

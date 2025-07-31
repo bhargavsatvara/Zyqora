@@ -4,7 +4,6 @@ import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../../components/navbar";
 import MobileApp from "../../components/mobile-app";
 import Footer from "../../components/footer";
-import Switcher from "../../components/switcher";
 import Counter from "../../components/counter";
 
 import ScrollToTop from "../../components/scroll-to-top";
@@ -75,11 +74,15 @@ export default function Shopcart(props){
     };
 
     const handleQuantityChange = async (itemId, newQuantity) => {
+        console.log('handleQuantityChange called with:', { itemId, newQuantity });
+        
         const item = cartData.find(i => i.product_id === itemId);
         if (newQuantity === 0 && item) {
             await removeFromCart(item);
             return;
         }
+        
+        // Optimistically update the UI
         setCartData(prevCartData => {
             const updatedCart = prevCartData.map(item =>
                 item.product_id === itemId
@@ -93,13 +96,26 @@ export default function Shopcart(props){
         try {
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
             if (token) {
-                await cartAPI.updateCartItemAlt({
+                console.log('Sending update request with:', { itemId, quantity: newQuantity });
+                const response = await cartAPI.updateCartItemAlt({
                     itemId: itemId,
                     quantity: newQuantity
                 });
+                
+                console.log('Update response:', response.data);
+                
+                if (!response.data.success) {
+                    throw new Error(response.data.message || 'Failed to update cart');
+                }
+                
+                // Update cart context
+                await fetchCart();
             }
         } catch (error) {
             console.error('Error updating cart item:', error);
+            setMessage('Error updating quantity. Please try again.');
+            setTimeout(() => setMessage(''), 3000);
+            // Revert the optimistic update by refetching data
             fetchCartData();
         }
     };
@@ -317,7 +333,6 @@ export default function Shopcart(props){
 
         </section>
         <Footer/>
-        <Switcher/>
         <ScrollToTop/>
         </>
     )

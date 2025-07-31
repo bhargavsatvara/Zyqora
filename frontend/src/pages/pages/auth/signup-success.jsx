@@ -1,6 +1,5 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import Switcher from "../../../components/switcher";
 import BackToHome from "../../../components/back-to-home";
 
 export default function SignSuccess(){
@@ -33,7 +32,6 @@ export default function SignSuccess(){
                 </div>
             </div>
         </section>
-        <Switcher/>
         <BackToHome/>
         </>
     )

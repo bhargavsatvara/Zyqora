@@ -5,7 +5,6 @@ import { Elements, CardElement, useStripe, useElements } from "@stripe/react-str
 
 import Navbar from "../../components/navbar";
 import Footer from "../../components/footer";
-import Switcher from "../../components/switcher";
 import ScrollToTop from "../../components/scroll-to-top";
 import { useCart } from "../../contexts/CartContext";
 import { userAPI, ordersAPI, countriesAPI, statesAPI, citiesAPI } from "../../services/api";
@@ -643,7 +642,6 @@ export default function ShopCheckOut() {
                 </div>
             </section>
             <Footer />
-            <Switcher />
             <ScrollToTop />
         </>
     )

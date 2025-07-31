@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import Navbar from "../components/navbar";
 import MobileApp from "../components/mobile-app";
 import Footer from "../components/footer";
-import Switcher from "../components/switcher";
 import { productsAPI, reviewsAPI, wishlistAPI } from "../services/api";
 import { useToast } from "../contexts/ToastContext";
 
@@ -331,7 +330,6 @@ export default function Sale() {
                 <MobileApp />
             </section>
             <Footer />
-            <Switcher />
             <ScrollToTop />
         </>
     )

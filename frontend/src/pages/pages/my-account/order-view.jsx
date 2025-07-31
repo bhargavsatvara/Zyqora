@@ -3,7 +3,6 @@ import { useParams, Link } from "react-router-dom";
 import Navbar from "../../../components/navbar";
 import Usertab from "../../../components/user-tab";
 import Footer from "../../../components/footer";
-import Switcher from "../../../components/switcher";
 import ScrollToTop from "../../../components/scroll-to-top";
 import { ordersAPI, reviewsAPI } from "../../../services/api";
 import { useToast } from "../../../contexts/ToastContext";
@@ -542,7 +541,6 @@ export default function OrderView() {
       )}
 
       <Footer />
-      <Switcher />
       <ScrollToTop />
     </>
   );

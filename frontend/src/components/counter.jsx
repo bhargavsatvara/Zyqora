@@ -16,11 +16,16 @@ export default function Counter({ qtn, onQuantityChange }){
     }
 
     const decrement = () => {
-        if (count > 0) {
+        if (count > 1) {
             const newCount = count - 1;
             setCount(newCount);
             if (onQuantityChange) {
                 onQuantityChange(newCount);
+            }
+        } else if (count === 1) {
+            // If quantity is 1 and user tries to decrement, remove the item
+            if (onQuantityChange) {
+                onQuantityChange(0);
             }
         }
     }

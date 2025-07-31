@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 
 import Navbar from "../../components/navbar";
 import Footer from "../../components/footer";
-import Switcher from "../../components/switcher";
 import ScrollToTop from "../../components/scroll-to-top";
 
 export default function RecentlyViewed(){
@@ -37,7 +36,6 @@ export default function RecentlyViewed(){
         </section>
 
         <Footer/>
-        <Switcher/>
         <ScrollToTop/>
         </>
     )

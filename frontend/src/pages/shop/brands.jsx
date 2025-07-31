@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 
 import Navbar from "../../components/navbar";
 import Footer from "../../components/footer";
-import Switcher from "../../components/switcher";
 import ScrollToTop from "../../components/scroll-to-top";
 import { brandsAPI } from "../../services/api";
 
@@ -118,7 +117,6 @@ export default function Brands() {
                 </div>
             </section>
             <Footer />
-            <Switcher />
             <ScrollToTop />
         </>
     )

@@ -4,7 +4,6 @@ import aboutImg from "../../assets/images/ab1.jpg"
 import aboutImg2 from "../../assets/images/ab2.jpg"
 import Navbar from "../../components/navbar";
 import Footer from "../../components/footer";
-import Switcher from "../../components/switcher";
 import ScrollToTop from "../../components/scroll-to-top";
 import { FiPhone, FiMapPin, FiX, FiDribbble, FiLinkedin, FiFacebook, FiInstagram, FiTwitter, } from "../../assets/icons/vander"
 import client4 from '../../assets/images/client/04.jpg'
@@ -192,7 +191,6 @@ export default function AboutUS() {
                 </div>
             </section>
             <Footer />
-            <Switcher />
             {modal && (
                 <div className="w-full h-screen bg-slate-900/80 fixed top-0 left-0 bottom-0 right-0 z-999 flex items-center justify-center" role="status" aria-modal="true">
                     <div className="w-full h-full px-5 md:px-40 md-py-20 py-5">

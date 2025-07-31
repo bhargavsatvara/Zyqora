@@ -3,7 +3,6 @@ import { Link, useSearchParams } from "react-router-dom";
 
 import Navbar from "../../../components/navbar";
 import Footer from "../../../components/footer";
-import Switcher from "../../../components/switcher";
 import ScrollToTop from "../../../components/scroll-to-top";
 import { productsAPI, reviewsAPI, wishlistAPI } from "../../../services/api";
 import { useToast } from "../../../contexts/ToastContext";
@@ -364,7 +363,6 @@ export default function ShopList() {
                 </div>
             </section>
             <Footer />
-            <Switcher />
             <ScrollToTop />
         </>
     )

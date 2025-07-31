@@ -3,7 +3,6 @@ import React from "react";
 import Navbar from "../../../components/navbar";
 import Usertab from "../../../components/user-tab";
 import Footer from "../../../components/footer";
-import Switcher from "../../../components/switcher";
 
 import { userSocial } from "../../../data/data";
 import ScrollToTop from "../../../components/scroll-to-top";
@@ -63,7 +62,6 @@ export default function UserSocial(){
             </div>
         </section>
         <Footer/>
-        <Switcher/>
         <ScrollToTop/>
         </>
     )

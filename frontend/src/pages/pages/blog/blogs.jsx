@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 
 import Navbar from "../../../components/navbar";
 import Footer from "../../../components/footer";
-import Switcher from "../../../components/switcher";
 import ScrollToTop from "../../../components/scroll-to-top";
 
 import { blogData } from "../../../data/data";
@@ -95,7 +94,6 @@ export default function Blogs(){
             </div>
         </section>
         <Footer/>
-        <Switcher/>
         <ScrollToTop/>
         </>
     )

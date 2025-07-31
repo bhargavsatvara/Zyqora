@@ -3,7 +3,6 @@ import { Link, useSearchParams } from "react-router-dom";
 
 import Navbar from "../../../components/navbar";
 import Footer from "../../../components/footer";
-import Switcher from "../../../components/switcher";
 import Filter from "../../../components/filter";
 
 import { FiHeart, FiEye, FiBookmark, FiChevronLeft, FiChevronRight } from '../../../assets/icons/vander'
@@ -453,7 +452,6 @@ export default function Products() {
 				</div>
 			</section>
 			<Footer />
-			<Switcher />
 			<ScrollToTop />
 		</>
 	)

@@ -6,7 +6,6 @@ import ProductDetail from "../../../components/product-detail";
 import ProductAboutTab from "../../../components/product-about-tab";
 import ArrivalItem from "../../../components/arrival-item";
 import Footer from "../../../components/footer";
-import Switcher from "../../../components/switcher";
 import ScrollToTop from "../../../components/scroll-to-top";
 import Lightbox from 'react-18-image-lightbox';
 import 'react-18-image-lightbox/style.css';
@@ -136,7 +135,6 @@ export default function ProductDetailOne() {
 				<ArrivalItem />
 			</section>
 			<Footer />
-			<Switcher />
 			{isOpen && images.length > 0 && (
 				<Lightbox
 					mainSrc={images[photoIndex]}

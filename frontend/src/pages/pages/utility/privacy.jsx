@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 
 import Navbar from "../../../components/navbar";
 import Footer from "../../../components/footer";
-import Switcher from "../../../components/switcher";
 
 import { termsData } from "../../../data/data";
 import ScrollToTop from "../../../components/scroll-to-top";
@@ -61,7 +60,6 @@ export default function Privacy(){
             </div>
         </section>
         <Footer/>
-        <Switcher/>
         <ScrollToTop/>
         </>
     )

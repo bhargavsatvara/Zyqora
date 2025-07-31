@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 
 import logo from '../../../assets/images/logo-icon-64.png'
 
-import Switcher from "../../../components/switcher";
 import BackToHome from "../../../components/back-to-home";
 
 export default function Comingsoon(){
@@ -55,7 +54,6 @@ export default function Comingsoon(){
                 </div>
             </div>
         </section>
-        <Switcher/>
         <BackToHome/>
         </>
     )

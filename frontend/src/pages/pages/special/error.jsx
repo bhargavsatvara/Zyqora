@@ -5,7 +5,6 @@ import logoDark from '../../../assets/images/logo-dark.png'
 import logoLight from '../../../assets/images/logo-light.png'
 import errorImg from '../../../assets/images/error.svg'
 
-import Switcher from "../../../components/switcher";
 import BackToHome from "../../../components/back-to-home";
 
 export default function Error(){
@@ -37,7 +36,6 @@ export default function Error(){
                 </div>
             </div>
         </section>
-        <Switcher/>
         <BackToHome/>
         </>
     )

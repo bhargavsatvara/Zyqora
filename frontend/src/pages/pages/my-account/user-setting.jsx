@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import Navbar from "../../../components/navbar";
 import Usertab from "../../../components/user-tab";
 import Footer from "../../../components/footer";
-import Switcher from "../../../components/switcher";
 import { FiUser, FiMail, FiKey } from '../../../assets/icons/vander'
 import { FiEdit, FiEye, FiEyeOff } from 'react-icons/fi';
 import ScrollToTop from "../../../components/scroll-to-top";
@@ -349,7 +348,6 @@ export default function UserSetting() {
         </div>
       </section>
       <Footer />
-      <Switcher />
       <ScrollToTop />
     </>
   )

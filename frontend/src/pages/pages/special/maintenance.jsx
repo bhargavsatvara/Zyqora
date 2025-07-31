@@ -1,6 +1,5 @@
 import React,{useState, useEffect} from "react";
 
-import Switcher from "../../../components/switcher";
 import BackToHome from "../../../components/back-to-home";
 
 import logo from '../../../assets/images/logo-light.png'
@@ -57,7 +56,6 @@ export default function Maintenance(){
                 </div>
             </div>
         </section>
-        <Switcher/>
         <BackToHome/>
         </>
     )

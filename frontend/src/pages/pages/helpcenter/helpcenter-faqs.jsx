@@ -4,7 +4,6 @@ import { Link } from "react-scroll";
 import Navbar from "../../../components/navbar";
 import GetInTouch from "../../../components/get-in-touch";
 import Footer from "../../../components/footer";
-import Switcher from "../../../components/switcher";
 import ScrollToTop from "../../../components/scroll-to-top";
 
 import { faqData } from "../../../data/data";
@@ -156,7 +155,6 @@ export default function HelpcenterFaqs(){
             <GetInTouch/>
         </section>
         <Footer/>
-        <Switcher/>
         <ScrollToTop/>
         </>
     )

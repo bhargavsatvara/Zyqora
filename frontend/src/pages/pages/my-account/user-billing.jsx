@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import Navbar from "../../../components/navbar";
 import Usertab from "../../../components/user-tab";
 import Footer from "../../../components/footer";
-import Switcher from "../../../components/switcher";
 import ScrollToTop from "../../../components/scroll-to-top";
 import { FiEdit, FiMapPin, FiPhone } from '../../../assets/icons/vander'
 import { addressesAPI, countriesAPI, statesAPI, citiesAPI } from "../../../services/api";
@@ -349,7 +348,6 @@ export default function UserBilling() {
         </div>
       </section>
       <Footer />
-      <Switcher />
       <ScrollToTop />
     </>
   )

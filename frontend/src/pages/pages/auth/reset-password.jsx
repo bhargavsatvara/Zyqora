@@ -8,7 +8,6 @@ import logoLight from '../../../assets/images/Zyqora-light.png';
 import bg1 from '../../../assets/images/forgot-password.jpg';
 
 import BackToHome from '../../../components/back-to-home';
-import Switcher from '../../../components/switcher';
 
 export default function ResetPassword() {
   const { token } = useParams();
@@ -133,7 +132,6 @@ export default function ResetPassword() {
       </div>
 
       <BackToHome />
-      <Switcher />
     </section>
   );
 }

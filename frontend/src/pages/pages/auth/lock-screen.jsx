@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 
 import client from '../../../assets/images/client/16.jpg'
 
-import Switcher from "../../../components/switcher";
 import BackToHome from "../../../components/back-to-home";
 
 export default function LockScreen() {
@@ -42,7 +41,6 @@ export default function LockScreen() {
                     </div>
                 </div>
             </section>
-            <Switcher />
             <BackToHome />
         </>
     )

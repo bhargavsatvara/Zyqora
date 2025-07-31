@@ -3,7 +3,6 @@ import { Link, useParams } from "react-router-dom";
 
 import Navbar from "../../../components/navbar";
 import Footer from "../../../components/footer";
-import Switcher from "../../../components/switcher";
 import ScrollToTop from "../../../components/scroll-to-top";
 
 import blogImg from '../../../assets/images/blog/9.jpg'
@@ -147,7 +146,6 @@ export default function BlogDetail(){
             </div>
         </section>
         <Footer/>
-        <Switcher/>
         <ScrollToTop/>
         </>
     )

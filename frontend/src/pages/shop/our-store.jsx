@@ -7,7 +7,6 @@ import image3 from "../../assets/images/ab4.jpg"
 
 import Navbar from "../../components/navbar";
 import Footer from "../../components/footer";
-import Switcher from "../../components/switcher";
 import ScrollToTop from "../../components/scroll-to-top";
 
 import {FiPhone, FiMapPin, FiX} from "../../assets/icons/vander"
@@ -111,7 +110,6 @@ export default function OurStore(){
             </div>
         </section>
         <Footer/>
-        <Switcher/>
         {modal && (
             <div className="w-full h-screen bg-slate-900/80 fixed top-0 left-0 bottom-0 right-0 z-999 flex items-center justify-center">
                 <div className="w-full h-full px-5 md:px-40 md-py-20 py-5">

@@ -8,7 +8,6 @@ import logoLight from '../../../assets/images/Zyqora-light.png';
 import bg1 from '../../../assets/images/forgot-password.jpg';
 
 import BackToHome from '../../../components/back-to-home';
-import Switcher from '../../../components/switcher';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -101,7 +100,6 @@ export default function ForgotPassword() {
       </div>
 
       <BackToHome />
-      <Switcher />
     </section>
   );
 }

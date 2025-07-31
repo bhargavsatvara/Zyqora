@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import Navbar from "../../components/navbar";
 import MobileApp from "../../components/mobile-app";
 import Footer from "../../components/footer";
-import Switcher from "../../components/switcher";
 import ScrollToTop from "../../components/scroll-to-top";
 
 import about1 from '../../assets/images/ab3.jpg'
@@ -122,7 +121,6 @@ export default function Career(){
             <MobileApp/>
         </section>
         <Footer/>
-        <Switcher/>
         <ScrollToTop/>
         </>
     )

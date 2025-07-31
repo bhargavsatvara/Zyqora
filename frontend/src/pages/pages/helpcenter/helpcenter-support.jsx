@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import Navbar from "../../../components/navbar";
 import FaqAbout from "../../../components/faq-about";
 import Footer from "../../../components/footer";
-import Switcher from "../../../components/switcher";
 import ScrollToTop from "../../../components/scroll-to-top";
 
 import {FiUser, FiMail, FiBook, FiMessageCircle} from "../../../assets/icons/vander"
@@ -94,7 +93,6 @@ export default function HelpcenterSupport(){
             <div role="region" aria-label="FAQ/About Block" className="sr-only"></div>
         </section>
         <Footer/>
-        <Switcher/>
         <ScrollToTop/>
         </>
     )

@@ -4,7 +4,6 @@ import Navbar from "../../components/navbar";
 import { categoriesAPI, productsAPI, wishlistAPI, cartAPI, reviewsAPI } from "../../services/api";
 import { useToast } from "../../contexts/ToastContext";
 import Footer from "../../components/footer";
-import Switcher from "../../components/switcher";
 import Tagline from "../../components/tagline";
 import ScrollToTop from "../../components/scroll-to-top";
 import heroVideo from '../../assets/videos/heroVideo6.mp4';
@@ -230,7 +229,6 @@ export default function Index() {
         </section>
 
         <Footer />
-        <Switcher />
         <ScrollToTop />
       </>
     );
@@ -338,34 +336,12 @@ export default function Index() {
                   />
 
                   <div className="absolute bottom-[-5rem] start-3 end-3 duration-500 group-hover:bottom-3">
-                    <button
-                      onClick={async () => {
-                        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-                        if (!token) {
-                          window.location.href = '/login';
-                          return;
-                        }
-                        // Call add to cart API
-                        try {
-                          await cartAPI.addToCartAlt({
-                            product_id: item._id,
-                            name: item.name,
-                            price: item.price,
-                            image: item.image,
-                            quantity: 1,
-                            sku: item.sku
-                          });
-                        } catch (error) {
-                          console.error('Error adding to cart:', error);
-                          showError('Failed to add to cart');
-                          return;
-                        }
-                        window.location.href = '/shop-cart';
-                      }}
+                    <Link
+                      to={`/product-detail-one/${item._id}`}
                       className="inline-block w-full px-5 py-2 text-base font-semibold text-white bg-slate-900 rounded-md tracking-wide align-middle duration-500 text-center"
                     >
-                      Add to Cart
-                    </button>
+                      View Details
+                    </Link>
                   </div>
 
                   <ul className="absolute top-[10px] end-4 space-y-1 opacity-0 duration-500 group-hover:opacity-100 list-none">
@@ -466,7 +442,6 @@ export default function Index() {
       </section>
 
       <Footer />
-      <Switcher />
       <ScrollToTop />
     </>
   );
