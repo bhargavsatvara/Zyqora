@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import client from '../assets/images/client/16.jpg'
-import { FiAirplay, FiEdit, FiCreditCard, FiFileText, FiShare2, FiBell, FiSettings, FiLogOut } from '../assets/icons/vander'
+import { FiAirplay, FiEdit, FiSettings, FiLogOut } from '../assets/icons/vander'
 import { userAPI } from '../services/api';
 import { useToast } from '../contexts/ToastContext';
 

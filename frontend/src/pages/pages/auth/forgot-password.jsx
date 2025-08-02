@@ -91,10 +91,7 @@ export default function ForgotPassword() {
               </p>
             </form>
 
-            <p className="mt-6 text-center text-gray-400 text-xs">
-              &copy; {new Date().getFullYear()} Zyqora. Made with{' '}
-              <span role="img" aria-label="love">❤️</span> by Zyqora.
-            </p>
+           
           </div>
         </div>
       </div>

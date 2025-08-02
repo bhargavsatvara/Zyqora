@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import Navbar from "../../../components/navbar";
 import GetInTouch from "../../../components/get-in-touch";
 import Footer from "../../../components/footer";
-import Switcher from "../../../components/switcher";
 
 import { guidenceData } from "../../../data/data";
 import ScrollToTop from "../../../components/scroll-to-top";
@@ -56,7 +55,6 @@ export default function HelpcenterGuides(){
             <GetInTouch/>
         </section>
         <Footer/>
-        <Switcher/>
         <ScrollToTop/>
         </>
     )

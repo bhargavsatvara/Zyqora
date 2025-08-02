@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { authAPI } from "../../../services/api";
 
 import logoDark from "../../../assets/images/logo.png";
@@ -141,13 +141,11 @@ export default function Login() {
                 />
                 <button
                   type="button"
-                  onMouseDown={() => setShowPassword(true)}
-                  onMouseUp={() => setShowPassword(false)}
-                  onMouseLeave={() => setShowPassword(false)}
-                  className="absolute inset-y-0 right-3 top-[38px] flex items-center text-gray-500"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-3 top-[38px] flex items-center text-gray-500 hover:text-gray-700"
                   tabIndex={-1}
                 >
-                  <Eye size={18} />
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
 
@@ -188,17 +186,7 @@ export default function Login() {
               </p>
             </form>
 
-            <p className="mt-6 text-center text-gray-400 text-xs">
-              © {new Date().getFullYear()} Zyqora. Design &amp; Develop with{" "}
-              <span role="img" aria-label="love">
-                ❤️
-              </span>{" "}
-              by{" "}
-              <Link to="https://zyqora.in/" target="_blank" className="text-gray-400 hover:underline">
-                Group 7
-              </Link>
-              .
-            </p>
+            
           </div>
         </div>
       </div>

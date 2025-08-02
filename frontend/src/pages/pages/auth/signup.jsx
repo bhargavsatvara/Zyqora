@@ -1,7 +1,7 @@
 // src/pages/auth/Signup.jsx
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { authAPI } from "../../../services/api";
 import logoDark from '../../../assets/images/logo.png';
 import logoLight from '../../../assets/images/Zyqora-light.png';
@@ -170,13 +170,11 @@ export default function Signup() {
                 />
                 <button
                   type="button"
-                  onMouseDown={() => setShowPassword(true)}
-                  onMouseUp={() => setShowPassword(false)}
-                  onMouseLeave={() => setShowPassword(false)}
-                  className="absolute inset-y-0 right-3 top-[38px] flex items-center text-gray-500"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-3 top-[38px] flex items-center text-gray-500 hover:text-gray-700"
                   tabIndex={-1}
                 >
-                  <Eye size={18} />
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
 
@@ -196,13 +194,11 @@ export default function Signup() {
                 />
                 <button
                   type="button"
-                  onMouseDown={() => setShowConfirm(true)}
-                  onMouseUp={() => setShowConfirm(false)}
-                  onMouseLeave={() => setShowConfirm(false)}
-                  className="absolute inset-y-0 right-3 top-[38px] flex items-center text-gray-500"
+                  onClick={() => setShowConfirm(!showConfirm)}
+                  className="absolute inset-y-0 right-3 top-[38px] flex items-center text-gray-500 hover:text-gray-700"
                   tabIndex={-1}
                 >
-                  <Eye size={18} />
+                  {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
 
@@ -243,13 +239,7 @@ export default function Signup() {
               </p>
             </form>
 
-            <p className="mt-6 text-center text-gray-400 text-xs">
-              © {new Date().getFullYear()} Zyqora. Made with{" "}
-              <span role="img" aria-label="love">
-                ❤️
-              </span>{" "}
-              by Group 7.
-            </p>
+            
           </div>
         </div>
       </div>

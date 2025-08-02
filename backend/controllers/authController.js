@@ -200,13 +200,22 @@ exports.resetPassword = async (req, res) => {
     const { token } = req.params;
     const { password } = req.body;
 
-    // Verify & decode token
+    // 1) Password strength validation
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()+={}[\]|\\:;"'<>,./~-]).{8,}$/;
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({
+        message:
+          'Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character'
+      });
+    }
+
+    // 2) Verify & decode token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.userId);
     if (!user)
       return res.status(400).json({ message: 'Invalid or expired token.' });
 
-    // Hash & save new password
+    // 3) Hash & save new password
     const hashed = await bcrypt.hash(password, 10);
     user.password = hashed;
     await user.save();
