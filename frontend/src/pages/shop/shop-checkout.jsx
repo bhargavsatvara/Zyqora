@@ -467,7 +467,7 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
                             </svg>
                         </div>
                         <h3 className="text-2xl font-bold text-green-600 mb-2">Order Placed Successfully!</h3>
-                        <p className="text-gray-600">Thank you for your purchase. You will receive an email confirmation shortly.</p>
+                        <p className="text-gray-600">Thank you for your purchase</p>
                     </div>
                     <div className="mt-4">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
