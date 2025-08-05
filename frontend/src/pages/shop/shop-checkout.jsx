@@ -12,7 +12,7 @@ import { userAPI, ordersAPI, countriesAPI, statesAPI, citiesAPI } from "../../se
 const stripePromise = loadStripe('pk_test_51RnLFbFW8XM59bhWaYOroZ29ELB4xWqWiadqhP8CPAl3RvZL8ahBcZTdHxI94f9r0hn9IJNaO8BOGcQXrpE2SBYF00CkTXOTtd'); // TODO: Replace with your real Stripe publishable key
 
 function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedCountry, selectedState, setSelectedState, selectedCity, setSelectedCity, zipCode, setZipCode }) {
-    const { cartData, totals } = useCart();
+    const { cartData, totals, fetchCart } = useCart();
     const [form, setForm] = useState({
         firstName: '',
         lastName: '',
@@ -24,6 +24,7 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
     const [addresses, setAddresses] = useState([]);
     const [selectedAddressId, setSelectedAddressId] = useState('');
     const [showAddressForm, setShowAddressForm] = useState(false);
@@ -47,7 +48,7 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
     const [addressStates, setAddressStates] = useState([]);
     const [addressCities, setAddressCities] = useState([]);
 
-    const [user, setUser] = useState({ name: '', email: '' });
+    const [, setUser] = useState({ name: '', email: '' });
 
     useEffect(() => {
         // Fetch data only once on mount
@@ -111,7 +112,7 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
                 setSelectedCity(cityId);
             }
         }
-    }, [selectedAddressId, addresses, countries, states, cities]);
+    }, [selectedAddressId, addresses, countries, states, cities, setZipCode, setSelectedCountry, setSelectedState, setSelectedCity]);
 
     // Fetch states for address form
     useEffect(() => {
@@ -197,9 +198,8 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
         e.preventDefault();
         setAddingAddress(true);
         setError('');
-        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
         try {
-            const res = await userAPI.createAddress(addressForm);
+            await userAPI.createAddress(addressForm);
             setShowAddressForm(false);
             setAddressForm({ street: '', city: '', state: '', country: '', zipCode: '', isDefault: false });
             fetchAddresses();
@@ -317,7 +317,13 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
             const data = res.data;
             if (data.success || data._id) {
                 setSuccess('Order placed successfully!');
-                setTimeout(() => navigate('/'), 2000);
+                setShowSuccessAnimation(true);
+                // Clear the cart context after successful order
+                await fetchCart();
+                setTimeout(() => {
+                    setShowSuccessAnimation(false);
+                    navigate('/');
+                }, 3000);
             } else {
                 setError(data.message || 'Order failed');
             }
@@ -328,7 +334,8 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
     };
 
     return (
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-8 space-y-8">
+        <>
+            <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-8 space-y-8">
             <h2 className="text-2xl font-bold mb-4">Billing Address</h2>
             {/* Address selection */}
             {addresses.length > 0 && !showAddressForm && (
@@ -435,7 +442,7 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
                 </div>
                 <div className="md:col-span-3">
                     <label className="block font-semibold mb-1">Zip Code <span className="text-red-600">*</span></label>
-                    <input type="number" value={zipCode} onChange={e => setZipCode(e.target.value)} className="w-full py-3 px-4 border rounded-lg focus:ring-2 focus:ring-orange-400" required />
+                    <input type="text" value={zipCode} onChange={e => setZipCode(e.target.value)} className="w-full py-3 px-4 border rounded-lg focus:ring-2 focus:ring-orange-400" required />
                 </div>
             </div>
             <h2 className="text-2xl font-bold mb-4 mt-8">Payment</h2>
@@ -448,6 +455,28 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
                 {loading ? 'Processing...' : 'Continue to checkout'}
             </button>
         </form>
+
+        {/* Success Animation Overlay */}
+        {showSuccessAnimation && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg p-8 text-center max-w-md mx-4 animate-bounce">
+                    <div className="mb-4">
+                        <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <h3 className="text-2xl font-bold text-green-600 mb-2">Order Placed Successfully!</h3>
+                        <p className="text-gray-600">Thank you for your purchase. You will receive an email confirmation shortly.</p>
+                    </div>
+                    <div className="mt-4">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
+                        <p className="text-sm text-gray-500 mt-2">Redirecting to homepage...</p>
+                    </div>
+                </div>
+            </div>
+        )}
+        </>
     );
 }
 

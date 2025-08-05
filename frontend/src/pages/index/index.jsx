@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../../components/navbar";
-import { categoriesAPI, productsAPI, wishlistAPI, cartAPI, reviewsAPI } from "../../services/api";
+import { productsAPI, wishlistAPI, cartAPI, reviewsAPI } from "../../services/api";
 import { useToast } from "../../contexts/ToastContext";
 import Footer from "../../components/footer";
 import Tagline from "../../components/tagline";
@@ -12,6 +12,11 @@ import { AiFillHeart } from 'react-icons/ai';
 import levisLogo from '../../assets/images/brand/levis-logo-brand.png';
 import ralphLogo from '../../assets/images/brand/ralph-lauren-brand.png';
 import nikeLogo from '../../assets/images/brand/nike-logo.png';
+import mensWare from '../../assets/images/categories/mens-ware.jpg';
+import womenWare from '../../assets/images/categories/ladies-ware.jpg';
+import kidsWare from '../../assets/images/categories/kids-ware.jpg';
+import footwear from '../../assets/images/categories/chappal-shoes.jpg';
+import accessories from '../../assets/images/categories/accessories.jpg'; 
 import vansLogo from '../../assets/images/brand/vans-brand.png';
 import hugoLogo from '../../assets/images/brand/hugo-boss.png';
 import uniqloLogo from '../../assets/images/brand/uniqlo-logo.png';
@@ -22,24 +27,47 @@ import zaraLogo from '../../assets/images/brand/zara-logo.png';
 import hmLogo from '../../assets/images/brand/hm-logo.png'; 
 import gucciLogo from '../../assets/images/brand/gucci-brand-logo.png';
 
+// Static categories with images
+const staticCategories = [
+  {
+    id: 1,
+    name: "Men's Fashion",
+    image: mensWare,
+    link: "/products?department_id=men"
+  },
+  {
+    id: 2,  
+    name: "Women's Fashion",
+    image: womenWare,
+    link: "/products?department_id=women"
+  },
+  {
+    id: 3,
+    name: "Kids & Baby",
+    image: kidsWare,
+    link: "/products?department_id=kids"
+  },
+  {
+    id: 4,
+    name: "Footwear",
+    image: footwear,
+    link: "/products?category_id=footwear"
+  },
+  {
+    id: 5,
+    name: "Accessories",
+    image: accessories,
+    link: "/products?category_id=accessories"
+  }
+];
+
 export default function Index() {
   const { showSuccess, showError } = useToast();
-  const [collections, setCollections] = useState([]);
+  const [collections] = useState(staticCategories); // Use static categories
   const [newProduct, setNewProduct] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   const [productRatings, setProductRatings] = useState({});
   const [loading, setLoading] = useState(true);
-
-  const fetchCollections = async () => {
-    try {
-      const response = await categoriesAPI.getCategories({ page: 1, limit: 5 });
-      console.log("fetchCollections :: ", response.data.data.categories);
-      setCollections(response.data.data.categories);
-    } catch (error) {
-      console.error('Error fetching collections:', error);
-      setCollections([]);
-    }
-  };
 
   const fetchNewProduct = async () => {
     try {
@@ -55,7 +83,6 @@ export default function Index() {
   };
 
   useEffect(() => {
-    fetchCollections();
     fetchNewProduct();
   }, []);
 
@@ -96,7 +123,7 @@ export default function Index() {
         localStorage.setItem('wishlist', JSON.stringify(localWishlist));
         setWishlist(prev => prev.includes(item._id) ? prev : [...prev, item._id]);
       }
-      showSuccess('Added to wishlist (local)!');
+      showSuccess('Added to wishlist!');
     }
   };
 
@@ -202,7 +229,7 @@ export default function Index() {
 
               <div className="mt-6">
                 <Link
-                  to="#"
+                  to="/products"
                   className="inline-block w-max px-5 py-2 font-semibold tracking-wide text-center text-white bg-slate-900 dark:bg-orange-500 rounded-md"
                 >
                   Shop Now <i className="mdi mdi-arrow-right"></i>
@@ -284,7 +311,7 @@ export default function Index() {
 
             <div className="mt-6">
               <Link
-                to="#"
+                to="/products"
                 className="inline-block w-max px-5 py-2 font-semibold tracking-wide text-center text-white bg-slate-900 dark:bg-orange-500 rounded-md"
               >
                 Shop Now <i className="mdi mdi-arrow-right"></i>
@@ -308,20 +335,19 @@ export default function Index() {
 
           <div className="grid gap-6 pt-6 lg:grid-cols-5 md:grid-cols-3 sm:grid-cols-2 grid-cols-2">
             {collections.map((item, index) => (
-              <Link
-                to={`/products?category_id=${item._id}`}
-                className="text-center hover:text-orange-500 transition-colors duration-300"
-                key={index}
+              <div
+                className="text-center hover:text-orange-500 transition-colors duration-300 flex flex-col items-center"
+                key={item.id}
               >
                 <img
                   src={item.image}
-                  className="w-40 h-40 rounded-full shadow dark:shadow-gray-800 hover:scale-105 transition-transform duration-300"
+                  className="w-40 h-40 rounded-full shadow dark:shadow-gray-800 hover:scale-105 transition-transform duration-300 object-cover"
                   alt={item.name}
                 />
-                <span className="block mt-3 text-xl font-medium">
+                <span className="block mt-3 text-xl font-medium text-center w-full">
                   {item.name}
                 </span>
-              </Link>
+              </div>
             ))}
           </div>
         </div>

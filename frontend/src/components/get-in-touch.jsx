@@ -11,7 +11,7 @@ export default function GetInTouch(){
                 <p className="text-slate-400 max-w-xl mx-auto">Upgrade your style with our curated sets. Choose confidence, embrace your unique look.</p>
             
                 <div className="mt-6">
-                    <Link to="/helpcenter-support" className="py-2 px-5 inline-flex items-center font-semibold tracking-wide align-middle duration-500 text-base text-center bg-orange-500 text-white rounded-md me-2 mt-2"><FiPhone className="size-4 me-1"></FiPhone> Contact us</Link>
+                    <Link to="/contact" className="py-2 px-5 inline-flex items-center font-semibold tracking-wide align-middle duration-500 text-base text-center bg-orange-500 text-white rounded-md me-2 mt-2"><FiPhone className="size-4 me-1"></FiPhone> Contact us</Link>
                 </div>
             </div>
         </div>

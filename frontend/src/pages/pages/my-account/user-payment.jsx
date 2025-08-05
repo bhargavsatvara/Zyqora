@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import Navbar from "../../../components/navbar";
 import Usertab from "../../../components/user-tab";
 import Footer from "../../../components/footer";
-import Switcher from "../../../components/switcher";
 
 // import { paymentMethod } from "../../../data/data";
 
@@ -80,7 +79,6 @@ export default function UserPayment() {
                 </div>
             </section>
             <Footer />
-            <Switcher />
             {modal && (
                 <div className="rounded-md shadow dark:shadow-gray-800 bg-slate-900/75 text-slate-900 dark:text-white fixed w-full h-screen top-0 left-0 bottom-0 right-0 flex items-center justify-center z-999">
                     <div className="relative w-full h-auto max-w-md inline-block bg-white dark:bg-slate-900">

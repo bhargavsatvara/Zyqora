@@ -73,7 +73,6 @@ export default function Footer() {
                       <ul className="list-none footer-list mt-6">
                         <li className="ms-0 mt-[10px]"><Link to="/helpcenter" className="text-gray-300 hover:text-gray-400 duration-500 ease-in-out"><i className="mdi mdi-chevron-right" /> Overview</Link></li>
                         <li className="ms-0 mt-[10px]"><Link to="/helpcenter-faqs" className="text-gray-300 hover:text-gray-400 duration-500 ease-in-out"><i className="mdi mdi-chevron-right" /> FAQ</Link></li>
-                        <li className="ms-0 mt-[10px]"><Link to="/helpcenter-guides" className="text-gray-300 hover:text-gray-400 duration-500 ease-in-out"><i className="mdi mdi-chevron-right" /> Guides</Link></li>
                         <li className="ms-0 mt-[10px]"><Link to="/helpcenter-support" className="text-gray-300 hover:text-gray-400 duration-500 ease-in-out"><i className="mdi mdi-chevron-right" /> Support</Link></li>
                       </ul>
                     </div>

@@ -5,7 +5,6 @@ import Navbar from "../../../components/navbar";
 import FaqAbout from "../../../components/faq-about";
 import GetInTouch from "../../../components/get-in-touch";
 import Footer from "../../../components/footer";
-import Switcher from "../../../components/switcher";
 import ScrollToTop from "../../../components/scroll-to-top";
 
 import {FiHelpCircle} from '../../../assets/icons/vander'
@@ -15,8 +14,9 @@ export default function Helpcenter(){
         <>
         <Navbar navClass="defaultscroll is-sticky" navlight={true}/>
 
-        <section className="relative table w-full py-36 bg-[url('../../assets/images/hero/pages.jpg')] bg-center bg-no-repeat bg-cover" role="banner">
-            <div className="absolute inset-0 bg-black opacity-80"></div>
+        <section className="relative table w-full  items-center py-36 bg-[url('../../assets/images/hero/pages.jpg')] bg-top bg-no-repeat bg-cover" role="banner">
+        <div className="absolute inset-0 bg-black opacity-80"></div>
+
             <div className="container relative">
                 <div className="grid grid-cols-1 pb-8 text-center mt-10">
                     <h3 className="mb-6 text-4xl leading-normal tracking-wider font-semibold text-white">Hello ! <br/> How can we help you?</h3>
@@ -87,7 +87,6 @@ export default function Helpcenter(){
            <GetInTouch/>
         </section>
         <Footer/>
-        <Switcher/>
         <ScrollToTop/>
         </>
     )

@@ -18,8 +18,9 @@ export default function HelpcenterFaqs(){
     return(
         <>
         <Navbar navClass="defaultscroll is-sticky" navlight={true}/>
-        <section className="relative table w-full py-36 bg-[url('../../assets/images/hero/pages.jpg')] bg-center bg-no-repeat bg-cover" role="banner">
-            <div className="absolute inset-0 bg-black opacity-80"></div>
+        <section className="relative table w-full items-center py-36 bg-[url('../../assets/images/hero/pages.jpg')] bg-top bg-no-repeat bg-cover" role="banner">
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/60 via-slate-900/80 to-slate-900"></div>
+            
             <div className="container relative">
                 <div className="grid grid-cols-1 pb-8 text-center mt-10">
                     <h3 className="text-4xl leading-normal tracking-wider font-semibold text-white">Frequently Asked Questions</h3>

@@ -649,14 +649,7 @@ export default function Navbar({ navClass, navlight }) {
                           <FiUser className="h-4 w-4 me-2" /> Account
                         </Link>
                       </li>
-                      <li>
-                        <Link
-                          to="/helpcenter"
-                          className="flex items-center font-medium py-2 px-4 hover:text-orange-500"
-                        >
-                          <FiHelpCircle className="h-4 w-4 me-2" /> Help center
-                        </Link>
-                      </li>
+                      
                       <li>
                         <Link
                           to="/user-setting"

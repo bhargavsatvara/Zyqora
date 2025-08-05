@@ -200,7 +200,7 @@ export default function ShopListRightSidebar() {
                 localStorage.setItem('wishlist', JSON.stringify(localWishlist));
                 setWishlist(prev => prev.includes(item._id) ? prev : [...prev, item._id]);
             }
-            showSuccess('Added to wishlist (local)!');
+            showSuccess('Added to wishlist!');
         }
     };
 

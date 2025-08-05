@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 
 import Navbar from "../../../components/navbar";
 import Footer from "../../../components/footer";
-import Switcher from "../../../components/switcher";
 
 import logoDark from '../../../assets/images/logo-dark.png'
 import logoLight from '../../../assets/images/logo-light.png'
@@ -208,7 +207,6 @@ export default function Invoice(){
             </div>
         </section>
         <Footer/>
-        <Switcher/>
         <ScrollToTop/>
         </>
     )
