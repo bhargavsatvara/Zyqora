@@ -200,7 +200,10 @@ exports.clearCart = async (req, res) => {
     const userId = req.user ? req.user.toString() : 'guest';
     let cart = await Cart.findOne({ user_id: userId });
     if (!cart) {
-      return res.status(404).json({ message: 'Cart not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Cart not found' 
+      });
     }
     cart.items = [];
     await cart.save();
@@ -208,8 +211,22 @@ exports.clearCart = async (req, res) => {
     // Reset abandonment count when cart is cleared
     await CartAbandonmentService.resetAbandonmentCount(cart._id);
     
-    res.json({ message: 'Cart cleared' });
+    res.json({ 
+      success: true,
+      message: 'Cart cleared successfully',
+      data: {
+        items: [],
+        subtotal: 0,
+        tax: 0,
+        total: 0,
+        itemCount: 0
+      }
+    });
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('Clear cart error:', err);
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error' 
+    });
   }
 }; 

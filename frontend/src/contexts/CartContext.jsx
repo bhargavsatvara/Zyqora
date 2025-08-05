@@ -55,9 +55,24 @@ export function CartProvider({ children }) {
     setTotals({ subtotal, tax, total });
   };
 
+  const clearCart = async () => {
+    try {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      if (token) {
+        const response = await cartAPI.clearCart();
+        if (response.data.success) {
+          setCartData([]);
+          setTotals({ subtotal: 0, tax: 0, total: 0 });
+        }
+      }
+    } catch (error) {
+      console.error('Error clearing cart in context:', error);
+    }
+  };
+
   return (
     <CartContext.Provider value={{
-      cartData, setCartData, totals, setTotals, fetchCart, recalculateTotals
+      cartData, setCartData, totals, setTotals, fetchCart, recalculateTotals, clearCart
     }}>
       {children}
     </CartContext.Provider>

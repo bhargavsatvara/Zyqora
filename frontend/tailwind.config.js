@@ -46,6 +46,23 @@ module.exports = {
                 'black': '#161c2d',
                 'dark-footer': '#161c28',
             },
+            animation: {
+                'fade-in-up': 'fadeInUp 0.6s ease-out forwards',
+                'bounce': 'bounce 1s infinite',
+                'pulse': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            },
+            keyframes: {
+                fadeInUp: {
+                    '0%': {
+                        opacity: '0',
+                        transform: 'translateY(30px)'
+                    },
+                    '100%': {
+                        opacity: '1',
+                        transform: 'translateY(0)'
+                    }
+                }
+            },
 
             boxShadow: {
                 sm: '0 2px 4px 0 rgb(60 72 88 / 0.15)',

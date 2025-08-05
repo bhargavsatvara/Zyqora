@@ -20,7 +20,7 @@ export default function Shopcart(props){
     });
     const [message, setMessage] = useState('');
     const navigate = useNavigate();
-    const { fetchCart } = useCart();
+    const { fetchCart, clearCart: contextClearCart } = useCart();
 
     useEffect(() => {
         fetchCartData();
@@ -150,15 +150,26 @@ export default function Shopcart(props){
         try {
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
             if (token) {
-                await cartAPI.clearCart();
-                setMessage('Cart cleared successfully');
-                setTimeout(() => setMessage(''), 3000);
-                fetchCartData();
-                await fetchCart(); // Update cart context after clearing
+                const response = await cartAPI.clearCart();
+                console.log('Clear cart response:', response.data);
+                
+                if (response.data.success) {
+                    setMessage('Cart cleared successfully');
+                    setTimeout(() => setMessage(''), 3000);
+                    
+                    // Update local state immediately
+                    setCartData([]);
+                    setTotals({ subtotal: 0, tax: 0, total: 0 });
+                    
+                    // Update cart context
+                    await contextClearCart();
+                } else {
+                    throw new Error(response.data.message || 'Failed to clear cart');
+                }
             }
         } catch (error) {
             console.error('Error clearing cart:', error);
-            setMessage('Error clearing cart');
+            setMessage('Error clearing cart: ' + (error.response?.data?.message || error.message));
             setTimeout(() => setMessage(''), 3000);
         }
     };

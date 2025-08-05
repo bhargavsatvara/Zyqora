@@ -9,6 +9,18 @@ import ScrollToTop from "../../components/scroll-to-top";
 import heroVideo from '../../assets/videos/heroVideo6.mp4';
 import { FiHeart, FiEye, FiBookmark } from '../../assets/icons/vander';
 import { AiFillHeart } from 'react-icons/ai';
+import levisLogo from '../../assets/images/brand/levis-logo-brand.png';
+import ralphLogo from '../../assets/images/brand/ralph-lauren-brand.png';
+import nikeLogo from '../../assets/images/brand/nike-logo.png';
+import vansLogo from '../../assets/images/brand/vans-brand.png';
+import hugoLogo from '../../assets/images/brand/hugo-boss.png';
+import uniqloLogo from '../../assets/images/brand/uniqlo-logo.png';
+import pradaLogo from '../../assets/images/brand/prada-brand-logo.png';
+import converseLogo from '../../assets/images/brand/Converse-logo.png';
+import addidasLogo from '../../assets/images/brand/adidas-logo.png';
+import zaraLogo from '../../assets/images/brand/zara-logo.png';
+import hmLogo from '../../assets/images/brand/hm-logo.png'; 
+import gucciLogo from '../../assets/images/brand/gucci-brand-logo.png';
 
 export default function Index() {
   const { showSuccess, showError } = useToast();
@@ -437,6 +449,210 @@ export default function Index() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Brands Section */}
+      <section className="relative py-20 md:py-32 bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 overflow-hidden" role="main">
+        {/* Background decorative elements */}
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%239C92AC%22%20fill-opacity%3D%220.05%22%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%222%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-30"></div>
+        <div className="absolute top-0 left-0 w-72 h-72 bg-gradient-to-br from-orange-400/20 to-pink-400/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tl from-blue-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse"></div>
+        
+        <div className="container relative z-10" role="region" aria-label="Featured Brands">
+          <div className="grid grid-cols-1 justify-center mb-16 text-center">
+            
+            <h5 className="mb-6 text-4xl md:text-5xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+              Featured Brands
+            </h5>
+            <p className="max-w-2xl mx-auto text-lg text-gray-600 dark:text-gray-400">
+              Discover premium brands that define style and quality. Each brand represents excellence in fashion and innovation.
+            </p>
+          </div>
+
+          <div className="grid gap-8 pt-8 lg:grid-cols-6 md:grid-cols-4 sm:grid-cols-3 grid-cols-2">
+            {/* Levi's */}
+            <div className="group text-center animate-fade-in-up">
+              <div className="relative overflow-hidden rounded-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-8 shadow-lg hover:shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:-translate-y-2 border border-gray-200/50 dark:border-gray-700/50 hover:border-orange-300 dark:hover:border-orange-500">
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 to-pink-500/0 group-hover:from-orange-500/10 group-hover:to-pink-500/10 transition-all duration-500"></div>
+                <img
+                  src={levisLogo}
+                  className="relative w-full h-16 object-contain filter grayscale group-hover:grayscale-0 transition-all duration-500 group-hover:brightness-110"
+                  alt="Levi's"
+                />
+                <h6 className="relative mt-6 text-sm font-semibold text-gray-700 dark:text-gray-300 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors duration-300">
+                  Levi's
+                </h6>
+              </div>
+            </div>
+
+            {/* Nike */}
+            <div className="group text-center animate-fade-in-up animation-delay-100">
+              <div className="relative overflow-hidden rounded-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-8 shadow-lg hover:shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:-translate-y-2 border border-gray-200/50 dark:border-gray-700/50 hover:border-orange-300 dark:hover:border-orange-500">
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 to-pink-500/0 group-hover:from-orange-500/10 group-hover:to-pink-500/10 transition-all duration-500"></div>
+                <img
+                    src={nikeLogo}
+                    className="relative w-full h-16 object-contain filter grayscale group-hover:grayscale-0 transition-all duration-500 group-hover:brightness-110"
+                  alt="Nike"
+                />
+                <h6 className="relative mt-6 text-sm font-semibold text-gray-700 dark:text-gray-300 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors duration-300">
+                  Nike
+                </h6>
+              </div>
+            </div>
+
+            {/* Adidas */}
+            <div className="group text-center animate-fade-in-up animation-delay-200">
+              <div className="relative overflow-hidden rounded-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-8 shadow-lg hover:shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:-translate-y-2 border border-gray-200/50 dark:border-gray-700/50 hover:border-orange-300 dark:hover:border-orange-500">
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 to-pink-500/0 group-hover:from-orange-500/10 group-hover:to-pink-500/10 transition-all duration-500"></div>
+                <img
+                  src={addidasLogo}
+                  className="relative w-full h-16 object-contain filter grayscale group-hover:grayscale-0 transition-all duration-500 group-hover:brightness-110"
+                  alt="Adidas"
+                />
+                <h6 className="relative mt-6 text-sm font-semibold text-gray-700 dark:text-gray-300 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors duration-300">
+                  Adidas
+                </h6>
+              </div>
+            </div>
+
+            {/* Ralph Lauren */}
+            <div className="group text-center animate-fade-in-up animation-delay-300">
+              <div className="relative overflow-hidden rounded-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-8 shadow-lg hover:shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:-translate-y-2 border border-gray-200/50 dark:border-gray-700/50 hover:border-orange-300 dark:hover:border-orange-500">
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 to-pink-500/0 group-hover:from-orange-500/10 group-hover:to-pink-500/10 transition-all duration-500"></div>
+                <img
+                  src={ralphLogo}
+                  className="relative w-full h-16 object-contain filter grayscale group-hover:grayscale-0 transition-all duration-500 group-hover:brightness-110"
+                  alt="Ralph Lauren"
+                />
+                <h6 className="relative mt-6 text-sm font-semibold text-gray-700 dark:text-gray-300 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors duration-300">
+                  Ralph Lauren
+                </h6>
+              </div>
+            </div>
+
+            {/* Vans */}
+            <div className="group text-center animate-fade-in-up animation-delay-400">
+              <div className="relative overflow-hidden rounded-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-8 shadow-lg hover:shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:-translate-y-2 border border-gray-200/50 dark:border-gray-700/50 hover:border-orange-300 dark:hover:border-orange-500">
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 to-pink-500/0 group-hover:from-orange-500/10 group-hover:to-pink-500/10 transition-all duration-500"></div>
+                <img
+                  src={vansLogo}
+                  className="relative w-full h-16 object-contain filter grayscale group-hover:grayscale-0 transition-all duration-500 group-hover:brightness-110"
+                  alt="Vans"
+                />
+                <h6 className="relative mt-6 text-sm font-semibold text-gray-700 dark:text-gray-300 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors duration-300">
+                  Vans
+                </h6>
+              </div>
+            </div>
+
+            {/* Hugo Boss */}
+            <div className="group text-center animate-fade-in-up animation-delay-500">
+              <div className="relative overflow-hidden rounded-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-8 shadow-lg hover:shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:-translate-y-2 border border-gray-200/50 dark:border-gray-700/50 hover:border-orange-300 dark:hover:border-orange-500">
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 to-pink-500/0 group-hover:from-orange-500/10 group-hover:to-pink-500/10 transition-all duration-500"></div>
+                <img
+                  src={hugoLogo}
+                  className="relative w-full h-16 object-contain filter grayscale group-hover:grayscale-0 transition-all duration-500 group-hover:brightness-110"
+                  alt="Hugo Boss"
+                />
+                <h6 className="relative mt-6 text-sm font-semibold text-gray-700 dark:text-gray-300 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors duration-300">
+                  Hugo Boss
+                </h6>
+              </div>
+            </div>
+
+            {/* Zara */}
+            <div className="group text-center animate-fade-in-up animation-delay-600">
+              <div className="relative overflow-hidden rounded-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-8 shadow-lg hover:shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:-translate-y-2 border border-gray-200/50 dark:border-gray-700/50 hover:border-orange-300 dark:hover:border-orange-500">
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 to-pink-500/0 group-hover:from-orange-500/10 group-hover:to-pink-500/10 transition-all duration-500"></div>
+                <img
+                  src={zaraLogo}
+                  className="relative w-full h-16 object-contain filter grayscale group-hover:grayscale-0 transition-all duration-500 group-hover:brightness-110"
+                  alt="Zara"
+                />
+                <h6 className="relative mt-6 text-sm font-semibold text-gray-700 dark:text-gray-300 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors duration-300">
+                  Zara
+                </h6>
+              </div>
+            </div>
+
+            {/* H&M */}
+            <div className="group text-center animate-fade-in-up animation-delay-700">
+              <div className="relative overflow-hidden rounded-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-8 shadow-lg hover:shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:-translate-y-2 border border-gray-200/50 dark:border-gray-700/50 hover:border-orange-300 dark:hover:border-orange-500">
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 to-pink-500/0 group-hover:from-orange-500/10 group-hover:to-pink-500/10 transition-all duration-500"></div>
+                <img
+                  src={hmLogo}
+                  className="relative w-full h-16 object-contain filter grayscale group-hover:grayscale-0 transition-all duration-500 group-hover:brightness-110"
+                  alt="H&M"
+                />
+                <h6 className="relative mt-6 text-sm font-semibold text-gray-700 dark:text-gray-300 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors duration-300">
+                  H&M
+                </h6>
+              </div>
+            </div>
+
+            {/* Uniqlo */}
+            <div className="group text-center animate-fade-in-up animation-delay-800">
+              <div className="relative overflow-hidden rounded-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-8 shadow-lg hover:shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:-translate-y-2 border border-gray-200/50 dark:border-gray-700/50 hover:border-orange-300 dark:hover:border-orange-500">
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 to-pink-500/0 group-hover:from-orange-500/10 group-hover:to-pink-500/10 transition-all duration-500"></div>
+                <img
+                    src={uniqloLogo}
+                    className="relative w-full h-16 object-contain filter grayscale group-hover:grayscale-0 transition-all duration-500 group-hover:brightness-110"
+                  alt="Uniqlo"
+                />
+                <h6 className="relative mt-6 text-sm font-semibold text-gray-700 dark:text-gray-300 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors duration-300">
+                  Uniqlo
+                </h6>
+              </div>
+            </div>
+
+            {/* Gucci */}
+            <div className="group text-center animate-fade-in-up animation-delay-900">
+              <div className="relative overflow-hidden rounded-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-8 shadow-lg hover:shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:-translate-y-2 border border-gray-200/50 dark:border-gray-700/50 hover:border-orange-300 dark:hover:border-orange-500">
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 to-pink-500/0 group-hover:from-orange-500/10 group-hover:to-pink-500/10 transition-all duration-500"></div>
+                <img
+                  src={gucciLogo}
+                  className="relative w-full h-16 object-contain filter grayscale group-hover:grayscale-0 transition-all duration-500 group-hover:brightness-110"
+                  alt="Gucci"
+                />
+                <h6 className="relative mt-6 text-sm font-semibold text-gray-700 dark:text-gray-300 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors duration-300">
+                  Gucci
+                </h6>
+              </div>
+            </div>
+
+            {/* Prada */}
+            <div className="group text-center animate-fade-in-up animation-delay-1000">
+              <div className="relative overflow-hidden rounded-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-8 shadow-lg hover:shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:-translate-y-2 border border-gray-200/50 dark:border-gray-700/50 hover:border-orange-300 dark:hover:border-orange-500">
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 to-pink-500/0 group-hover:from-orange-500/10 group-hover:to-pink-500/10 transition-all duration-500"></div>
+                <img
+                  src={pradaLogo}
+                  className="relative w-full h-16 object-contain filter grayscale group-hover:grayscale-0 transition-all duration-500 group-hover:brightness-110"
+                  alt="Prada"
+                />
+                <h6 className="relative mt-6 text-sm font-semibold text-gray-700 dark:text-gray-300 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors duration-300">
+                  Prada
+                </h6>
+              </div>
+            </div>
+
+            {/* Converse */}
+            <div className="group text-center animate-fade-in-up animation-delay-1100">
+              <div className="relative overflow-hidden rounded-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-8 shadow-lg hover:shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:-translate-y-2 border border-gray-200/50 dark:border-gray-700/50 hover:border-orange-300 dark:hover:border-orange-500">
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 to-pink-500/0 group-hover:from-orange-500/10 group-hover:to-pink-500/10 transition-all duration-500"></div>
+                <img
+                  src={converseLogo}
+                  className="relative w-full h-16 object-contain filter grayscale group-hover:grayscale-0 transition-all duration-500 group-hover:brightness-110"
+                  alt="Converse"
+                />
+                <h6 className="relative mt-6 text-sm font-semibold text-gray-700 dark:text-gray-300 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors duration-300">
+                  Converse
+                </h6>
+              </div>
+            </div>
+
+            
           </div>
         </div>
       </section>
