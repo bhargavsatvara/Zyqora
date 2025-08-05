@@ -37,6 +37,7 @@ import HelpcenterSupport from './pages/pages/helpcenter/helpcenter-support';
 import HelpcenterFaqs from './pages/pages/helpcenter/helpcenter-faqs';
 import Terms from './pages/pages/utility/terms';
 import Privacy from './pages/pages/utility/privacy';
+import Accessibility from './pages/pages/accessibility';
 import Login from './pages/pages/auth/login';
 import Signup from './pages/pages/auth/signup';
 import ForgotPassword from './pages/pages/auth/forgot-password';
@@ -97,6 +98,7 @@ function App() {
         <Route path="/helpcenter-faqs" element={<HelpcenterFaqs />}></Route>
         <Route path="/terms" element={<Terms />}></Route>
         <Route path="/privacy" element={<Privacy />}></Route>
+        <Route path="/accessibility" element={<Accessibility />}></Route>
         <Route path="/login" element={<Login />}></Route>
         <Route path="/signup" element={<Signup />}></Route>
         <Route path="/forgot-password" element={<ForgotPassword />}></Route>

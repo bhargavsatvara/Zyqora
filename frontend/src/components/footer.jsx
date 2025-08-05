@@ -82,6 +82,7 @@ export default function Footer() {
                       <ul className="list-none footer-list mt-6">
                         <li className="ms-0 mt-[10px]"><Link to="/terms" className="text-gray-300 hover:text-gray-400 duration-500 ease-in-out"><i className="mdi mdi-chevron-right" /> Terms of Service</Link></li>
                         <li className="ms-0 mt-[10px]"><Link to="/privacy" className="text-gray-300 hover:text-gray-400 duration-500 ease-in-out"><i className="mdi mdi-chevron-right" /> Privacy Policy</Link></li>
+                        <li className="ms-0 mt-[10px]"><Link to="/accessibility" className="text-gray-300 hover:text-gray-400 duration-500 ease-in-out"><i className="mdi mdi-chevron-right" /> Accessibility</Link></li>
                         <li className="ms-0 mt-[10px]"><Link to="/contact" className="text-gray-300 hover:text-gray-400 duration-500 ease-in-out"><i className="mdi mdi-chevron-right" /> Contact Us</Link></li>
                       </ul>
                     </div>
