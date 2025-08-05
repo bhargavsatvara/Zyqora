@@ -120,6 +120,7 @@ exports.addItem = async (req, res) => {
 exports.updateItem = async (req, res) => {
   try {
     console.log('req.user:', req.user);
+    console.log('req.body:', req.body);
     const { itemId, quantity } = req.body;
     if (!itemId || quantity === undefined) {
       return res.status(400).json({ message: 'Missing required fields' });
@@ -128,7 +129,15 @@ exports.updateItem = async (req, res) => {
     let cart = await Cart.findOne({ user_id: userId });
     if (!cart) return res.status(404).json({ message: 'Cart not found' });
     const items = cart.items || [];
-    const itemIndex = items.findIndex(item => normalizeProductId(item.product_id) === normalizeProductId(itemId));
+    console.log('Cart items:', items);
+    console.log('Looking for itemId:', itemId);
+    const itemIndex = items.findIndex(item => {
+      const normalizedExistingId = normalizeProductId(item.product_id);
+      const normalizedNewId = normalizeProductId(itemId);
+      console.log('Comparing:', { existing: normalizedExistingId, new: normalizedNewId, match: normalizedExistingId === normalizedNewId });
+      return normalizedExistingId === normalizedNewId;
+    });
+    console.log('Found item at index:', itemIndex);
     if (itemIndex === -1) {
       return res.status(404).json({ message: 'Item not found in cart' });
     }
@@ -142,13 +151,32 @@ exports.updateItem = async (req, res) => {
     }
     cart.items = items;
     await cart.save();
-    res.json({
+    
+    // Calculate totals
+    const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const tax = subtotal * 0.1;
+    const total = subtotal + tax;
+    
+    const responseData = {
       success: true,
       message: 'Cart updated successfully',
-      cart: cart
-    });
+      data: {
+        items: items,
+        subtotal: subtotal,
+        tax: tax,
+        total: total,
+        itemCount: items.length
+      }
+    };
+    
+    console.log('Sending update response:', responseData);
+    res.json(responseData);
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('Update cart error:', err);
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error' 
+    });
   }
 };
 
@@ -182,13 +210,31 @@ exports.removeItem = async (req, res) => {
       await CartAbandonmentService.resetAbandonmentCount(cart._id);
     }
 
-    res.json({
+    // Calculate totals
+    const subtotal = filteredItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const tax = subtotal * 0.1;
+    const total = subtotal + tax;
+
+    const responseData = {
       success: true,
       message: 'Item removed from cart',
-      cart: cart
-    });
+      data: {
+        items: filteredItems,
+        subtotal: subtotal,
+        tax: tax,
+        total: total,
+        itemCount: filteredItems.length
+      }
+    };
+    
+    console.log('Sending remove item response:', responseData);
+    res.json(responseData);
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('Remove item error:', err);
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error' 
+    });
   }
 };
 
@@ -211,7 +257,7 @@ exports.clearCart = async (req, res) => {
     // Reset abandonment count when cart is cleared
     await CartAbandonmentService.resetAbandonmentCount(cart._id);
     
-    res.json({ 
+    const responseData = {
       success: true,
       message: 'Cart cleared successfully',
       data: {
@@ -221,7 +267,10 @@ exports.clearCart = async (req, res) => {
         total: 0,
         itemCount: 0
       }
-    });
+    };
+    
+    console.log('Sending clear cart response:', responseData);
+    res.json(responseData);
   } catch (err) {
     console.error('Clear cart error:', err);
     res.status(500).json({ 

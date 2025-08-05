@@ -214,6 +214,8 @@ export default function Navbar({ navClass, navlight }) {
       }
     }
   }, []);
+  
+
 
   const toggleMenu = () => {
     setToggle(!isToggle);

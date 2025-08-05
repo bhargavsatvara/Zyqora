@@ -60,19 +60,33 @@ export function CartProvider({ children }) {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       if (token) {
         const response = await cartAPI.clearCart();
-        if (response.data.success) {
+        console.log('Context clear cart response:', response);
+        
+        if (response.data && response.data.success) {
           setCartData([]);
           setTotals({ subtotal: 0, tax: 0, total: 0 });
+        } else {
+          console.error('Clear cart failed:', response.data?.message);
         }
       }
     } catch (error) {
       console.error('Error clearing cart in context:', error);
+      // Even if there's an error, we should clear the local state
+      setCartData([]);
+      setTotals({ subtotal: 0, tax: 0, total: 0 });
     }
+  };
+
+  // Function to update cart data directly (for immediate updates)
+  const updateCartData = (newCartData, newTotals) => {
+    // Force a state update by creating new objects
+    setCartData([...newCartData]);
+    setTotals({ ...newTotals });
   };
 
   return (
     <CartContext.Provider value={{
-      cartData, setCartData, totals, setTotals, fetchCart, recalculateTotals, clearCart
+      cartData, setCartData, totals, setTotals, fetchCart, recalculateTotals, clearCart, updateCartData
     }}>
       {children}
     </CartContext.Provider>
