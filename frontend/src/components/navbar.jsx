@@ -27,6 +27,7 @@ export default function Navbar({ navClass, navlight }) {
   const [userManu, setUserManu] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userName, setUserName] = useState("");
+  const [user, setUser] = useState(null);
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
   const cartRef = useRef(null);
@@ -204,13 +205,16 @@ export default function Navbar({ navClass, navlight }) {
   // Check authentication on mount
   useEffect(() => {
     const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-    const user = localStorage.getItem("user") || sessionStorage.getItem("user");
-    if (token && user) {
+    const userData = localStorage.getItem("user") || sessionStorage.getItem("user");
+    if (token && userData) {
       setIsAuthenticated(true);
       try {
-        setUserName(JSON.parse(user).name);
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
+        setUserName(parsedUser.name || parsedUser.first_name || parsedUser.email?.split('@')[0] || 'User');
       } catch {
         setUserName("");
+        setUser(null);
       }
     }
   }, []);
@@ -228,7 +232,33 @@ export default function Navbar({ navClass, navlight }) {
     sessionStorage.removeItem("user");
     setIsAuthenticated(false);
     setUserName("");
+    setUser(null);
     navigate("/login");
+  };
+
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    if (!user) return 'U';
+    
+    if (user.first_name && user.last_name) {
+      return `${user.first_name.charAt(0)}${user.last_name.charAt(0)}`.toUpperCase();
+    } else if (user.first_name) {
+      return user.first_name.charAt(0).toUpperCase();
+    } else if (user.full_name) {
+      const names = user.full_name.split(' ');
+      if (names.length >= 2) {
+        return `${names[0].charAt(0)}${names[1].charAt(0)}`.toUpperCase();
+      }
+      return user.full_name.charAt(0).toUpperCase();
+    } else if (user.email) {
+      return user.email.charAt(0).toUpperCase();
+    }
+    return 'U';
+  };
+
+  // Check if user has a valid profile image
+  const hasValidProfileImage = () => {
+    return user?.profileImage && user.profileImage !== 'null' && user.profileImage !== '';
   };
 
   const { cartData, totals } = useCart();
@@ -624,11 +654,22 @@ export default function Navbar({ navClass, navlight }) {
               type="button"
               onClick={() => setUserManu(!userManu)}
             >
-              <span className="size-9 inline-flex items-center justify-center tracking-wide align-middle duration-500 text-base text-center rounded-full border border-orange-500 bg-orange-500 text-white">
+              {isAuthenticated && hasValidProfileImage() ? (
+                <img
+                  src={user.profileImage}
+                  className="size-9 rounded-full border border-orange-500 object-cover"
+                  alt="Profile"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
+                />
+              ) : null}
+              <span className={`size-9 inline-flex items-center justify-center tracking-wide align-middle duration-500 text-base text-center rounded-full border border-orange-500 bg-orange-500 text-white ${isAuthenticated && hasValidProfileImage() ? 'hidden' : 'flex'}`}>
                 {isAuthenticated ? (
-                  <span className="font-medium">{userName.charAt(0)}</span>
+                  <span className="font-medium">{getUserInitials()}</span>
                 ) : (
-                  <img src={client} className="rounded-full" alt="" />
+                  <span className="font-medium">G</span>
                 )}
               </span>
             </button>

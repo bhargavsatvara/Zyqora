@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../contexts/CartContext";
 import { useToast } from "../contexts/ToastContext";
-import { reviewsAPI, cartAPI } from "../services/api";
+import { reviewsAPI } from "../services/api";
 
 export default function ProductDetail({ product }) {
     const { showSuccess, showError } = useToast();
@@ -11,7 +11,7 @@ export default function ProductDetail({ product }) {
     const [quantity, setQuantity] = useState(1);
     const [isAddingToCart, setIsAddingToCart] = useState(false);
     const navigate = useNavigate();
-    const { fetchCart } = useCart();
+    const { fetchCart, addToCart } = useCart();
     const [reviews, setReviews] = useState([]);
     const [avgRating, setAvgRating] = useState(0);
 
@@ -276,23 +276,21 @@ export default function ProductDetail({ product }) {
                 sku: product.sku
             };
 
-            // Add to cart API call
-            const response = await cartAPI.addToCartAlt(cartItem);
-            console.log('Backend response:', response.data);
-
-            if (response.status === 200 || response.status === 201) {
+            // Use the new cart context function that handles both authenticated and non-authenticated users
+            const result = await addToCart(cartItem);
+            
+            if (result.success) {
                 // Reset selections
                 setSelectedSize('');
                 setSelectedColor('');
                 setQuantity(1);
-                await fetchCart(); // Update cart context after adding
-                showSuccess('Product added to cart!');
+                showSuccess(result.message);
                 // Set flag in sessionStorage to show success message in cart
                 sessionStorage.setItem('addedToCart', 'true');
                 // Redirect to shop cart page immediately
                 navigate('/shop-cart');
             } else {
-                showError(response.data?.message || 'Failed to add product to cart');
+                showError(result.message);
             }
         } catch (error) {
             console.error('Error adding to cart:', error);
@@ -346,21 +344,19 @@ export default function ProductDetail({ product }) {
                 sku: product.sku
             };
 
-            // Add to cart API call
-            const response = await cartAPI.addToCartAlt(cartItem);
-            console.log('Backend response:', response.data);
+            // Use the new cart context function that handles both authenticated and non-authenticated users
+            const result = await addToCart(cartItem);
 
-            if (response.status === 200 || response.status === 201) {
+            if (result.success) {
                 // Reset selections
                 setSelectedSize('');
                 setSelectedColor('');
                 setQuantity(1);
-                await fetchCart(); // Update cart context after adding
                 showSuccess('Product added to cart! Redirecting to checkout...');
                 // Navigate to checkout page
                 navigate("/shop-checkout");
             } else {
-                showError(response.data?.message || 'Failed to add product to cart');
+                showError(result.message);
             }
         } catch (error) {
             console.error('Error adding to cart:', error);

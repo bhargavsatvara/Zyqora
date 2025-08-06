@@ -7,11 +7,11 @@ import Navbar from "../../components/navbar";
 import Footer from "../../components/footer";
 import ScrollToTop from "../../components/scroll-to-top";
 import { useCart } from "../../contexts/CartContext";
-import { userAPI, ordersAPI, countriesAPI, statesAPI, citiesAPI } from "../../services/api";
+import { userAPI, ordersAPI, countriesAPI, statesAPI, citiesAPI, couponsAPI } from "../../services/api";
 
 const stripePromise = loadStripe('pk_test_51RnLFbFW8XM59bhWaYOroZ29ELB4xWqWiadqhP8CPAl3RvZL8ahBcZTdHxI94f9r0hn9IJNaO8BOGcQXrpE2SBYF00CkTXOTtd'); // TODO: Replace with your real Stripe publishable key
 
-function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedCountry, selectedState, setSelectedState, selectedCity, setSelectedCity, zipCode, setZipCode }) {
+function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedCountry, selectedState, setSelectedState, selectedCity, setSelectedCity, zipCode, setZipCode, onCouponChange }) {
     const { cartData, totals, fetchCart } = useCart();
     const [form, setForm] = useState({
         firstName: '',
@@ -50,13 +50,24 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
 
     const [, setUser] = useState({ name: '', email: '' });
 
+    // Coupon state
+    const [availableCoupons, setAvailableCoupons] = useState([]);
+    const [selectedCoupon, setSelectedCoupon] = useState(null);
+    const [couponCode, setCouponCode] = useState('');
+    const [couponError, setCouponError] = useState('');
+    const [couponSuccess, setCouponSuccess] = useState('');
+    const [applyingCoupon, setApplyingCoupon] = useState(false);
+
     useEffect(() => {
         // Fetch data only once on mount
         const initializeData = async () => {
             try {
                 // Fetch addresses
                 await fetchAddresses();
-                
+
+                // Fetch available coupons
+                await fetchAvailableCoupons();
+
                 // Fetch user info
                 const token = localStorage.getItem('token') || sessionStorage.getItem('token');
                 if (token) {
@@ -70,7 +81,7 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
                 console.error('Error initializing checkout data:', error);
             }
         };
-        
+
         initializeData();
     }, []); // Empty dependency array - run only once
 
@@ -90,6 +101,70 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
         }
     };
 
+    const fetchAvailableCoupons = async () => {
+        try {
+            console.log('Fetching available coupons with order total:', totals.total);
+            const res = await couponsAPI.getAvailableCoupons({ orderTotal: totals.total });
+            console.log('Available coupons response:', res.data);
+            if (res.data.success) {
+                setAvailableCoupons(res.data.data);
+                console.log('Set available coupons:', res.data.data);
+            } else {
+                console.log('No success in response:', res.data);
+                setAvailableCoupons([]);
+            }
+        } catch (error) {
+            console.error('Error fetching available coupons:', error);
+            setAvailableCoupons([]);
+        }
+    };
+
+    const applyCoupon = async () => {
+        if (!couponCode.trim()) {
+            setCouponError('Please enter a coupon code');
+            return;
+        }
+
+        setApplyingCoupon(true);
+        setCouponError('');
+        setCouponSuccess('');
+
+        try {
+            const res = await couponsAPI.validateCoupon(couponCode.trim(), totals.total);
+            if (res.data.success) {
+                setSelectedCoupon(res.data.data);
+                setCouponSuccess(`Coupon applied! You'll save $${res.data.data.discountAmount}`);
+                setCouponCode('');
+            } else {
+                setCouponError(res.data.message || 'Invalid coupon code');
+            }
+        } catch (error) {
+            setCouponError(error.response?.data?.message || 'Error applying coupon');
+        } finally {
+            setApplyingCoupon(false);
+        }
+    };
+
+    const removeCoupon = () => {
+        setSelectedCoupon(null);
+        setCouponSuccess('');
+        setCouponError('');
+    };
+
+    // Notify parent component when coupon changes
+    useEffect(() => {
+        if (onCouponChange) {
+            onCouponChange(selectedCoupon);
+        }
+    }, [selectedCoupon, onCouponChange]);
+
+    // Refetch available coupons when cart total changes
+    useEffect(() => {
+        if (totals.total > 0) {
+            fetchAvailableCoupons();
+        }
+    }, [totals.total]);
+
     // When an address is selected, fill the form fields
     useEffect(() => {
         if (selectedAddressId && addresses.length > 0 && countries.length > 0) {
@@ -101,12 +176,12 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
                     address2: '',
                 }));
                 setZipCode(addr.zipCode || '');
-                
+
                 // Find and set country, state, city IDs
                 const countryId = countries.find(c => c.name === addr.country)?._id || '';
                 const stateId = states.find(s => s.name === addr.state)?._id || '';
                 const cityId = cities.find(c => c.name === addr.city)?._id || '';
-                
+
                 setSelectedCountry(countryId);
                 setSelectedState(stateId);
                 setSelectedCity(cityId);
@@ -123,7 +198,7 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
             setAddressCity('');
             return;
         }
-        
+
         let isMounted = true;
         async function fetchStates() {
             try {
@@ -139,12 +214,12 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
             }
         }
         fetchStates();
-        
+
         return () => {
             isMounted = false;
         };
     }, [addressCountry]);
-    
+
     // Fetch cities for address form
     useEffect(() => {
         if (!addressState) {
@@ -152,7 +227,7 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
             setAddressCity('');
             return;
         }
-        
+
         let isMounted = true;
         async function fetchCities() {
             try {
@@ -168,7 +243,7 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
             }
         }
         fetchCities();
-        
+
         return () => {
             isMounted = false;
         };
@@ -234,13 +309,28 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
             // Add more as needed
         };
         const countryCode = countries.find(c => c._id === selectedCountry)?.code || countryNameToCode[countries.find(c => c._id === selectedCountry)?.name] || '';
-        const billingAddress = {
-            street: form.address,
-            city: cities.find(c => c._id === selectedCity)?.name || '',
-            state: states.find(s => s._id === selectedState)?.name || '',
-            country: countryCode,
-            zipCode,
-        };
+        // If user selected an existing address, send the address ID
+        // Otherwise, send the full address details
+        const billingAddress = selectedAddressId ?
+            { addressId: selectedAddressId } :
+            {
+                first_name: form.firstName,
+                last_name: form.lastName,
+                email: form.email,
+                phone: form.phone || '',
+                address_line1: form.address,
+                address_line2: form.address2 || '',
+                city: cities.find(c => c._id === selectedCity)?.name || '',
+                state: states.find(s => s._id === selectedState)?.name || '',
+                postal_code: zipCode,
+                country: countries.find(c => c._id === selectedCountry)?.name || '',
+            };
+
+        // Calculate totals with coupon discount
+        const couponDiscount = selectedCoupon ? selectedCoupon.discountAmount : 0;
+        const finalTotal = totals.total - couponDiscount;
+        const finalSubtotal = totals.subtotal;
+        const finalTax = totals.tax;
         const cartItems = cartData.map(item => ({
             product_id: item.product_id,
             name: item.name,
@@ -259,9 +349,10 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
             const res = await ordersAPI.checkout({
                 billingAddress,
                 cartItems,
-                totalAmount: totals.total,
-                subtotal: totals.subtotal,
-                tax: totals.tax
+                totalAmount: finalTotal,
+                subtotal: finalSubtotal,
+                tax: finalTax,
+                couponCode: selectedCoupon?.code
             });
             const data = res.data;
             if (data.clientSecret) {
@@ -309,9 +400,10 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
             const res = await ordersAPI.createOrder({
                 billingAddress,
                 cartItems,
-                totalAmount: totals.total,
-                subtotal: totals.subtotal,
-                tax: totals.tax,
+                totalAmount: finalTotal,
+                subtotal: finalSubtotal,
+                tax: finalTax,
+                couponCode: selectedCoupon?.code,
                 paymentIntentId: paymentIntent.id
             });
             const data = res.data;
@@ -336,146 +428,245 @@ function CheckoutForm({ countries, states, cities, selectedCountry, setSelectedC
     return (
         <>
             <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-8 space-y-8">
-            <h2 className="text-2xl font-bold mb-4">Billing Address</h2>
-            {/* Address selection */}
-            {addresses.length > 0 && !showAddressForm && (
-                <div className="mb-4">
-                    <label className="block font-semibold mb-2">Select Address</label>
-                    {addresses.map(addr => (
-                        <div key={addr._id} className="flex items-center mb-2">
-                            <input
-                                type="radio"
-                                name="selectedAddress"
-                                value={addr._id}
-                                checked={selectedAddressId === addr._id}
-                                onChange={() => setSelectedAddressId(addr._id)}
-                                className="mr-2"
-                            />
-                            <span>{addr.street}, {addr.city}, {addr.state}, {addr.country} {addr.zipCode}</span>
-                            {addr.isDefault && <span className="ml-2 text-xs text-orange-500">Default</span>}
-                        </div>
-                    ))}
-                    <button type="button" className="mt-2 text-orange-500 underline" onClick={() => { setShowAddressForm(true); setSelectedAddressId(''); }}>+ Add New Address</button>
+                <h2 className="text-2xl font-bold mb-4">Billing Address</h2>
+                {/* Address selection */}
+                {addresses.length > 0 && !showAddressForm && (
+                    <div className="mb-4">
+                        <label className="block font-semibold mb-2">Select Address</label>
+                        {addresses.map(addr => (
+                            <div key={addr._id} className="flex items-center mb-2">
+                                <input
+                                    type="radio"
+                                    name="selectedAddress"
+                                    value={addr._id}
+                                    checked={selectedAddressId === addr._id}
+                                    onChange={() => setSelectedAddressId(addr._id)}
+                                    className="mr-2"
+                                />
+                                <span>{addr.street}, {addr.city}, {addr.state}, {addr.country} {addr.zipCode}</span>
+                                {addr.isDefault && <span className="ml-2 text-xs text-orange-500">Default</span>}
+                            </div>
+                        ))}
+                        <button type="button" className="mt-2 text-orange-500 underline" onClick={() => { setShowAddressForm(true); setSelectedAddressId(''); }}>+ Add New Address</button>
+                    </div>
+                )}
+                {/* Address form for adding new address */}
+                {showAddressForm && (
+                    <div className="mb-4 p-4 border rounded">
+                        <h4 className="font-semibold mb-2">Add New Address</h4>
+                        <form onSubmit={handleAddAddress} className="space-y-2">
+                            <input type="text" name="street" value={addressForm.street} onChange={handleAddressFormChange} placeholder="Street Address" className="w-full border rounded px-3 py-2" required />
+                            {/* Country dropdown */}
+                            <select name="country" value={addressCountry} onChange={handleAddressFormChange} className="w-full border rounded px-3 py-2" required>
+                                <option value="">Select Country</option>
+                                {countries.map(country => (
+                                    <option key={country._id} value={country._id}>{country.name}</option>
+                                ))}
+                            </select>
+                            {/* State dropdown */}
+                            <select name="state" value={addressState} onChange={handleAddressFormChange} className="w-full border rounded px-3 py-2" required disabled={!addressCountry}>
+                                <option value="">Select State</option>
+                                {addressStates.map(state => (
+                                    <option key={state._id} value={state._id}>{state.name}</option>
+                                ))}
+                            </select>
+                            {/* City dropdown */}
+                            <select name="city" value={addressCity} onChange={handleAddressFormChange} className="w-full border rounded px-3 py-2" required disabled={!addressState}>
+                                <option value="">Select City</option>
+                                {addressCities.map(city => (
+                                    <option key={city._id} value={city._id}>{city.name}</option>
+                                ))}
+                            </select>
+                            <input type="text" name="zipCode" value={addressForm.zipCode} onChange={handleAddressFormChange} placeholder="ZIP/Postal Code" className="w-full border rounded px-3 py-2" required />
+                            <label className="flex items-center space-x-2">
+                                <input type="checkbox" name="isDefault" checked={addressForm.isDefault} onChange={handleAddressFormChange} />
+                                <span>Set as default address</span>
+                            </label>
+                            <div className="flex gap-2 mt-2">
+                                <button type="submit" className="bg-orange-500 text-white px-4 py-2 rounded" disabled={addingAddress}>{addingAddress ? 'Saving...' : 'Save Address'}</button>
+                                <button type="button" className="bg-gray-300 text-gray-800 px-4 py-2 rounded" onClick={() => setShowAddressForm(false)}>Cancel</button>
+                            </div>
+                            {error && <div className="text-red-500 text-sm">{error}</div>}
+                        </form>
+                    </div>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label className="block font-semibold mb-1">Name <span className="text-red-600">*</span></label>
+                        <input type="text" name="firstName" value={form.firstName} onChange={handleInput} className="w-full py-3 px-4 border rounded-lg focus:ring-2 focus:ring-orange-400" required />
+                    </div>
+                    <div>
+                        <label className="block font-semibold mb-1">Your Email <span className="text-red-600">*</span></label>
+                        <input type="email" name="email" value={form.email} onChange={handleInput} className="w-full py-3 px-4 border rounded-lg focus:ring-2 focus:ring-orange-400" required />
+                    </div>
+                    <div className="md:col-span-2">
+                        <label className="block font-semibold mb-1">Address <span className="text-red-600">*</span></label>
+                        <input type="text" name="address" value={form.address} onChange={handleInput} className="w-full py-3 px-4 border rounded-lg focus:ring-2 focus:ring-orange-400" required />
+                    </div>
                 </div>
-            )}
-            {/* Address form for adding new address */}
-            {showAddressForm && (
-                <div className="mb-4 p-4 border rounded">
-                    <h4 className="font-semibold mb-2">Add New Address</h4>
-                    <form onSubmit={handleAddAddress} className="space-y-2">
-                        <input type="text" name="street" value={addressForm.street} onChange={handleAddressFormChange} placeholder="Street Address" className="w-full border rounded px-3 py-2" required />
-                        {/* Country dropdown */}
-                        <select name="country" value={addressCountry} onChange={handleAddressFormChange} className="w-full border rounded px-3 py-2" required>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label className="font-semibold mb-1 block">Country</label>
+                        <select value={selectedCountry} onChange={e => setSelectedCountry(e.target.value)} className="form-select w-full py-3 px-4 border rounded-lg focus:ring-2 focus:ring-orange-400">
                             <option value="">Select Country</option>
-                            {countries.map(country => (
+                            {Array.isArray(countries) && countries.map(country => (
                                 <option key={country._id} value={country._id}>{country.name}</option>
                             ))}
                         </select>
-                        {/* State dropdown */}
-                        <select name="state" value={addressState} onChange={handleAddressFormChange} className="w-full border rounded px-3 py-2" required disabled={!addressCountry}>
+                    </div>
+                    <div>
+                        <label className="font-semibold mb-1 block">State</label>
+                        <select value={selectedState} onChange={e => setSelectedState(e.target.value)} className="form-select w-full py-3 px-4 border rounded-lg focus:ring-2 focus:ring-orange-400" disabled={!selectedCountry}>
                             <option value="">Select State</option>
-                            {addressStates.map(state => (
+                            {Array.isArray(states) && states.map(state => (
                                 <option key={state._id} value={state._id}>{state.name}</option>
                             ))}
                         </select>
-                        {/* City dropdown */}
-                        <select name="city" value={addressCity} onChange={handleAddressFormChange} className="w-full border rounded px-3 py-2" required disabled={!addressState}>
+                    </div>
+                    <div>
+                        <label className="font-semibold mb-1 block">City</label>
+                        <select value={selectedCity} onChange={e => setSelectedCity(e.target.value)} className="form-select w-full py-3 px-4 border rounded-lg focus:ring-2 focus:ring-orange-400" disabled={!selectedState}>
                             <option value="">Select City</option>
-                            {addressCities.map(city => (
+                            {Array.isArray(cities) && cities.map(city => (
                                 <option key={city._id} value={city._id}>{city.name}</option>
                             ))}
                         </select>
-                        <input type="text" name="zipCode" value={addressForm.zipCode} onChange={handleAddressFormChange} placeholder="ZIP/Postal Code" className="w-full border rounded px-3 py-2" required />
-                        <label className="flex items-center space-x-2">
-                            <input type="checkbox" name="isDefault" checked={addressForm.isDefault} onChange={handleAddressFormChange} />
-                            <span>Set as default address</span>
-                        </label>
-                        <div className="flex gap-2 mt-2">
-                            <button type="submit" className="bg-orange-500 text-white px-4 py-2 rounded" disabled={addingAddress}>{addingAddress ? 'Saving...' : 'Save Address'}</button>
-                            <button type="button" className="bg-gray-300 text-gray-800 px-4 py-2 rounded" onClick={() => setShowAddressForm(false)}>Cancel</button>
+                    </div>
+                    <div className="md:col-span-3">
+                        <label className="block font-semibold mb-1">Zip Code <span className="text-red-600">*</span></label>
+                        <input type="text" value={zipCode} onChange={e => setZipCode(e.target.value)} className="w-full py-3 px-4 border rounded-lg focus:ring-2 focus:ring-orange-400" required />
+                    </div>
+                </div>
+
+                {/* Coupon Section */}
+                <h2 className="text-2xl font-bold mb-4 mt-8">Discounts & Coupons</h2>
+                <div className="mb-6 p-4 border rounded-lg bg-gray-50">
+                    {/* Available Coupons */}
+                    <div className="mb-4">
+                        <h3 className="text-lg font-semibold mb-3 text-green-600">Available Coupons</h3>
+                        {availableCoupons.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {availableCoupons.map((coupon) => (
+                                    <div key={coupon._id} className="p-3 border border-green-200 rounded-lg bg-white">
+                                        <div className="flex justify-between items-center">
+                                            <div>
+                                                <p className="font-semibold text-green-700">{coupon.code}</p>
+                                                <p className="text-sm text-gray-600">Save ${coupon.discountAmount}</p>
+                                                {coupon.minimumOrderAmount > 0 && (
+                                                    <p className="text-xs text-gray-500">Min. order: ${coupon.minimumOrderAmount}</p>
+                                                )}
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={async () => {
+                                                    setCouponCode(coupon.code);
+                                                    setApplyingCoupon(true);
+                                                    setCouponError('');
+                                                    setCouponSuccess('');
+                                                    try {
+                                                        const res = await couponsAPI.validateCoupon(coupon.code, totals.total);
+                                                        if (res.data.success) {
+                                                            setSelectedCoupon(res.data.data);
+                                                            setCouponSuccess(`Coupon applied! You'll save $${res.data.data.discountAmount}`);
+                                                            setCouponCode('');
+                                                        } else {
+                                                            setCouponError(res.data.message || 'Invalid coupon code');
+                                                        }
+                                                    } catch (error) {
+                                                        setCouponError(error.response?.data?.message || 'Error applying coupon');
+                                                    } finally {
+                                                        setApplyingCoupon(false);
+                                                    }
+                                                }}
+                                                className="px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600"
+                                            >
+                                                Apply
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-gray-500">No available coupons for your order total.</p>
+                        )}
+                    </div>
+
+                    {/* Coupon Input */}
+                    <div className="mb-4">
+                        <h3 className="text-lg font-semibold mb-3">Have a Coupon Code?</h3>
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                value={couponCode}
+                                onChange={(e) => setCouponCode(e.target.value)}
+                                placeholder="Enter coupon code"
+                                className="flex-1 py-2 px-3 border rounded-lg focus:ring-2 focus:ring-orange-400"
+                                disabled={applyingCoupon}
+                            />
+                            <button
+                                type="button"
+                                onClick={applyCoupon}
+                                disabled={applyingCoupon || !couponCode.trim()}
+                                className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50"
+                            >
+                                {applyingCoupon ? 'Applying...' : 'Apply'}
+                            </button>
                         </div>
-                        {error && <div className="text-red-500 text-sm">{error}</div>}
-                    </form>
+                        {couponError && <p className="text-red-500 text-sm mt-2">{couponError}</p>}
+                        {couponSuccess && <p className="text-green-500 text-sm mt-2">{couponSuccess}</p>}
+                    </div>
+
+                    {/* Applied Coupon */}
+                    {selectedCoupon && (
+                        <div className="p-3 bg-green-100 border border-green-300 rounded-lg">
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <p className="font-semibold text-green-700">Applied: {selectedCoupon.code}</p>
+                                    <p className="text-sm text-green-600">You'll save ${selectedCoupon.discountAmount}</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={removeCoupon}
+                                    className="text-red-500 hover:text-red-700"
+                                >
+                                    Remove
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                <h2 className="text-2xl font-bold mb-4 mt-8">Payment</h2>
+                <div className="mb-4">
+                    <CardElement options={{ hidePostalCode: true }} className="p-3 border rounded-lg" />
+                </div>
+                {error && <div className="text-red-600 mb-2" role="status">{error}</div>}
+                {success && <div className="text-green-600 mb-2" role="status">{success}</div>}
+                <button type="submit" className="w-full py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition">
+                    {loading ? 'Processing...' : 'Continue to checkout'}
+                </button>
+            </form>
+
+            {/* Success Animation Overlay */}
+            {showSuccessAnimation && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-8 text-center max-w-md mx-4 animate-bounce">
+                        <div className="mb-4">
+                            <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                            <h3 className="text-2xl font-bold text-green-600 mb-2">Order Placed Successfully!</h3>
+                            <p className="text-gray-600">Thank you for your purchase</p>
+                        </div>
+                        <div className="mt-4">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
+                            <p className="text-sm text-gray-500 mt-2">Redirecting to homepage...</p>
+                        </div>
+                    </div>
                 </div>
             )}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label className="block font-semibold mb-1">Name <span className="text-red-600">*</span></label>
-                    <input type="text" name="firstName" value={form.firstName} onChange={handleInput} className="w-full py-3 px-4 border rounded-lg focus:ring-2 focus:ring-orange-400" required />
-                </div>
-                <div>
-                    <label className="block font-semibold mb-1">Your Email <span className="text-red-600">*</span></label>
-                    <input type="email" name="email" value={form.email} onChange={handleInput} className="w-full py-3 px-4 border rounded-lg focus:ring-2 focus:ring-orange-400" required />
-                </div>
-                <div className="md:col-span-2">
-                    <label className="block font-semibold mb-1">Address <span className="text-red-600">*</span></label>
-                    <input type="text" name="address" value={form.address} onChange={handleInput} className="w-full py-3 px-4 border rounded-lg focus:ring-2 focus:ring-orange-400" required />
-                </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                    <label className="font-semibold mb-1 block">Country</label>
-                    <select value={selectedCountry} onChange={e => setSelectedCountry(e.target.value)} className="form-select w-full py-3 px-4 border rounded-lg focus:ring-2 focus:ring-orange-400">
-                        <option value="">Select Country</option>
-                        {Array.isArray(countries) && countries.map(country => (
-                            <option key={country._id} value={country._id}>{country.name}</option>
-                        ))}
-                    </select>
-                </div>
-                <div>
-                    <label className="font-semibold mb-1 block">State</label>
-                    <select value={selectedState} onChange={e => setSelectedState(e.target.value)} className="form-select w-full py-3 px-4 border rounded-lg focus:ring-2 focus:ring-orange-400" disabled={!selectedCountry}>
-                        <option value="">Select State</option>
-                        {Array.isArray(states) && states.map(state => (
-                            <option key={state._id} value={state._id}>{state.name}</option>
-                        ))}
-                    </select>
-                </div>
-                <div>
-                    <label className="font-semibold mb-1 block">City</label>
-                    <select value={selectedCity} onChange={e => setSelectedCity(e.target.value)} className="form-select w-full py-3 px-4 border rounded-lg focus:ring-2 focus:ring-orange-400" disabled={!selectedState}>
-                        <option value="">Select City</option>
-                        {Array.isArray(cities) && cities.map(city => (
-                            <option key={city._id} value={city._id}>{city.name}</option>
-                        ))}
-                    </select>
-                </div>
-                <div className="md:col-span-3">
-                    <label className="block font-semibold mb-1">Zip Code <span className="text-red-600">*</span></label>
-                    <input type="text" value={zipCode} onChange={e => setZipCode(e.target.value)} className="w-full py-3 px-4 border rounded-lg focus:ring-2 focus:ring-orange-400" required />
-                </div>
-            </div>
-            <h2 className="text-2xl font-bold mb-4 mt-8">Payment</h2>
-            <div className="mb-4">
-                <CardElement options={{ hidePostalCode: true }} className="p-3 border rounded-lg" />
-            </div>
-            {error && <div className="text-red-600 mb-2" role="status">{error}</div>}
-            {success && <div className="text-green-600 mb-2" role="status">{success}</div>}
-            <button type="submit" className="w-full py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition">
-                {loading ? 'Processing...' : 'Continue to checkout'}
-            </button>
-        </form>
-
-        {/* Success Animation Overlay */}
-        {showSuccessAnimation && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white rounded-lg p-8 text-center max-w-md mx-4 animate-bounce">
-                    <div className="mb-4">
-                        <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-                            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                        </div>
-                        <h3 className="text-2xl font-bold text-green-600 mb-2">Order Placed Successfully!</h3>
-                        <p className="text-gray-600">Thank you for your purchase</p>
-                    </div>
-                    <div className="mt-4">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
-                        <p className="text-sm text-gray-500 mt-2">Redirecting to homepage...</p>
-                    </div>
-                </div>
-            </div>
-        )}
         </>
     );
 }
@@ -494,6 +685,9 @@ export default function ShopCheckOut() {
     const [selectedCity, setSelectedCity] = useState('');
     const [zipCode, setZipCode] = useState('');
     const { cartData, totals } = useCart(); // <-- Add this line
+
+    // Coupon state for cart summary
+    const [selectedCoupon, setSelectedCoupon] = useState(null);
 
     // Fetch countries on mount
     useEffect(() => {
@@ -518,7 +712,7 @@ export default function ShopCheckOut() {
             setSelectedCity('');
             return;
         }
-        
+
         let isMounted = true;
         async function fetchStates() {
             try {
@@ -534,7 +728,7 @@ export default function ShopCheckOut() {
             }
         }
         fetchStates();
-        
+
         return () => {
             isMounted = false;
         };
@@ -547,7 +741,7 @@ export default function ShopCheckOut() {
             setSelectedCity('');
             return;
         }
-        
+
         let isMounted = true;
         async function fetchCities() {
             try {
@@ -563,7 +757,7 @@ export default function ShopCheckOut() {
             }
         }
         fetchCities();
-        
+
         return () => {
             isMounted = false;
         };
@@ -606,6 +800,7 @@ export default function ShopCheckOut() {
                                         setSelectedCity={setSelectedCity}
                                         zipCode={zipCode}
                                         setZipCode={setZipCode}
+                                        onCouponChange={setSelectedCoupon}
                                     />
                                 </Elements>
                             </div>
@@ -658,11 +853,21 @@ export default function ShopCheckOut() {
                                         </div>
                                         <p className="font-semibold">{totals.tax.toLocaleString('en-CA', { style: 'currency', currency: 'CAD' })}</p>
                                     </div>
+                                    {selectedCoupon && (
+                                        <div className="p-3 flex justify-between items-center border-t border-gray-100 dark:border-gray-800">
+                                            <div>
+                                                <h5 className="font-semibold text-green-600">Discount ({selectedCoupon.code})</h5>
+                                            </div>
+                                            <p className="font-semibold text-green-600">-{selectedCoupon.discountAmount.toLocaleString('en-CA', { style: 'currency', currency: 'CAD' })}</p>
+                                        </div>
+                                    )}
                                     <div className="p-3 flex justify-between items-center border-t border-gray-100 dark:border-gray-800">
                                         <div>
                                             <h5 className="font-semibold">Total (CAD)</h5>
                                         </div>
-                                        <p className="font-semibold">{totals.total.toLocaleString('en-CA', { style: 'currency', currency: 'CAD' })}</p>
+                                        <p className="font-semibold">
+                                            {(totals.total - (selectedCoupon ? selectedCoupon.discountAmount : 0)).toLocaleString('en-CA', { style: 'currency', currency: 'CAD' })}
+                                        </p>
                                     </div>
                                 </div>
                             </div>

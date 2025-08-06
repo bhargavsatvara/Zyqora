@@ -413,4 +413,62 @@ exports.applyCoupon = async (req, res) => {
             error: error.message 
         });
     }
+};
+
+// Get available coupons for checkout (public endpoint)
+exports.getAvailableCoupons = async (req, res) => {
+    try {
+        const { orderTotal = 0 } = req.query;
+        console.log('Getting available coupons for order total:', orderTotal);
+        
+        // Find active coupons that haven't expired
+        const availableCoupons = await Coupon.find({
+            isActive: true,
+            $or: [
+                { expiryDate: { $gt: new Date() } },
+                { expiryDate: null }
+            ]
+        }).sort({ discountAmount: -1 }); // Sort by highest discount first
+        
+        console.log('Found coupons before filtering:', availableCoupons.length);
+        
+        // Filter coupons based on minimum order amount
+        const validCoupons = availableCoupons.filter(coupon => {
+            // Check if order total meets minimum requirement
+            if (coupon.minimumOrderAmount && orderTotal < coupon.minimumOrderAmount) {
+                console.log(`Coupon ${coupon.code} filtered out - order total ${orderTotal} < minimum ${coupon.minimumOrderAmount}`);
+                return false;
+            }
+            
+            // Check usage limit
+            if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
+                console.log(`Coupon ${coupon.code} filtered out - usage limit reached`);
+                return false;
+            }
+            
+            return true;
+        });
+        
+        console.log('Valid coupons after filtering:', validCoupons.length);
+        
+        res.json({
+            success: true,
+            data: validCoupons.map(coupon => ({
+                _id: coupon._id,
+                code: coupon.code,
+                discountAmount: coupon.discountAmount,
+                minimumOrderAmount: coupon.minimumOrderAmount,
+                expiryDate: coupon.expiryDate,
+                usageLimit: coupon.usageLimit,
+                usedCount: coupon.usedCount
+            }))
+        });
+    } catch (error) {
+        console.error('Error fetching available coupons:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error fetching available coupons',
+            error: error.message 
+        });
+    }
 }; 

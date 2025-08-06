@@ -36,7 +36,6 @@ const storage = multer.diskStorage({
     cb(null, Date.now() + '-' + file.originalname);
   }
 });
-const upload = multer({ storage: storage });
 
 // Image upload endpoint
 router.post('/upload/category-image', uploadCategory.single('image'), async (req, res) => {

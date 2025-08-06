@@ -5,6 +5,7 @@ const {
   Address, Country, State, City, Color, 
   Size, Material, Coupon 
 } = require('../models');
+const seedCoupons = require('./couponSeeder');
 
 // Database connection configuration
 const connectDB = async () => {
@@ -208,7 +209,7 @@ const seedDatabase = async () => {
     );
 
     // Create coupons
-    await Coupon.insertMany(sampleData.coupons);
+    await seedCoupons();
 
     // Create users with hashed passwords
     const users = await Promise.all(

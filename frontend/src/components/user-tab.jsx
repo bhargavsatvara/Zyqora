@@ -1,32 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import client from '../assets/images/client/16.jpg'
-import { FiAirplay, FiEdit, FiSettings, FiLogOut } from '../assets/icons/vander'
+import { FiAirplay, FiEdit, FiSettings, FiLogOut, FiUser } from '../assets/icons/vander'
 import { userAPI } from '../services/api';
 import { useToast } from '../contexts/ToastContext';
-
-// Function to get proper image URL
-const getImageUrl = (imagePath) => {
-  if (!imagePath) return client;
-  
-  // If it's already a full URL, return as is
-  if (imagePath.startsWith('http')) {
-    return imagePath;
-  }
-  
-  // If it starts with /uploads, it's a backend file
-  if (imagePath.startsWith('/uploads')) {
-    return `https://zyqora.onrender.com${imagePath}`;
-  }
-  
-  // Default fallback
-  return client;
-};
 
 export default function Usertab() {
 	const navigate = useNavigate();
 	const { showSuccess, showError } = useToast();
-	const [file, setFile] = useState(client);
+	const [file, setFile] = useState(null);
 	const [user, setUser] = useState(null);
 	const [uploading, setUploading] = useState(false);
 	let current = window.location.pathname;
@@ -38,9 +19,10 @@ export default function Usertab() {
 			try {
 				const parsedUser = JSON.parse(userData);
 				setUser(parsedUser);
+				console.log(parsedUser);
 				// Set profile image if available
 				if (parsedUser.profileImage) {
-					setFile(getImageUrl(parsedUser.profileImage));
+					setFile(parsedUser.profileImage);
 				}
 			} catch (error) {
 				console.error('Error parsing user data:', error);
@@ -76,25 +58,23 @@ export default function Usertab() {
 			formData.append('image', selectedFile);
 
 			const response = await userAPI.uploadProfileImage(formData);
-			
+
 			// Update user data in storage
 			const updatedUser = { ...user, profileImage: response.data.profileImage };
 			localStorage.setItem('user', JSON.stringify(updatedUser));
 			sessionStorage.setItem('user', JSON.stringify(updatedUser));
 			setUser(updatedUser);
-			
-			// Update the file state with the proper URL
-			setFile(getImageUrl(response.data.profileImage));
 
+			// Update the file state with the proper URL
+			setFile(response.data.profileImage);
 			showSuccess('Profile image updated successfully!');
 		} catch (error) {
 			console.error('Error uploading profile image:', error);
 			showError(error.response?.data?.message || 'Failed to upload profile image');
-			// Revert to previous image on error
 			if (user?.profileImage) {
 				setFile(user.profileImage);
 			} else {
-				setFile(client);
+				setFile(null);
 			}
 		} finally {
 			setUploading(false);
@@ -112,7 +92,7 @@ export default function Usertab() {
 	// Get user display name - use full name if available, otherwise use first name or email
 	const getUserDisplayName = () => {
 		if (!user) return 'User';
-		
+
 		if (user.full_name) {
 			return user.full_name;
 		} else if (user.first_name && user.last_name) {
@@ -132,33 +112,70 @@ export default function Usertab() {
 		return user.email || 'No email available';
 	};
 
+	// Get user initials for avatar
+	const getUserInitials = () => {
+		if (!user) return 'U';
+		
+		if (user.first_name && user.last_name) {
+			return `${user.first_name.charAt(0)}${user.last_name.charAt(0)}`.toUpperCase();
+		} else if (user.first_name) {
+			return user.first_name.charAt(0).toUpperCase();
+		} else if (user.full_name) {
+			const names = user.full_name.split(' ');
+			if (names.length >= 2) {
+				return `${names[0].charAt(0)}${names[1].charAt(0)}`.toUpperCase();
+			}
+			return user.full_name.charAt(0).toUpperCase();
+		} else if (user.email) {
+			return user.email.charAt(0).toUpperCase();
+		}
+		return 'U';
+	};
+
+	// Check if user has a valid profile image
+	const hasValidProfileImage = () => {
+		return user?.profileImage && user.profileImage !== 'null' && user.profileImage !== '';
+	};
+
 	return (
 		<div className="lg:w-1/4 md:w-1/3 md:px-3">
 			<div className="relative md:-mt-48 -mt-32">
 				<div className="p-6 rounded-md shadow dark:shadow-gray-800 bg-white dark:bg-slate-900">
 					<div className="profile-pic text-center mb-5">
-						<input 
-							id="pro-img" 
-							name="profile-image" 
-							type="file" 
+						<input
+							id="pro-img"
+							name="profile-image"
+							type="file"
 							accept="image/jpeg,image/jpg,image/png,image/webp"
-							className="hidden" 
+							className="hidden"
 							onChange={(e) => handleChange(e)}
 							disabled={uploading}
 						/>
 						<div>
 							<div className="relative h-28 w-28 mx-auto">
-								<img 
-									src={getImageUrl(user?.profileImage || file)} 
-									className="rounded-full shadow dark:shadow-gray-800 ring-4 ring-slate-50 dark:ring-slate-800 object-cover" 
-									id="profile-image" 
-									alt="Profile" 
-									onError={(e) => {
-										e.target.src = client;
-									}}
-								/>
-								<label 
-									className={`absolute inset-0 cursor-pointer ${uploading ? 'cursor-not-allowed opacity-50' : ''}`} 
+								{hasValidProfileImage() || file ? (
+									<img
+										src={user?.profileImage || file}
+										className="rounded-full shadow dark:shadow-gray-800 ring-4 ring-slate-50 dark:ring-slate-800 object-cover w-28 h-28"
+										id="profile-image"
+										alt="Profile"
+										onError={(e) => {
+											e.target.style.display = 'none';
+											const avatarFallback = document.getElementById('avatar-fallback');
+											if (avatarFallback) {
+												avatarFallback.style.display = 'flex';
+											}
+										}}
+									/>
+								) : null}
+								<div 
+									className={`rounded-full shadow dark:shadow-gray-800 ring-4 ring-slate-50 dark:ring-slate-800 w-28 h-28 flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold text-2xl ${(hasValidProfileImage() || file) ? 'hidden' : 'flex'}`}
+									id="avatar-fallback"
+								>
+									{getUserInitials()}
+								</div>
+								<label
+									className={`absolute inset-0 cursor-pointer ${uploading ? 'cursor-not-allowed opacity-50' : ''}`}
 									htmlFor="pro-img"
 									title={uploading ? 'Uploading...' : 'Click to change profile picture'}
 								></label>

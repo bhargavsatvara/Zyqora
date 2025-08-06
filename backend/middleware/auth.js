@@ -16,6 +16,7 @@ const authenticate = (req, res, next) => {
 
 const authorizeAdmin = async (req, res, next) => {
   try {
+    console.log("authorizeAdmin ---------- >>", req.user);
     const user = await User.findById(req.user);
     if (!user || user.role !== 'admin') {
       return res.status(403).json({ message: 'Access denied. Admin privileges required.' });

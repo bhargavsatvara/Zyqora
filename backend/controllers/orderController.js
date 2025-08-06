@@ -1,4 +1,4 @@
-const {  Cart } = require('../models');
+const { Cart } = require('../models');
 const stripe = require('../utils/stripe');
 const Address = require('../models/address');
 const OrderItem = require('../models/order_item');
@@ -7,6 +7,7 @@ const Color = require('../models/color');
 const Order = require('../models/order');
 const Product = require('../models/product'); // Add this import
 const User = require('../models/user'); // Add this import
+const Coupon = require('../models/coupon'); // Add this import
 const mongoose = require('mongoose'); // Add this import
 const path = require('path'); // Add this import
 const CartAbandonmentService = require('../services/cartAbandonmentService');
@@ -16,13 +17,86 @@ const { orderConfirmationEmail } = require('../utils/emailTemplates'); // Add th
 exports.createOrder = async (req, res) => {
   try {
     console.log('Order create request body:', req.body);
-    const { billingAddress, cartItems, totalAmount, subtotal, tax, paymentIntentId } = req.body;
+    const { billingAddress, cartItems, totalAmount, subtotal, tax, paymentIntentId, couponCode } = req.body;
     if (!cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
       return res.status(400).json({ message: 'Cart is empty' });
     }
-    // 1. Save billing address
-    const address = new Address({ ...billingAddress, user: req.user, isDefault: true });
-    await address.save();
+
+    // 1. Handle billing address - check if addressId is provided or create/find address
+    let address;
+
+    if (billingAddress.addressId) {
+      // User selected an existing address - fetch it by ID
+      console.log('User selected existing address:', billingAddress.addressId);
+      address = await Address.findById(billingAddress.addressId);
+
+      if (!address) {
+        return res.status(400).json({ message: 'Selected address not found' });
+      }
+
+      // Verify the address belongs to the current user (for security)
+      if (req.user && address.user && address.user.toString() !== req.user.toString()) {
+        return res.status(403).json({ message: 'Access denied to this address' });
+      }
+
+      console.log('Using selected address:', address._id);
+    } else {
+      // User provided new address details - check if it already exists or create new
+      if (req.user) {
+        // For authenticated users, check if they already have this address
+        const existingAddress = await Address.findOne({
+          user: req.user,
+          street: billingAddress.address_line1,
+          city: billingAddress.city,
+          state: billingAddress.state,
+          country: billingAddress.country,
+          zipCode: billingAddress.postal_code
+        });
+
+        if (existingAddress) {
+          console.log('Using existing address:', existingAddress._id);
+          address = existingAddress;
+        } else {
+          console.log('Creating new address for user');
+          // Map billingAddress fields to Address model fields
+          const addressData = {
+            user: req.user,
+            street: billingAddress.address_line1,
+            city: billingAddress.city,
+            state: billingAddress.state,
+            country: billingAddress.country,
+            zipCode: billingAddress.postal_code,
+            isDefault: true
+          };
+          address = new Address(addressData);
+          await address.save();
+        }
+      } else {
+        // For guest users, always create a new address
+        console.log('Creating new address for guest user');
+        // Map billingAddress fields to Address model fields
+        const addressData = {
+          user: null,
+          street: billingAddress.address_line1,
+          city: billingAddress.city,
+          state: billingAddress.state,
+          country: billingAddress.country,
+          zipCode: billingAddress.postal_code,
+          isDefault: true
+        };
+        address = new Address(addressData);
+        await address.save();
+      }
+    }
+
+    // Calculate discount amount if coupon was applied
+    let discountAmount = 0;
+    let originalTotal = subtotal + tax;
+    
+    if (couponCode) {
+      discountAmount = originalTotal - totalAmount;
+      console.log(`Coupon applied: ${couponCode}, Discount: $${discountAmount}, Original Total: $${originalTotal}, Final Total: $${totalAmount}`);
+    }
 
     // 2. Create the order first (without order_items)
     const order = new Order({
@@ -31,6 +105,7 @@ exports.createOrder = async (req, res) => {
       total_amount: totalAmount,
       subtotal,
       tax_amount: tax,
+      discount_amount: discountAmount,
       payment_method: 'stripe',
       status: 'processing',
     });
@@ -50,14 +125,14 @@ exports.createOrder = async (req, res) => {
         const colorDoc = await Color.findById(item.color);
         colorName = colorDoc ? colorDoc.name : '';
       }
-      
+
       // Fetch product to get SKU if not available in cart item
       let sku = item.sku;
       if (!sku) {
         const product = await Product.findById(item.product_id);
         sku = product?.sku || 'N/A';
       }
-      
+
       console.log('Creating OrderItem with order_id:', order._id, 'and item:', item, 'size:', sizeName, 'color:', colorName, 'sku:', sku);
       const orderItem = new OrderItem({
         order_id: order._id,
@@ -88,7 +163,21 @@ exports.createOrder = async (req, res) => {
     order.order_items = orderItemIds;
     await order.save();
 
-    // 5. Remove only ordered items from the user's cart
+    // 5. Increment coupon usage count if coupon was applied
+    if (couponCode) {
+      try {
+        await Coupon.findOneAndUpdate(
+          { code: couponCode },
+          { $inc: { usedCount: 1 } }
+        );
+        console.log(`Coupon usage count incremented for: ${couponCode}`);
+      } catch (couponError) {
+        console.error('Error incrementing coupon usage count:', couponError);
+        // Don't fail the order if coupon update fails
+      }
+    }
+
+    // 6. Remove only ordered items from the user's cart
     const userId = req.user ? req.user.toString() : 'guest';
     let cart = await Cart.findOne({ user_id: userId });
     if (cart) {
@@ -103,14 +192,15 @@ exports.createOrder = async (req, res) => {
       );
       console.log('Cart after:', cart.items);
       await cart.save();
-      
+
       // Reset abandonment count if cart is now empty or if items were removed
       if (cart.items.length === 0) {
         await CartAbandonmentService.resetAbandonmentCount(cart._id);
       }
     }
 
-    // 6. Send order confirmation email
+    // 7. Send order confirmation email after successful order creation
+    let emailSent = false;
     try {
       let userEmail = null;
       let userName = null;
@@ -121,7 +211,7 @@ exports.createOrder = async (req, res) => {
         const user = await User.findById(req.user);
         if (user && user.email && user.settings?.emailNotifications !== false) {
           userEmail = user.email;
-          userName = user.name || user.email.split('@')[0];
+          userName = user.name || user.first_name || user.email.split('@')[0];
           shouldSendEmail = true;
         }
       } else {
@@ -131,7 +221,9 @@ exports.createOrder = async (req, res) => {
           userName = billingAddress.first_name || billingAddress.email.split('@')[0];
           shouldSendEmail = true;
         }
+        // Note: Address model doesn't store email, so we can't get it from address object
       }
+      console.log("userEmail", userEmail);
 
       if (shouldSendEmail && userEmail) {
         // Get order items with product images
@@ -140,7 +232,7 @@ exports.createOrder = async (req, res) => {
 
         // Generate order URL
         const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-        const orderUrl = `${frontendUrl}/order-view/${order._id}`;
+        const orderUrl = `${frontendUrl}`;
 
         // Generate email HTML
         const emailHtml = orderConfirmationEmail(userName, order, populatedOrderItems, orderUrl);
@@ -161,14 +253,21 @@ exports.createOrder = async (req, res) => {
         };
 
         await transporter.sendMail(mailOptions);
-        console.log(`Order confirmation email sent to ${userEmail} for order ${order._id}`);
+        console.log(`Order confirmation email sent successfully to ${userEmail} for order ${order._id}`);
+        emailSent = true;
       }
     } catch (emailError) {
       console.error('Error sending order confirmation email:', emailError);
-      // Don't fail the order creation if email fails
+      // Don't fail the order creation if email fails, but log the error
     }
 
-    res.status(201).json({ success: true, order });
+    // 8. Return success response with email status
+    res.status(201).json({
+      success: true,
+      order,
+      emailSent,
+      message: 'Order placed successfully' + (emailSent ? ' and confirmation email sent' : '')
+    });
   } catch (err) {
     console.error('Order creation error:', err);
     res.status(500).json({ message: err.message || 'Order creation failed' });
@@ -179,6 +278,7 @@ exports.getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find({ user_id: req.user })
       .populate('order_items') // Populate order_items to include size and color
+      .sort({ _id: -1 })
       .exec();
     res.json(orders);
   } catch (err) {
@@ -310,13 +410,13 @@ exports.updateOrderStatusAdmin = async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
-}; 
+};
 
 // Generate invoice for an order
 exports.generateInvoice = async (req, res) => {
   try {
     const orderId = req.params.id;
-    
+
     // Get order with all related data
     const order = await Order.findById(orderId)
       .populate('user_id', 'name email')
@@ -342,16 +442,16 @@ exports.generateInvoice = async (req, res) => {
     }
 
     // Check if user has permission to access this order
-    console.log('User info:', { 
+    console.log('User info:', {
       userId: req.user,
-      orderUserId: order.user_id?._id || order.user_id 
+      orderUserId: order.user_id?._id || order.user_id
     });
-    
+
     // If no user is authenticated, deny access
     if (!req.user) {
       return res.status(401).json({ message: 'Authentication required' });
     }
-    
+
     // Check if user is admin
     let isAdmin = false;
     try {
@@ -362,14 +462,14 @@ exports.generateInvoice = async (req, res) => {
       console.error('Error checking user role:', error);
       return res.status(500).json({ message: 'Error checking permissions' });
     }
-    
+
     // If not admin, check if user owns this order
     if (!isAdmin) {
       const userId = req.user.toString();
       const orderUserId = (order.user_id._id || order.user_id).toString();
-      
+
       console.log('Permission check:', { userId, orderUserId, match: userId === orderUserId });
-      
+
       if (userId !== orderUserId) {
         return res.status(403).json({ message: 'Access denied - You can only access your own orders' });
       }
@@ -394,7 +494,7 @@ exports.generateInvoice = async (req, res) => {
       orderNumber: order._id.toString().slice(-8).toUpperCase(),
       orderDate: new Date(order.created_at).toLocaleDateString(),
       dueDate: new Date(order.created_at).toLocaleDateString(),
-      
+
       // Company information
       company: {
         name: 'Zyqora',
@@ -403,7 +503,7 @@ exports.generateInvoice = async (req, res) => {
         email: 'support@zyqora.com',
         website: 'https://zyqora-ten.vercel.app/'
       },
-      
+
       // Customer information
       customer: {
         name: order.user_id?.name || 'Guest Customer',
@@ -415,7 +515,7 @@ exports.generateInvoice = async (req, res) => {
             state: order.billing_address.state || '',
             country: order.billing_address.country || '',
             zipCode: order.billing_address.zipCode || ''
-          } : (typeof order.billing_address === 'string' ? 
+          } : (typeof order.billing_address === 'string' ?
             (() => {
               try {
                 return JSON.parse(order.billing_address);
@@ -426,7 +526,7 @@ exports.generateInvoice = async (req, res) => {
             })() : null)
         ) : null
       },
-      
+
       // Order items
       items: order.order_items.map(item => {
         const sku = item.sku || (item.product_id?.sku) || 'N/A';
@@ -446,14 +546,14 @@ exports.generateInvoice = async (req, res) => {
           color: item.color || ''
         };
       }),
-      
+
       // Totals
       subtotal: Number(order.subtotal?.$numberDecimal || order.subtotal || 0),
       tax: Number(order.tax_amount?.$numberDecimal || order.tax_amount || 0),
       shipping: Number(order.shipping_charge?.$numberDecimal || order.shipping_charge || 0),
       discount: Number(order.discount_amount?.$numberDecimal || order.discount_amount || 0),
       total: Number(order.total_amount?.$numberDecimal || order.total_amount || 0),
-      
+
       // Payment information
       paymentMethod: order.payment_method || 'Credit Card',
       status: order.status

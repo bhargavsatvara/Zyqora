@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API_BASE_URL = 'https://zyqora.onrender.com/api';
-//const API_BASE_URL = 'http://localhost:4000/api';
+// const API_BASE_URL = 'http://localhost:4000/api';
 
 // Create axios instance
 const api = axios.create({
@@ -173,7 +173,8 @@ export const materialsAPI = {
 export const couponsAPI = {
   getCoupons: (params) => api.get('/coupons', { params }),
   getCoupon: (id) => api.get(`/coupons/${id}`),
-  validateCoupon: (code) => api.post('/coupons/validate', { code }),
+  getAvailableCoupons: (params) => api.get('/coupons/available', { params }),
+  validateCoupon: (code, orderTotal) => api.get(`/coupons/validate/${code}`, { params: { orderTotal } }),
 };
 
 // Contact API

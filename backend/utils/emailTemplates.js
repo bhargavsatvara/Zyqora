@@ -365,6 +365,7 @@ exports.orderConfirmationEmail = (userName, order, orderItems, orderUrl) => {
               <strong>Order ID:</strong> ${order._id}<br>
               <strong>Order Date:</strong> ${new Date(order.created_at).toLocaleDateString()}<br>
               <strong>Status:</strong> <span style="color:#f97316; font-weight:600;">${order.status}</span>
+              ${Number(order.discount_amount || 0) > 0 ? `<br><strong>Coupon Applied:</strong> <span style="color:#10b981; font-weight:600;">You saved $${Number(order.discount_amount || 0).toFixed(2)}!</span>` : ''}
             </p>
           </div>
         </td>
@@ -397,9 +398,9 @@ exports.orderConfirmationEmail = (userName, order, orderItems, orderUrl) => {
                       </span>
                     </span>
                   </td>
-                  <td style="text-align:center; padding:16px; font-family:'DM Sans',sans-serif;">$${item.price.toFixed(2)}</td>
+                  <td style="text-align:center; padding:16px; font-family:'DM Sans',sans-serif;">$${Number(item.price || 0).toFixed(2)}</td>
                   <td style="text-align:center; padding:16px; font-family:'DM Sans',sans-serif;">${item.quantity}</td>
-                  <td style="text-align:right; padding:16px; font-family:'DM Sans',sans-serif;">$${item.total.toFixed(2)}</td>
+                  <td style="text-align:right; padding:16px; font-family:'DM Sans',sans-serif;">$${Number(item.total || 0).toFixed(2)}</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -418,15 +419,21 @@ exports.orderConfirmationEmail = (userName, order, orderItems, orderUrl) => {
                     <tr style="list-style:none; padding:0; margin:0;">
                       <td style="display:flex; justify-content:space-between; padding:0 0 10px;">
                         <span style="font-weight:500; font-family:'DM Sans',sans-serif;">Subtotal:</span>
-                        <span style="color:#94a3b8; font-family:'DM Sans',sans-serif;">$${order.subtotal.toFixed(2)}</span>
+                        <span style="color:#94a3b8; font-family:'DM Sans',sans-serif;">$${Number(order.subtotal || 0).toFixed(2)}</span>
                       </td>
                       <td style="display:flex; justify-content:space-between; padding:10px 0; border-top:1px solid #f3f4f6;">
                         <span style="font-weight:500; font-family:'DM Sans',sans-serif;">Taxes:</span>
-                        <span style="color:#94a3b8; font-family:'DM Sans',sans-serif;">$${order.tax_amount.toFixed(2)}</span>
+                        <span style="color:#94a3b8; font-family:'DM Sans',sans-serif;">$${Number(order.tax_amount || 0).toFixed(2)}</span>
                       </td>
+                      ${Number(order.discount_amount || 0) > 0 ? `
+                      <td style="display:flex; justify-content:space-between; padding:10px 0; border-top:1px solid #f3f4f6;">
+                        <span style="font-weight:500; font-family:'DM Sans',sans-serif; color:#10b981;">Discount:</span>
+                        <span style="color:#10b981; font-family:'DM Sans',sans-serif; font-weight:500;">-$${Number(order.discount_amount || 0).toFixed(2)}</span>
+                      </td>
+                      ` : ''}
                       <td style="display:flex; justify-content:space-between; padding:10px 0 0; border-top:1px solid #f3f4f6;">
                         <span style="font-weight:600; font-family:'DM Sans',sans-serif;">Total:</span>
-                        <span style="font-weight:600; font-family:'DM Sans',sans-serif;">$${order.total_amount.toFixed(2)}</span>
+                        <span style="font-weight:600; font-family:'DM Sans',sans-serif;">$${Number(order.total_amount || 0).toFixed(2)}</span>
                       </td>
                     </tr>
                   </table>
@@ -590,7 +597,7 @@ exports.cartAbandonmentEmail = (userName, cartItems, cartUrl) => {
               Your Cart Summary
             </h3>
             <p style="margin:0 0 10px 0; font-size:14px; color:#6b7280; font-family:'DM Sans',sans-serif;">
-              <strong>${totalItems}</strong> items • <strong>$${totalPrice.toFixed(2)}</strong> total
+              <strong>${totalItems}</strong> items • <strong>$${Number(totalPrice || 0).toFixed(2)}</strong> total
             </p>
             ${cartItems.map(item => `
               <div style="
@@ -607,7 +614,7 @@ exports.cartAbandonmentEmail = (userName, cartItems, cartUrl) => {
                     ${item.name}
                   </p>
                   <p style="margin:5px 0 0 0; font-size:12px; color:#6b7280; font-family:'DM Sans',sans-serif;">
-                    Qty: ${item.quantity} • $${item.price.toFixed(2)} each
+                    Qty: ${item.quantity} • $${Number(item.price || 0).toFixed(2)} each
                   </p>
                 </div>
               </div>

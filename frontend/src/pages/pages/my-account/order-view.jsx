@@ -501,7 +501,12 @@ export default function OrderView() {
                       <div className="text-slate-500 text-sm">Subtotal: <span className="font-semibold">${Number(order.subtotal?.$numberDecimal || order.subtotal || 0).toFixed(2)}</span></div>
                       <div className="text-slate-500 text-sm">Tax: <span className="font-semibold">${Number(order.tax_amount?.$numberDecimal || order.tax_amount || 0).toFixed(2)}</span></div>
                       <div className="text-slate-500 text-sm">Shipping: <span className="font-semibold">${Number(order.shipping_charge?.$numberDecimal || order.shipping_charge || 0).toFixed(2)}</span></div>
-                      <div className="text-slate-500 text-sm">Discount: <span className="font-semibold">${Number(order.discount_amount?.$numberDecimal || order.discount_amount || 0).toFixed(2)}</span></div>
+                      {Number(order.discount_amount?.$numberDecimal || order.discount_amount || 0) > 0 && (
+                        <>
+                          <div className="text-slate-500 text-sm">Discount: <span className="font-semibold text-green-600">-${Number(order.discount_amount?.$numberDecimal || order.discount_amount || 0).toFixed(2)}</span></div>
+                          <div className="text-green-600 text-sm mt-1">🎉 You saved ${Number(order.discount_amount?.$numberDecimal || order.discount_amount || 0).toFixed(2)} with a coupon!</div>
+                        </>
+                      )}
                     </div>
                     <div className="text-lg font-bold mt-4 md:mt-0">Total: ${Number(order.total_amount?.$numberDecimal || order.total_amount || 0).toFixed(2)}</div>
                   </div>

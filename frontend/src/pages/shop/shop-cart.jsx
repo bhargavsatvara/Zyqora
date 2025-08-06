@@ -8,19 +8,20 @@ import Counter from "../../components/counter";
 
 import ScrollToTop from "../../components/scroll-to-top";
 import { useCart } from "../../contexts/CartContext";
-import { cartAPI } from "../../services/api";
 
 export default function Shopcart(props){
-    const [cartData, setCartData] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [totals, setTotals] = useState({
-        subtotal: 0,
-        tax: 0,
-        total: 0
-    });
     const [message, setMessage] = useState('');
     const navigate = useNavigate();
-    const { fetchCart, clearCart: contextClearCart, updateCartData } = useCart();
+    const { 
+        cartData,
+        totals,
+        fetchCart, 
+        clearCart: contextClearCart, 
+        updateCartData, 
+        updateCartItem, 
+        removeFromCart: contextRemoveFromCart 
+    } = useCart();
 
     useEffect(() => {
         fetchCartData();
@@ -36,42 +37,17 @@ export default function Shopcart(props){
     const fetchCartData = async () => {
         try {
             setLoading(true);
-            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-            if (token) {
-                const response = await cartAPI.getCart();
-                const data = response.data;
-                
-                if (data.success) {
-                    setCartData(data.data.items || []);
-                    setTotals({
-                        subtotal: data.data.subtotal || 0,
-                        tax: data.data.tax || 0,
-                        total: data.data.total || 0
-                    });
-                } else {
-                    setCartData([]);
-                    setTotals({ subtotal: 0, tax: 0, total: 0 });
-                }
-            } else {
-                setCartData([]);
-                setTotals({ subtotal: 0, tax: 0, total: 0 });
-            }
+            // Use the cart context data which already handles both authenticated and local storage
+            await fetchCart();
+            // The cart context will automatically update the state
         } catch (error) {
             console.error('Error fetching cart:', error);
-            setCartData([]);
-            setTotals({ subtotal: 0, tax: 0, total: 0 });
         } finally {
             setLoading(false);
         }
     };
 
-    // Helper to recalculate totals instantly
-    const recalculateTotals = (cartItems) => {
-        const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        const tax = subtotal * 0.1;
-        const total = subtotal + tax;
-        setTotals({ subtotal, tax, total });
-    };
+
 
     const handleQuantityChange = async (itemId, newQuantity) => {
         console.log('handleQuantityChange called with:', { itemId, newQuantity });
@@ -81,200 +57,56 @@ export default function Shopcart(props){
             await removeFromCart(item);
             return;
         }
-        
-        // Optimistically update the UI
-        setCartData(prevCartData => {
-            const updatedCart = prevCartData.map(item =>
-                item.product_id === itemId
-                    ? { ...item, quantity: newQuantity }
-                    : item
-            );
-            recalculateTotals(updatedCart);
-            return updatedCart;
-        });
 
         try {
-            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-            if (token) {
-                console.log('Sending update request with:', { itemId, quantity: newQuantity });
-                const response = await cartAPI.updateCartItemAlt({
-                    itemId: itemId,
-                    quantity: newQuantity
-                });
-                
-                console.log('Update response:', response);
-                console.log('Update response data:', response.data);
-                console.log('Update response data structure:', {
-                    success: response.data?.success,
-                    data: response.data?.data,
-                    items: response.data?.data?.items
-                });
-                
-                if (response.data && response.data.success) {
-                    try {
-                        // Check if response.data.data exists before accessing items
-                        if (response.data.data && response.data.data.items) {
-                            // Update local state with the response data
-                            setCartData(response.data.data.items);
-                            setTotals({
-                                subtotal: response.data.data.subtotal || 0,
-                                tax: response.data.data.tax || 0,
-                                total: response.data.data.total || 0
-                            });
-                            
-                            // Update cart context immediately
-                            updateCartData(response.data.data.items, {
-                                subtotal: response.data.data.subtotal || 0,
-                                tax: response.data.data.tax || 0,
-                                total: response.data.data.total || 0
-                            });
-                        } else {
-                            // If response structure is different, just update cart context
-                            console.log('Response structure different, fetching cart data');
-                            await fetchCart();
-                        }
-                    } catch (error) {
-                        console.error('Error processing response data:', error);
-                        // Fallback to fetching cart data
-                        await fetchCart();
-                    }
-                } else {
-                    throw new Error(response.data?.message || 'Failed to update cart');
-                }
+            // Use the new cart context function that handles both authenticated and non-authenticated users
+            const result = await updateCartItem(itemId, item?.size || '', item?.color || '', newQuantity);
+            
+            if (result.success) {
+                // Cart context will automatically update the state
+                setMessage('Quantity updated successfully');
+                setTimeout(() => setMessage(''), 3000);
+            } else {
+                throw new Error(result.message || 'Failed to update cart');
             }
         } catch (error) {
             console.error('Error updating cart item:', error);
-            setMessage('Error updating quantity: ' + (error.response?.data?.message || error.message));
+            setMessage('Error updating quantity: ' + error.message);
             setTimeout(() => setMessage(''), 3000);
-            // Revert the optimistic update by refetching data
-            fetchCartData();
         }
     };
 
     const removeFromCart = async (item) => {
         try {
-            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-            if (token) {
-                console.log('Removing item:', item);
-                console.log('Current cart data before removal:', cartData);
-                
-                const response = await cartAPI.removeFromCartAlt({
-                    product_id: item.product_id,
-                    size: item.size,
-                    color: item.color
-                });
-                
-                console.log('Remove response:', response.data);
-                
-                if (response.data.success) {
-                    // Update local state immediately for better UX
-                    setCartData(prevCartData => {
-                        const updatedCart = prevCartData.filter(
-                            i => !(i.product_id === item.product_id && i.size === item.size && i.color === item.color)
-                        );
-                        
-                        console.log('Updated cart after removal:', updatedCart);
-                        
-                        // Calculate new totals
-                        const newSubtotal = updatedCart.reduce((sum, cartItem) => sum + (cartItem.price * cartItem.quantity), 0);
-                        const newTax = newSubtotal * 0.1;
-                        const newTotal = newSubtotal + newTax;
-                        
-                        console.log('New totals:', { subtotal: newSubtotal, tax: newTax, total: newTotal });
-                        
-                        return updatedCart;
-                    });
-                    
-                    // Update cart context to sync with navbar
-                    await fetchCart();
-                } else {
-                    throw new Error(response.data.message || 'Failed to remove item');
-                }
+            console.log('Removing item:', item);
+            
+            // Use the new cart context function that handles both authenticated and non-authenticated users
+            const result = await contextRemoveFromCart(item.product_id, item.size, item.color);
+            
+            if (result.success) {
+                // Cart context will automatically update the state
+                setMessage('Item removed from cart successfully');
+                setTimeout(() => setMessage(''), 3000);
+            } else {
+                throw new Error(result.message || 'Failed to remove item');
             }
         } catch (error) {
             console.error('Error removing item from cart:', error);
-            setMessage('Error removing item from cart: ' + (error.response?.data?.message || error.message));
+            setMessage('Error removing item from cart: ' + error.message);
             setTimeout(() => setMessage(''), 3000);
         }
     };
 
     const clearCart = async () => {
         try {
-            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-            if (token) {
-                const response = await cartAPI.clearCart();
-                console.log('Clear cart response:', response);
-                console.log('Clear cart response data:', response.data);
-                console.log('Response status:', response.status);
-                console.log('Response success:', response.data?.success);
-                console.log('Response message:', response.data?.message);
-                
-                // Always clear local state immediately for better UX
-                setCartData([]);
-                setTotals({ subtotal: 0, tax: 0, total: 0 });
-                
-                // Check if the response indicates success
-                if (response.data && response.data.success) {
-                    setMessage('Cart cleared successfully');
-                    setTimeout(() => setMessage(''), 3000);
-                    
-                    // Update cart context
-                    await contextClearCart();
-                } else if (response.data && response.data.message) {
-                    // If there's a message but not success, it might still be successful
-                    // Check if the message contains "cleared" or "success"
-                    if (response.data.message.toLowerCase().includes('cleared') || 
-                        response.data.message.toLowerCase().includes('success')) {
-                        setMessage('Cart cleared successfully');
-                        setTimeout(() => setMessage(''), 3000);
-                        
-                        // Update cart context
-                        await contextClearCart();
-                    } else {
-                        // Show the actual message
-                        setMessage('Cart cleared successfully');
-                        setTimeout(() => setMessage(''), 3000);
-                        
-                        // Update cart context
-                        await contextClearCart();
-                    }
-                } else {
-                    // No clear success indicator, but we've already cleared local state
-                    setMessage('Cart cleared successfully');
-                    setTimeout(() => setMessage(''), 3000);
-                    
-                    // Update cart context
-                    await contextClearCart();
-                }
-            }
+            // Use the context clear cart function that handles both authenticated and non-authenticated users
+            await contextClearCart();
+            setMessage('Cart cleared successfully');
+            setTimeout(() => setMessage(''), 3000);
         } catch (error) {
             console.error('Error clearing cart:', error);
-            console.log('Error details:', {
-                message: error.message,
-                response: error.response,
-                responseData: error.response?.data
-            });
-            
-            // Even if there's an error, clear the local state for better UX
-            setCartData([]);
-            setTotals({ subtotal: 0, tax: 0, total: 0 });
-            
-            // Check if this is actually a successful clear (sometimes axios treats 200 responses as errors)
-            if (error.response && error.response.status === 200) {
-                // This is likely a successful clear
-                setMessage('Cart cleared successfully');
-                setTimeout(() => setMessage(''), 3000);
-                
-                // Update cart context
-                await contextClearCart();
-            } else {
-                // This is a real error, but we've already cleared local state
-                setMessage('Cart cleared successfully');
-                setTimeout(() => setMessage(''), 3000);
-                
-                // Update cart context
-                await contextClearCart();
-            }
+            setMessage('Error clearing cart. Please try again.');
+            setTimeout(() => setMessage(''), 3000);
         }
     };
 

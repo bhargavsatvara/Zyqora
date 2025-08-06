@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const couponController = require('../controllers/couponController');
 const { authenticate, authorizeAdmin } = require('../middleware/auth');
+const Coupon = require('../models/coupon');
 
 /**
  * @swagger
@@ -9,6 +10,25 @@ const { authenticate, authorizeAdmin } = require('../middleware/auth');
  *   name: Coupons
  *   description: Coupon management endpoints
  */
+
+
+/**
+ * @swagger
+ * /coupons/available:
+ *   get:
+ *     summary: Get available coupons for checkout (public endpoint)
+ *     tags: [Coupons]
+ *     parameters:
+ *       - in: query
+ *         name: orderTotal
+ *         schema: { type: number, default: 0 }
+ *         description: Order total amount for filtering coupons
+ *     responses:
+ *       200: { description: List of available coupons }
+ *       500: { description: Server error }
+ */
+router.get('/available', couponController.getAvailableCoupons);
+
 
 /**
  * @swagger

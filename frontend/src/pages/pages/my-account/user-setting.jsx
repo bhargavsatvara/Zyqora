@@ -31,22 +31,20 @@ export default function UserSetting() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Function to get proper image URL
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return defaultProfileImage;
+  // Helper function to get user initials
+  const getUserInitials = () => {
+    if (!user.name) return 'U';
+    return user.name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
-    // If it's already a full URL, return as is
-    if (imagePath.startsWith('http')) {
-      return imagePath;
-    }
-
-    // If it starts with /uploads, it's a backend file
-    if (imagePath.startsWith('/uploads')) {
-      return `https://zyqora.onrender.com${imagePath}`;
-    }
-
-    // Default fallback
-    return defaultProfileImage;
+  // Helper function to check if profile image is valid
+  const hasValidProfileImage = () => {
+    return user.profileImage && user.profileImage.trim() !== '' && user.profileImage !== 'null';
   };
 
   const fetchUserProfile = () => {
@@ -62,6 +60,7 @@ export default function UserSetting() {
             email: data.email || (data.data && data.data.email) || '',
             profileImage: data.profileImage || (data.data && data.data.profileImage) || ''
           };
+          console.log("newUser", newUser);
           setUser(newUser);
           setOriginalUser(newUser);
         }
@@ -201,25 +200,48 @@ export default function UserSetting() {
                 {/* Profile Image Section */}
                 <div className="mb-6 text-center">
                   <div className="relative inline-block">
-                    <img
-                      src={getImageUrl(user.profileImage)}
-                      alt="Profile"
-                      className="w-24 h-24 rounded-full shadow-lg ring-4 ring-slate-100 dark:ring-slate-700 object-cover"
-                      onError={(e) => {
-                        e.target.src = defaultProfileImage;
-                      }}
-                    />
-                    <label
-                      className={`absolute inset-0 cursor-pointer rounded-full ${uploadingImage ? 'cursor-not-allowed opacity-50' : ''}`}
-                      htmlFor="profile-image-upload"
-                      title={uploadingImage ? 'Uploading...' : 'Click to change profile picture'}
+                    {hasValidProfileImage() ? (
+                      <img
+                        src={user.profileImage}
+                        alt="Profile"
+                        className="w-24 h-24 rounded-full shadow-lg ring-4 ring-slate-100 dark:ring-slate-700 object-cover relative z-10"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          const avatarFallback = document.getElementById('avatar-fallback-settings');
+                          if (avatarFallback) {
+                            avatarFallback.style.display = 'flex';
+                          }
+                        }}
+                      />
+                    ) : null}
+                    <div
+                      className={`w-24 h-24 rounded-full shadow-lg ring-4 ring-slate-100 dark:ring-slate-700 flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 text-white font-bold text-2xl relative z-10 ${hasValidProfileImage() ? 'hidden' : 'flex'}`}
+                      id="avatar-fallback-settings"
                     >
-                      <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 rounded-full transition-all duration-200 flex items-center justify-center">
-                        <FiEdit className="text-white opacity-0 hover:opacity-100 transition-opacity duration-200" />
-                      </div>
-                    </label>
+                      {getUserInitials()}
+                    </div>
+                    {hasValidProfileImage() && (
+                      <label
+                        className={`absolute inset-0 cursor-pointer rounded-full z-20 ${uploadingImage ? 'cursor-not-allowed opacity-50' : ''}`}
+                        htmlFor="profile-image-upload"
+                        title={uploadingImage ? 'Uploading...' : 'Click to change profile picture'}
+                      >
+                        <div className="absolute inset-0 flex items-center justify-center group">
+                          <FiEdit className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-lg bg-black bg-opacity-50 rounded-full p-2" />
+                        </div>
+                      </label>
+                    )}
+
+                    {/* Clickable overlay for avatar (no hover effect) */}
+                    {!hasValidProfileImage() && (
+                      <label
+                        className={`absolute inset-0 cursor-pointer rounded-full z-20 ${uploadingImage ? 'cursor-not-allowed opacity-50' : ''}`}
+                        htmlFor="profile-image-upload"
+                        title={uploadingImage ? 'Uploading...' : 'Click to change profile picture'}
+                      />
+                    )}
                     {uploadingImage && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full">
+                      <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full z-30">
                         <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                       </div>
                     )}
