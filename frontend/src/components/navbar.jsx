@@ -650,7 +650,7 @@ export default function Navbar({ navClass, navlight }) {
           {/* User Dropdown */}
           <li className="dropdown inline-block relative ps-0.5" ref={userRef}>
             <button
-              className="dropdown-toggle items-center"
+              className="dropdown-toggle size-9 inline-flex items-center justify-center tracking-wide align-middle duration-500 text-base text-center rounded-full border border-orange-500 bg-orange-500 text-white"
               type="button"
               onClick={() => setUserManu(!userManu)}
             >
@@ -664,14 +664,11 @@ export default function Navbar({ navClass, navlight }) {
                     e.target.nextSibling.style.display = 'flex';
                   }}
                 />
-              ) : null}
-              <span className={`size-9 inline-flex items-center justify-center tracking-wide align-middle duration-500 text-base text-center rounded-full border border-orange-500 bg-orange-500 text-white ${isAuthenticated && hasValidProfileImage() ? 'hidden' : 'flex'}`}>
-                {isAuthenticated ? (
-                  <span className="font-medium">{getUserInitials()}</span>
-                ) : (
-                  <span className="font-medium">G</span>
-                )}
-              </span>
+              ) : (
+                <span className="font-medium">
+                  {isAuthenticated ? getUserInitials() : 'G'}
+                </span>
+              )}
             </button>
             {userManu && (
               <div className="dropdown-menu absolute end-0 m-0 mt-4 z-10 w-48 rounded-md overflow-hidden bg-white dark:bg-slate-900 shadow dark:shadow-gray-700">
