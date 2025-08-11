@@ -221,10 +221,10 @@ export default function Index() {
                 New Collection
               </span>
               <h4 className="mt-3 text-4xl font-bold md:text-6xl md:leading-normal leading-normal text-white">
-                The Gift Suite
+              Everyday Luxe
               </h4>
               <p className="mt-2 text-lg text-white">
-                Our latest collection of essential basics.
+              Comfort meets elegance in our latest collection
               </p>
 
               <div className="mt-6">
@@ -303,10 +303,10 @@ export default function Index() {
               New Collection
             </span>
             <h4 className="mt-3 text-4xl font-bold md:text-6xl md:leading-normal leading-normal text-white">
-              The Gift Suite
+            Everyday Luxe
             </h4>
             <p className="mt-2 text-lg text-white">
-              Our latest collection of essential basics.
+            Comfort meets elegance in our latest collection
             </p>
 
             <div className="mt-6">
